@@ -54,19 +54,21 @@ class DarrowToolPanel(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
-        obj = context.object
+        layout.label(text = "Viewport Display Options")
         row = layout.row()
+        row.operator('set.wireframe')
+        row.operator('reset.wireframe')
+        obj = context.object
         split=layout.split()
         col=split.column(align = True)
+
+
+        
+        
         
         if obj is not None:
             # Actual panel buttons and logic
-            col.label(text = "Overlays")
-            col.prop(obj, 'wireframeBool')
-            
-            Var_wireframe = bpy.context.object.wireframeBool
-            col.separator()
-            
+
             col.label(text = "Object Origin")
             if context.mode == 'EDIT_MESH':
                  col.operator('set.origin')
@@ -76,7 +78,8 @@ class DarrowToolPanel(bpy.types.Panel):
                 col.separator()
                 #disabled "Apply All" button for orgin and move
                 #col.operator('setsnap.origin')
-            col.separator()
+
+
             if context.mode == 'OBJECT':
                 col.label(text = "Export Checklist")
                 layout.operator('apply_all.darrow')
@@ -85,7 +88,7 @@ class DarrowToolPanel(bpy.types.Panel):
                 col.operator('shade.smooth')
                 col.operator('apply.transforms')
                 col.operator('apply.normals')
-            layout.separator()
+
             box = layout.box()
 
             box.label(text = "Export as FBX")
@@ -95,6 +98,9 @@ class DarrowToolPanel(bpy.types.Panel):
             #Variables for the bools and enums
             Var_prefix_bool = bpy.context.object.useprefixBool
             Var_custom_prefix = bpy.context.object.PrefixOption
+            
+            
+            
 
             #If use prefix is selected then these options show up
             if Var_prefix_bool == True:   
@@ -103,25 +109,45 @@ class DarrowToolPanel(bpy.types.Panel):
                 if Var_custom_prefix == 'OP2':
                     box.prop(context.scene, "my_string_prop", text="Prefix")
                     
-            if Var_wireframe == True:
-                bpy.context.space_data.show_gizmo = False
-                bpy.context.space_data.overlay.show_floor = False
-                bpy.context.space_data.overlay.show_axis_y = False
-                bpy.context.space_data.overlay.show_axis_x = False
-                bpy.context.space_data.overlay.show_axis_z = False
-                bpy.context.space_data.overlay.show_cursor = False
-                bpy.context.space_data.overlay.show_object_origins = False
-                bpy.context.space_data.overlay.show_wireframes = True
+                    
 
-            if Var_wireframe == False:
-                bpy.context.space_data.show_gizmo = True
-                bpy.context.space_data.overlay.show_floor = True
-                bpy.context.space_data.overlay.show_axis_y = True
-                bpy.context.space_data.overlay.show_axis_x = True
-                bpy.context.space_data.overlay.show_cursor = True
-                bpy.context.space_data.overlay.show_object_origins = True
-                bpy.context.space_data.overlay.show_wireframes = False
+class DarrowWireframe(bpy.types.Operator):
+    bl_idname = "set.wireframe"
+    bl_description = "Wireframe Only"
+    bl_label = "Wireframe"
 
+    def execute(self, context):
+
+        bpy.context.space_data.show_gizmo = False
+        bpy.context.space_data.overlay.show_floor = False
+        bpy.context.space_data.overlay.show_axis_y = False
+        bpy.context.space_data.overlay.show_axis_x = False
+        bpy.context.space_data.overlay.show_cursor = False
+        bpy.context.space_data.overlay.show_object_origins = False
+        bpy.context.space_data.overlay.show_wireframes = True
+        
+        
+
+        self.report({'INFO'}, "Transforms applied")
+        return {'FINISHED'} 
+  
+class DarrowWireframeReset(bpy.types.Operator):
+    bl_idname = "reset.wireframe"
+    bl_description = "Reset View"
+    bl_label = "Reset"
+
+    def execute(self, context):
+        Var_wireframe = bpy.context.object.wireframeBool
+        bpy.context.space_data.show_gizmo = True
+        bpy.context.space_data.overlay.show_floor = True
+        bpy.context.space_data.overlay.show_axis_y = True
+        bpy.context.space_data.overlay.show_axis_x = True
+        bpy.context.space_data.overlay.show_cursor = True
+        bpy.context.space_data.overlay.show_object_origins = True
+        bpy.context.space_data.overlay.show_wireframes = False
+    
+        self.report({'INFO'}, "Transforms applied")
+        return {'FINISHED'}   
          
 #Button to apply all transformations
 class DarrowTransforms(bpy.types.Operator):
@@ -321,6 +347,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
 def register():
     
     bpy.utils.register_class(DarrowApply)
+    bpy.utils.register_class(DarrowWireframe)
+    bpy.utils.register_class(DarrowWireframeReset)
     bpy.utils.register_class(DarrowSetOrigin)
     bpy.utils.register_class(DarrowSetSnapOrigin)    
     bpy.utils.register_class(DarrowMoveOrigin)
@@ -360,6 +388,8 @@ def register():
 def unregister():
     
     bpy.utils.unregister_class(DarrowApply)
+    bpy.utils.runegister_class(DarrowWireframeReset)
+    bpy.utils.runegister_class(DarrowWireframe)
     bpy.utils.unregister_class(DarrowSetOrigin)
     bpy.utils.unregister_class(DarrowSetSnapOrigin) 
     bpy.utils.unregister_class(DarrowMoveOrigin)
