@@ -54,17 +54,21 @@ class DarrowToolPanel(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
-        layout.label(text = "Viewport Display Options")
-        row = layout.row()
-        row.operator('set.wireframe')
-        row.operator('reset.wireframe')
+        
+        #layout.label(text = "Viewport Display Options")
+        #row = layout.row()
+        #row.operator('set.wireframe')
+        #row.operator('reset.wireframe')
+
         obj = context.object
         split=layout.split()
         col=split.column(align = True)
 
 
-        
-        
+        col.label(text = "Viewport Display Options")
+        col.operator('set.wireframe')
+        col.operator('reset.wireframe')
+        col.separator()
         
         if obj is not None:
             # Actual panel buttons and logic
@@ -79,7 +83,6 @@ class DarrowToolPanel(bpy.types.Panel):
                 #disabled "Apply All" button for orgin and move
                 #col.operator('setsnap.origin')
 
-
             if context.mode == 'OBJECT':
                 col.label(text = "Export Checklist")
                 layout.operator('apply_all.darrow')
@@ -90,7 +93,6 @@ class DarrowToolPanel(bpy.types.Panel):
                 col.operator('apply.normals')
 
             box = layout.box()
-
             box.label(text = "Export as FBX")
             box.operator('export_selected.darrow')
             box.prop(obj, 'useprefixBool')
@@ -99,9 +101,6 @@ class DarrowToolPanel(bpy.types.Panel):
             Var_prefix_bool = bpy.context.object.useprefixBool
             Var_custom_prefix = bpy.context.object.PrefixOption
             
-            
-            
-
             #If use prefix is selected then these options show up
             if Var_prefix_bool == True:   
                 box.prop(obj, 'PrefixOption')
@@ -109,12 +108,10 @@ class DarrowToolPanel(bpy.types.Panel):
                 if Var_custom_prefix == 'OP2':
                     box.prop(context.scene, "my_string_prop", text="Prefix")
                     
-                    
-
 class DarrowWireframe(bpy.types.Operator):
     bl_idname = "set.wireframe"
-    bl_description = "Wireframe Only"
-    bl_label = "Wireframe"
+    bl_description = "Display Wireframe Overlay Only"
+    bl_label = "Wireframe Showcase"
 
     def execute(self, context):
 
@@ -126,18 +123,15 @@ class DarrowWireframe(bpy.types.Operator):
         bpy.context.space_data.overlay.show_object_origins = False
         bpy.context.space_data.overlay.show_wireframes = True
         
-        
-
-        self.report({'INFO'}, "Transforms applied")
+        self.report({'INFO'}, "Viewport Wireframe only")
         return {'FINISHED'} 
   
 class DarrowWireframeReset(bpy.types.Operator):
     bl_idname = "reset.wireframe"
-    bl_description = "Reset View"
+    bl_description = "Reset display overlays"
     bl_label = "Reset"
 
     def execute(self, context):
-        Var_wireframe = bpy.context.object.wireframeBool
         bpy.context.space_data.show_gizmo = True
         bpy.context.space_data.overlay.show_floor = True
         bpy.context.space_data.overlay.show_axis_y = True
@@ -146,7 +140,7 @@ class DarrowWireframeReset(bpy.types.Operator):
         bpy.context.space_data.overlay.show_object_origins = True
         bpy.context.space_data.overlay.show_wireframes = False
     
-        self.report({'INFO'}, "Transforms applied")
+        self.report({'INFO'}, "Reset viewport")
         return {'FINISHED'}   
          
 #Button to apply all transformations
@@ -362,12 +356,6 @@ def register():
     bpy.types.Object.useprefixBool = BoolProperty(
     name = "Use Prefix",
     description = "Export selected object with custom text as a prefix",
-    default = False
-    )
-    
-    bpy.types.Object.wireframeBool = BoolProperty(
-    name = "Only Wireframe",
-    description = "",
     default = False
     )
 
