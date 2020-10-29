@@ -5,8 +5,10 @@ bl_info = {
     "version": (0, 7),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Darrow Toolkit",
-    "category": "Tools"
+    "description": "Toolkit to speed up common tasks.",
+    "category": "Tools",
+    "warning": "Still in development, you might encounter bugs",
+    "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
     }
 #-----------------------------------------------------#  
 #	Imports
@@ -108,13 +110,14 @@ class DarrowToolPanel(bpy.types.Panel):
                 if Var_custom_prefix == 'OP2':
                     box.prop(context.scene, "my_string_prop", text="Prefix")
                     
+#handles the wireframe display                   
 class DarrowWireframe(bpy.types.Operator):
     bl_idname = "set.wireframe"
     bl_description = "Display Wireframe Overlay Only"
     bl_label = "Wireframe Showcase"
 
     def execute(self, context):
-
+        bpy.context.active_object.select_set(False)
         bpy.context.space_data.show_gizmo = False
         bpy.context.space_data.overlay.show_floor = False
         bpy.context.space_data.overlay.show_axis_y = False
@@ -125,13 +128,15 @@ class DarrowWireframe(bpy.types.Operator):
         
         self.report({'INFO'}, "Viewport Wireframe only")
         return {'FINISHED'} 
-  
+    
+#handles reseting the wireframe display    
 class DarrowWireframeReset(bpy.types.Operator):
     bl_idname = "reset.wireframe"
     bl_description = "Reset display overlays"
     bl_label = "Reset"
 
     def execute(self, context):
+        bpy.context.active_object.select_set(False)
         bpy.context.space_data.show_gizmo = True
         bpy.context.space_data.overlay.show_floor = True
         bpy.context.space_data.overlay.show_axis_y = True
