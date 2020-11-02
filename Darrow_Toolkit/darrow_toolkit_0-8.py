@@ -10,6 +10,7 @@ bl_info = {
     "warning": "Still in development, you might encounter bugs",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
     }
+    
 #-----------------------------------------------------#  
 #	Imports
 #-----------------------------------------------------#  
@@ -42,14 +43,12 @@ from bpy.types import (Panel,
                        PropertyGroup,
                        )
 #-----------------------------------------------------#  
-
-#Render viewport button: Changes viewport overlays to get model ready for wireframe screenshot. Hide origin, cursor, etc
-#Default viewpor button: restore viewport back to normal overlays
 #-----------------------------------------------------#  
 
 
-
-#main panel menu logic
+#-----------------------------------------------------#  
+#     handles ui     
+#-----------------------------------------------------#  
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "Darrow Toolkit"
     bl_category = "Darrow Toolkit"
@@ -91,16 +90,14 @@ class DarrowToolPanel(bpy.types.Panel):
 
                 layout.operator('apply_all.darrow')
                 layout.separator()
-                
+            
             if context.mode == 'OBJECT':
                 col.operator('shade.smooth')
                 col.operator('apply.transforms')
                 col.operator('apply.normals')
-                
-
-
+            
             box = layout.box()
-            box.label(text = "Export as FBX")
+            box.label(text = "FBX Exporter")
             box.operator('export_selected.darrow')
             split=box.split()
             split.prop(obj, 'useprefixBool')
@@ -110,8 +107,7 @@ class DarrowToolPanel(bpy.types.Panel):
             Var_prefix_bool = bpy.context.object.useprefixBool
             Var_suffix_bool = bpy.context.object.usecounterBool
             Var_custom_prefix = bpy.context.object.PrefixOption
-            
-
+         
             if Var_suffix_bool == True:
                 box.label(text = "Increase the suffix by (+1)")
                 box.operator('reset.counter')
@@ -123,9 +119,11 @@ class DarrowToolPanel(bpy.types.Panel):
                 box.prop(obj, 'PrefixOption')
                 #If the custom enum is selected these show up
                 if Var_custom_prefix == 'OP2':
-                    box.prop(context.scene, "my_string_prop", text="Prefix")
-          
-#handles reseting the suffix counter               
+                    box.prop(context.scene, "my_string_prop", text="Prefix")    
+
+#-----------------------------------------------------#  
+#     handles reseting the suffix counter      
+#-----------------------------------------------------#             
 class DarrowCounterReset(bpy.types.Operator):
     bl_idname = "reset.counter"
     bl_description = "Resets FBX suffix counter"
@@ -133,10 +131,12 @@ class DarrowCounterReset(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.counter = 0
-        self.report({'INFO'}, "Set suffix to 0")
+        self.report({'INFO'}, "Set suffix count to 0")
         return {'FINISHED'} 
                     
-#handles the wireframe display                   
+#-----------------------------------------------------#  
+#     handles wireframe display   
+#-----------------------------------------------------#                 
 class DarrowWireframe(bpy.types.Operator):
     bl_idname = "set.wireframe"
     bl_description = "Display Wireframe Overlay Only"
@@ -155,7 +155,9 @@ class DarrowWireframe(bpy.types.Operator):
         self.report({'INFO'}, "Viewport Wireframe only")
         return {'FINISHED'} 
     
-#handles reseting the wireframe display    
+#-----------------------------------------------------#  
+#     handles reseting the wireframe display  
+#-----------------------------------------------------#   
 class DarrowWireframeReset(bpy.types.Operator):
     bl_idname = "reset.wireframe"
     bl_description = "Reset display overlays"
@@ -173,8 +175,10 @@ class DarrowWireframeReset(bpy.types.Operator):
     
         self.report({'INFO'}, "Reset viewport")
         return {'FINISHED'}   
-         
-#Button to apply all transformations
+
+#-----------------------------------------------------#  
+#    Button to apply all transformations
+#-----------------------------------------------------#  
 class DarrowTransforms(bpy.types.Operator):
     bl_idname = "apply.transforms"
     bl_description = "Apply transformations to selected object"
@@ -184,8 +188,10 @@ class DarrowTransforms(bpy.types.Operator):
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
         self.report({'INFO'}, "Transforms applied")
         return {'FINISHED'}
-    
-#Set Objects origin
+
+#-----------------------------------------------------#  
+#    Set Objects origin
+#-----------------------------------------------------#  
 class DarrowSetOrigin(bpy.types.Operator):
     bl_idname = "set.origin"
     bl_description = "Set selected as object origin"
@@ -199,8 +205,10 @@ class DarrowSetOrigin(bpy.types.Operator):
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         self.report({'INFO'}, "Selected is now origin")
         return {'FINISHED'}
-    
-#Snap object to world center
+
+#-----------------------------------------------------#  
+#     Snap object to world center
+#-----------------------------------------------------#   
 class DarrowMoveOrigin(bpy.types.Operator):
     bl_idname = "move.origin"
     bl_description = "Move selected to world origin"
@@ -211,8 +219,10 @@ class DarrowMoveOrigin(bpy.types.Operator):
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         self.report({'INFO'}, "Moved selected to object origin")
         return {'FINISHED'}
-    
-#Set Objects origin and move to world origin
+
+#-----------------------------------------------------#  
+#    Set Objects origin and move to world origin
+#-----------------------------------------------------#   
 class DarrowSetSnapOrigin(bpy.types.Operator):
     bl_idname = "setsnap.origin"
     bl_description = "Set selected as object origin and move to world origin"
@@ -228,7 +238,9 @@ class DarrowSetSnapOrigin(bpy.types.Operator):
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         return {'FINISHED'}
 
-#Button to apply outside calculated normals
+#-----------------------------------------------------#  
+#     Button to apply outside calculated normals
+#-----------------------------------------------------#    
 class DarrowNormals(bpy.types.Operator):
     bl_idname = "apply.normals"
     bl_description = "Calculate outside normals"
@@ -242,7 +254,10 @@ class DarrowNormals(bpy.types.Operator):
         self.report({'INFO'}, "Normals calculated outside")
         return {'FINISHED'}
     
-#Button to smooth mesh
+
+#-----------------------------------------------------#  
+#     Button to smooth mesh
+#-----------------------------------------------------#    
 class DarrowSmooth(bpy.types.Operator):
     bl_idname = "shade.smooth"
     bl_label = "Smooth Object"
@@ -253,8 +268,10 @@ class DarrowSmooth(bpy.types.Operator):
         bpy.context.object.data.use_auto_smooth = True
         self.report({'INFO'}, "Object smoothed")
         return {'FINISHED'}
-        
-#Button to apply all checklisted items
+
+#-----------------------------------------------------#  
+#     Button to apply all checklisted items
+#-----------------------------------------------------#         
 class DarrowApply(bpy.types.Operator):
     bl_idname = "apply_all.darrow"
     bl_label = "Apply All"
@@ -275,7 +292,10 @@ class DarrowApply(bpy.types.Operator):
         self.report({'INFO'}, "Applied transforms, smoothed mesh, and calculated normals")
         return {'FINISHED'}
 
-#Logic for exporting as FBX
+
+#-----------------------------------------------------#  
+#    Logic for exporting as FBX
+#-----------------------------------------------------#  
 class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     bl_idname = "export_selected.darrow"
     bl_label = 'Export Selected'
@@ -288,30 +308,25 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     def execute(self, context):
         #option to show in exporter
         path_mode = path_reference_mode
-        
         #get the name of the active object
         fbxname = bpy.context.view_layer.objects.active
-        
         #get string of custom prefix user input
         customprefix = bpy.context.scene.my_string_prop
-        
         #get blend name
         blendName = bpy.path.basename(bpy.context.blend_data.filepath).replace(".blend", "")
-        
         #get fbx name
         name = bpy.path.clean_name(fbxname.name)
-        
         #Variables for UI, like bools and enums
         Var_PrefixBool = bpy.context.object.useprefixBool
         Var_custom_prefix = bpy.context.object.PrefixOption
         Var_counterBool = bpy.context.object.usecounterBool
-
-        #get the counter from the .blend file and add "1" to it
-    
-        context.scene.counter += 1
-        count = context.scene.counter
-        count = str(count)
-        Var_exportnumber = "_" + count
+        
+        #get the counter and add "1" to it, only when bool is checked
+        if Var_counterBool == True:
+            context.scene.counter += 1
+            count = context.scene.counter
+            count = str(count)
+            Var_exportnumber = "_" + count
         
         #If "Use Prefix" box selected, the 2 prefix options will show up in the enum
         if not bpy.data.is_saved:
@@ -321,7 +336,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         if Var_PrefixBool == True:
             print("USED PREFIX")
 
-        #if Use Custom Prefix 1 is selected, the object will export with custom prefix + mesh name
+        #if ".blend enum" is selected, the object will export with custom prefix + mesh name
             if Var_custom_prefix == 'OP1':
                 #If the "export counter" bool is true then we add the counter varable to the end of the save location          
                 if Var_counterBool == True:
@@ -333,8 +348,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace('.fbx', '')+ ".fbx",
                     check_existing=True, 
-                    axis_forward='-Z', 
-                    axis_up='Y', 
+                    axis_forward= '-Z', 
+                    axis_up= 'Y', 
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
@@ -344,13 +359,14 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             else:
                 print("No Prefix Defined", context.mode)
 
-        #If Use Custom Prefix 2 is selected, the object will export with custom prefix + mesh name
+        #If use "custom" enum is selected, the object will export with custom prefix + mesh name
             if Var_custom_prefix == 'OP2':
                 #If the "export counter" bool is true then we add the counter varable to the end of the save location
                 if Var_counterBool == True:
                     customname = customprefix + "_" + name + Var_exportnumber
                 else:
                     customname = customprefix + "_" + name
+                
                 saveLoc = self.filepath.replace(blendName,'') + customname  
                 #export logic
                 bpy.ops.export_scene.fbx(
@@ -410,7 +426,6 @@ def register():
     bpy.utils.register_class(DarrowNormals)
     bpy.utils.register_class(DarrowSmooth)
 
-
     bpy.types.Object.useprefixBool = BoolProperty(
     name = "Use Prefix",
     description = "Export selected object with custom text as a prefix",
@@ -440,7 +455,7 @@ def register():
            ('OP2', "custom", ""),
         ]
     )
-
+    
 def unregister():
     
     bpy.utils.unregister_class(DarrowCounterReset)
@@ -455,7 +470,6 @@ def unregister():
     bpy.utils.unregister_class(DarrowNormals)
     bpy.utils.unregister_class(DarrowSmooth)
     bpy.utils.unregister_class(DarrowExportFBX)
-
 
 if __name__ == "__main__":
     register()
