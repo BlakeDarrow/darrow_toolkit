@@ -73,78 +73,227 @@ class DarrowToolPanel(bpy.types.Panel):
         
         if obj is not None:
             
+            #Variables for the bools and enums
+            Var_prefix_bool = bpy.context.object.useprefixBool
+            Var_suffix_bool = bpy.context.object.usecounterBool
+            Var_custom_prefix = bpy.context.object.PrefixOption
+            Var_use_alerts = bpy.context.object.usealertsBool
+            Var_hidetools = bpy.types.Object.hidetoolkitBool
+            
+            if bpy.context.object.hidetoolkitBool == False:
+
+                col.label(text = "Viewport Display Options")
+                col.operator('set.wireframe')
+                col.operator('reset.wireframe')
+                col.separator()
+                col.label(text = "Object Origin")   
+            
+                if context.mode == 'EDIT_MESH':
+                    col.operator('set.origin')
+                    
+                if context.mode == 'OBJECT':
+                    col.operator('move.origin')
+                    col.separator()
+                    #disabled "Apply All" button for orgin and move
+                    #col.operator('setsnap.origin')
+
+                    col.label(text = "Export Checklist")
+
+                    layout.operator('apply_all.darrow')
+                    layout.separator()
+                    
+                    col.operator('shade.smooth')
+                    col.operator('apply.transforms')
+                    col.operator('apply.normals')
+                    
+                    box = layout.box()
+                    box.label(text = "FBX Exporter")
+                    box.operator('export_selected.darrow')
+                    
+                    split=box.split()
+                    split.prop(obj, 'useprefixBool')
+                    split.prop(obj, 'usecounterBool')
+                    layout.separator()
+                    
+                    if Var_suffix_bool == True:
+                        box.label(text = "Increase the suffix by (+1)")
+                        box.operator('reset.counter')
+                        
+                    #If use prefix is selected then these options show up
+                    if Var_prefix_bool == True: 
+                        layout.label(text = "Prefix Options")
+                        box = layout.box()
+                        box.prop(obj, 'PrefixOption')
+                        #If the custom enum is selected these show up
+                        if Var_custom_prefix == 'OP2':
+                            
+                            box.prop(context.scene, "my_string_prop", text="Prefix")    
+
+                  
+            split=layout.split()
+            col=split.column(align = True)
+            col.operator('get.prices')
+            
             if bpy.context.object.showPricesBool == True:
+
                 box = layout.box()
+                box.separator()
                 box.prop(context.scene, "btc_price")
                 box.prop(context.scene, "eth_price")
                 box.prop(context.scene, "xrp_price")
                 box.label(text = "[ Refreshed every few minutes ]")
-            
-                #box.operator('update.prices')
-            #if bpy.context.object.showPricesBool == False:
-        
-            col.operator('get.prices')
-            split=layout.split()
-            col=split.column(align = True) 
-
-            col.label(text = "Viewport Display Options")
-            col.operator('set.wireframe')
-            col.operator('reset.wireframe')
-            col.separator()
-            col.label(text = "Object Origin")
-            
-            
-            if context.mode == 'EDIT_MESH':
-                col.operator('set.origin')
-                
-            if context.mode == 'OBJECT':
-                col.operator('move.origin')
-                col.separator()
-                #disabled "Apply All" button for orgin and move
-                #col.operator('setsnap.origin')
-
-                col.label(text = "Export Checklist")
-
-                layout.operator('apply_all.darrow')
-                layout.separator()
-                
-                col.operator('shade.smooth')
-                col.operator('apply.transforms')
-                col.operator('apply.normals')
-                
-                box = layout.box()
-                box.label(text = "FBX Exporter")
-                box.operator('export_selected.darrow')
-                
                 split=box.split()
-                split.prop(obj, 'useprefixBool')
-                split.prop(obj, 'usecounterBool')
-
-                #Variables for the bools and enums
-                Var_prefix_bool = bpy.context.object.useprefixBool
-                Var_suffix_bool = bpy.context.object.usecounterBool
-                Var_custom_prefix = bpy.context.object.PrefixOption
+                split.operator('update.prices')
+                split.operator('reset.prices')
+                box.prop(obj, "hidetoolkitBool")
+                box.prop(obj, "usealertsBool")
+                
+                if Var_use_alerts == True:
+                    #box.label(text = "Price Notifications")
+                    box.prop(context.scene, "btc_alert")
+                    box.prop(context.scene, "eth_alert")
+                    box.prop(context.scene, "xrp_alert")
              
-                if Var_suffix_bool == True:
-                    box.label(text = "Increase the suffix by (+1)")
-                    box.operator('reset.counter')
-                    
-                #If use prefix is selected then these options show up
-                if Var_prefix_bool == True: 
-                    layout.label(text = "Prefix Options")
-                    box = layout.box()
-                    box.prop(obj, 'PrefixOption')
-                    #If the custom enum is selected these show up
-                    if Var_custom_prefix == 'OP2':
-                        box.prop(context.scene, "my_string_prop", text="Prefix")    
+            
+class DarrowResetPrices(bpy.types.Operator):
+    bl_idname = "reset.prices"
+    bl_description = "Reset/restart all values"
+    bl_label = "Reset"
+    
+    def execute(self, context):
+
+        # resets url
+        context.scene.btc_url = "null"
+        context.scene.eth_url = "null"
+        context.scene.xrp_url = "null"
+        
+        # print result
+        print("url: Reset",context.scene.btc_url)
+        print("url: Reset",context.scene.eth_url)
+        print("url: Reset",context.scene.xrp_url)
+        
+        # resets price display
+        context.scene.btc_price = "0.00"
+        context.scene.eth_price = "0.00"
+        context.scene.xrp_price = "0.00"
+        
+        # resets alerts
+        context.scene.btc_alert = 25000
+        context.scene.eth_alert = 500
+        context.scene.xrp_alert = 0.35
+        
+        
+        self.report({'INFO'}, "Prices Reset")
+        return {'FINISHED'}
 
 
 class DarrowUpdatePrices(bpy.types.Operator):
     bl_idname = "update.prices"
-    bl_description = "Update prices"
-    bl_label = "Refresh"
+    bl_description = "Check for updated prices"
+    bl_label = "Check Update"
     
     def execute(self, context):
+        
+        btc_url = context.scene.btc_url
+        eth_url = context.scene.eth_url
+        xrp_url = context.scene.xrp_url
+   
+#-----------------------------------------------------#  
+#     Get bitcoin price from the internet    
+#-----------------------------------------------------# 
+        btc_url = 'https://coinmarketcap.com/'
+        btc_response = urlopen(btc_url)
+        #raw html code from url
+        btc_rawstring = btc_response.read().decode('utf-8')
+        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
+        btc_static = btc_rawstring.find('/currencies/bitcoin/markets/')
+        #add a character buffer to get closer to price positions in raw string
+        btc_buffer = 47
+        #add the buffer to the static identifer to get the actual string start value for btc
+        btc_startprice = btc_static + btc_buffer
+        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
+        btc_endprice = btc_startprice + 10
+        #get the actual price of btc by searching the raw string within these parameters
+        btcprice = (btc_rawstring[btc_startprice:btc_endprice])
+        #set global btc_price variable
+        context.scene.btc_price = btcprice
+#-----------------------------------------------------#  
+#     Get Etherum price from the internet    
+#-----------------------------------------------------#        
+        eth_url = 'https://coinmarketcap.com/'
+        eth_response = urlopen(eth_url)
+        #raw html code from url
+        eth_rawstring = eth_response.read().decode('utf-8')
+        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
+        eth_static = eth_rawstring.find('/currencies/ethereum/markets/')
+        #add a character buffer to get closer to price positions in raw string
+        eth_buffer = 48
+        #add the buffer to the static identifer to get the actual string start value for btc
+        eth_startprice = eth_static + eth_buffer
+        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
+        eth_endprice = eth_startprice + 9
+        #get the actual price of btc by searching the raw string within these parameters
+        ethprice = (eth_rawstring[eth_startprice:eth_endprice])
+        #set global btc_price variable
+        context.scene.eth_price = ethprice
+#-----------------------------------------------------#  
+#     Get Ripple price from the internet    
+#-----------------------------------------------------#        
+        xrp_url = 'https://coinmarketcap.com/'
+        xrp_response = urlopen(xrp_url)
+        #raw html code from url
+        xrp_rawstring = xrp_response.read().decode('utf-8')
+        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
+        xrp_static = xrp_rawstring.find('/currencies/xrp/markets/')
+        #add a character buffer to get closer to price positions in raw string
+        xrp_buffer = 43
+        #add the buffer to the static identifer to get the actual string start value for btc
+        xrp_startprice = xrp_static + xrp_buffer
+        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
+        xrp_endprice = xrp_startprice + 7
+        #get the actual price of btc by searching the raw string within these parameters
+        xrpprice = (xrp_rawstring[xrp_startprice:xrp_endprice])
+        #set global btc_price variable
+        context.scene.xrp_price = xrpprice
+        
+#-----------------------------------------------------#  
+#     Alerts
+#-----------------------------------------------------#    
+
+        # BTC Alerts
+        btc_alert = context.scene.btc_alert
+        btc_alert = float(btc_alert)
+        
+        btc_str_price = xrpprice.replace("$", '')
+        btc_str_price = float(btc_str_price)
+        
+        
+        # XRP Alerts 
+        xrp_alert = context.scene.xrp_alert
+        xrp_alert = float(xrp_alert)
+        
+        xrp_str_price = xrpprice.replace("$", '')
+        xrp_str_price = float(xrp_str_price)
+
+        print(xrp_str_price)
+        print(xrp_alert)
+
+
+        if bpy.context.object.usealertsBool == True:
+            if (xrp_str_price <= xrp_alert):
+                print("",)
+                print("XRP UP")
+            
+        
+        print("",)
+        print("BTC:",btcprice)
+        print("ETH:",ethprice)
+        print("XRP:",xrpprice)
+
+        print("url:",btc_url)
+        print("url:",eth_url)
+        print("url:",xrp_url)
+    
         self.report({'INFO'}, "Prices Refreshed")
         return {'FINISHED'}
 
@@ -163,66 +312,9 @@ class DarrowGetPrices(bpy.types.Operator):
             bpy.context.object.showPricesBool = True
         else:
             bpy.context.object.showPricesBool = False
+        
+        return {'FINISHED'}
 
-#-----------------------------------------------------#  
-#     Get bitcoin price from the internet    
-#-----------------------------------------------------# 
-        btc_url = 'https://coinmarketcap.com/currencies/bitcoin'
-        btc_response = urlopen(btc_url)
-        #raw html code from url
-        btc_rawstring = btc_response.read().decode('utf-8')
-        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
-        btc_static = btc_rawstring.find('priceValue___11gHJ')
-        #add a character buffer to get closer to price positions in raw string
-        btc_buffer = 20  
-        #add the buffer to the static identifer to get the actual string start value for btc
-        btc_startprice = btc_static + btc_buffer
-        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
-        btc_endprice = btc_startprice + 10
-        #get the actual price of btc by searching the raw string within these parameters
-        btcprice = (btc_rawstring[btc_startprice:btc_endprice])
-        #set global btc_price variable
-        context.scene.btc_price = btcprice
-#-----------------------------------------------------#  
-#     Get Etherum price from the internet    
-#-----------------------------------------------------#        
-        eth_url = 'https://coinmarketcap.com/currencies/ethereum'
-        eth_response = urlopen(eth_url)
-        #raw html code from url
-        eth_rawstring = eth_response.read().decode('utf-8')
-        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
-        eth_static = eth_rawstring.find('priceValue___11gHJ')
-        #add a character buffer to get closer to price positions in raw string
-        eth_buffer = 20  
-        #add the buffer to the static identifer to get the actual string start value for btc
-        eth_startprice = eth_static + eth_buffer
-        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
-        eth_endprice = eth_startprice + 9
-        #get the actual price of btc by searching the raw string within these parameters
-        ethprice = (eth_rawstring[eth_startprice:eth_endprice])
-        #set global btc_price variable
-        context.scene.eth_price = ethprice
-#-----------------------------------------------------#  
-#     Get Ripple price from the internet    
-#-----------------------------------------------------#        
-        xrp_url = 'https://coinmarketcap.com/currencies/xrp/'
-        xrp_response = urlopen(xrp_url)
-        #raw html code from url
-        xrp_rawstring = xrp_response.read().decode('utf-8')
-        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
-        xrp_static = xrp_rawstring.find('priceValue___11gHJ')
-        #add a character buffer to get closer to price positions in raw string
-        xrp_buffer = 20  
-        #add the buffer to the static identifer to get the actual string start value for btc
-        xrp_startprice = xrp_static + xrp_buffer
-        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
-        xrp_endprice = xrp_startprice + 7
-        #get the actual price of btc by searching the raw string within these parameters
-        xrpprice = (xrp_rawstring[xrp_startprice:xrp_endprice])
-        #set global btc_price variable
-        context.scene.xrp_price = xrpprice
-        return {'FINISHED'} 
-    
 #-----------------------------------------------------#  
 #     handles reseting the suffix counter      
 #-----------------------------------------------------# 
@@ -544,7 +636,20 @@ def register():
     bpy.utils.register_class(DarrowGetPrices)
     bpy.utils.register_class(DarrowPriceMenu)
     bpy.utils.register_class(DarrowUpdatePrices)
+    bpy.utils.register_class(DarrowResetPrices)
 
+
+    bpy.types.Object.usealertsBool = BoolProperty(
+    name = "Turn on price alerts",
+    description = "Price alerts toggle",
+    default = False
+    )
+    
+    bpy.types.Object.hidetoolkitBool = BoolProperty(
+    name = "Crypto mode",
+    description = "Hide additional tools",
+    default = False
+    )
 
     bpy.types.Object.useprefixBool = BoolProperty(
     name = "Use Prefix",
@@ -587,6 +692,34 @@ def register():
     bpy.types.Scene.xrp_price = bpy.props.StringProperty(
     name = "XRP",
     description = "Current price of Ripple",
+    )
+    
+    bpy.types.Scene.btc_url = bpy.props.StringProperty(
+    name = "BTC URL",
+    description = "",
+    )
+    
+    bpy.types.Scene.eth_url = bpy.props.StringProperty(
+    name = "ETH URL",
+    description = "",
+    )
+    
+    bpy.types.Scene.xrp_url = bpy.props.StringProperty(
+    name = "xrp URL",
+    description = "",
+    )
+    
+    
+    bpy.types.Scene.btc_alert = bpy.props.FloatProperty(
+    name = "BTC <",
+    )
+    
+    bpy.types.Scene.eth_alert = bpy.props.FloatProperty(
+    name = "ETH <",
+    )
+    
+    bpy.types.Scene.xrp_alert = bpy.props.FloatProperty(
+    name = "XRP <",
     )
     
     bpy.types.Object.PrefixOption = EnumProperty(
