@@ -7,7 +7,7 @@ bl_info = {
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Toolkit to speed up common tasks.",
     "category": "Tools",
-    "warning": "Still in development, you might encounter bugs",
+    "warning": "Still in development, might encounter bugs. Coin info taken from CoinMarketCap.com",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
     }
     
@@ -22,9 +22,12 @@ import getopt
 import os
 import requests
 from pathlib import Path
+from time import sleep
 
 import urllib
 from urllib import request
+
+from urllib.request import urlopen
 
 from html.parser import HTMLParser
 
@@ -50,11 +53,11 @@ from bpy.types import (Panel,
                        Operator,
                        PropertyGroup,
                        )
-                       
 
 #-----------------------------------------------------#  
 #     handles Main ui     
 #-----------------------------------------------------#  
+
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "Darrow Toolkit"
     bl_category = "Darrow Toolkit"
@@ -62,117 +65,168 @@ class DarrowToolPanel(bpy.types.Panel):
     bl_region_type = "UI"
     
     def draw(self, context):
+        
         layout = self.layout
-        
-        #layout.label(text = "Viewport Display Options")
-        #row = layout.row()
-        #row.operator('set.wireframe')
-        #row.operator('reset.wireframe')
-
-        obj = context.object
         split=layout.split()
-        col=split.column(align = True)
-
-
-        col.label(text = "Crypto Price Testing")
-        col.operator('get.prices')
-        
-        col.label(text = "Viewport Display Options")
-        col.operator('set.wireframe')
-        col.operator('reset.wireframe')
-        col.separator()
+        col=split.column(align = True) 
+        obj = context.object
         
         if obj is not None:
-            # Actual panel buttons and logic
             
+            if bpy.context.object.showPricesBool == True:
+                box = layout.box()
+                box.prop(context.scene, "btc_price")
+                box.prop(context.scene, "eth_price")
+                box.prop(context.scene, "xrp_price")
+                box.label(text = "[ Refreshed every few minutes ]")
+            
+                #box.operator('update.prices')
+            #if bpy.context.object.showPricesBool == False:
+        
+            col.operator('get.prices')
+            split=layout.split()
+            col=split.column(align = True) 
+
+            col.label(text = "Viewport Display Options")
+            col.operator('set.wireframe')
+            col.operator('reset.wireframe')
+            col.separator()
             col.label(text = "Object Origin")
-            if context.mode == 'EDIT_MESH':
-                 col.operator('set.origin')
             
+            
+            if context.mode == 'EDIT_MESH':
+                col.operator('set.origin')
+                
             if context.mode == 'OBJECT':
                 col.operator('move.origin')
                 col.separator()
                 #disabled "Apply All" button for orgin and move
                 #col.operator('setsnap.origin')
 
-            if context.mode == 'OBJECT':
                 col.label(text = "Export Checklist")
 
                 layout.operator('apply_all.darrow')
                 layout.separator()
-            
-            if context.mode == 'OBJECT':
+                
                 col.operator('shade.smooth')
                 col.operator('apply.transforms')
                 col.operator('apply.normals')
-            
-            box = layout.box()
-            box.label(text = "FBX Exporter")
-            box.operator('export_selected.darrow')
-            split=box.split()
-            split.prop(obj, 'useprefixBool')
-            split.prop(obj, 'usecounterBool')
-
-            #Variables for the bools and enums
-            Var_prefix_bool = bpy.context.object.useprefixBool
-            Var_suffix_bool = bpy.context.object.usecounterBool
-            Var_custom_prefix = bpy.context.object.PrefixOption
-         
-            if Var_suffix_bool == True:
-                box.label(text = "Increase the suffix by (+1)")
-                box.operator('reset.counter')
                 
-            #If use prefix is selected then these options show up
-            if Var_prefix_bool == True: 
-                layout.label(text = "Prefix Options")
                 box = layout.box()
-                box.prop(obj, 'PrefixOption')
-                #If the custom enum is selected these show up
-                if Var_custom_prefix == 'OP2':
-                    box.prop(context.scene, "my_string_prop", text="Prefix")    
+                box.label(text = "FBX Exporter")
+                box.operator('export_selected.darrow')
+                
+                split=box.split()
+                split.prop(obj, 'useprefixBool')
+                split.prop(obj, 'usecounterBool')
+
+                #Variables for the bools and enums
+                Var_prefix_bool = bpy.context.object.useprefixBool
+                Var_suffix_bool = bpy.context.object.usecounterBool
+                Var_custom_prefix = bpy.context.object.PrefixOption
+             
+                if Var_suffix_bool == True:
+                    box.label(text = "Increase the suffix by (+1)")
+                    box.operator('reset.counter')
+                    
+                #If use prefix is selected then these options show up
+                if Var_prefix_bool == True: 
+                    layout.label(text = "Prefix Options")
+                    box = layout.box()
+                    box.prop(obj, 'PrefixOption')
+                    #If the custom enum is selected these show up
+                    if Var_custom_prefix == 'OP2':
+                        box.prop(context.scene, "my_string_prop", text="Prefix")    
 
 
-                  
-class DarrowPriceMenu(bpy.types.Menu):
-    bl_label = "Cryptocurrency Prices"
-    bl_idname = "Darrow.PriceMenu"
-    
-    btc_price = bpy.context.object.BTC_Price
+class DarrowUpdatePrices(bpy.types.Operator):
+    bl_idname = "update.prices"
+    bl_description = "Update prices"
+    bl_label = "Refresh"
     
     def execute(self, context):
+        self.report({'INFO'}, "Prices Refreshed")
         return {'FINISHED'}
-    
-    
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(context.scene,"BTC_Price", text="BTC Price")
- 
+
+#-----------------------------------------------------#  
+#     Show Crypto prices    
+#-----------------------------------------------------#      
         
 class DarrowGetPrices(bpy.types.Operator):
     bl_idname = "get.prices"
-    bl_description = "Gets cyrpto prices from the internet"
-    bl_label = "Display Crypto Prices"
+    bl_description = "Crypto prices from the internet"
+    bl_label = "<---  Crypto Prices  --->"
 
     def execute(self, context):
-        btc_price = bpy.context.object.BTC_Price
-    
-        
-        url = 'https://blakedarrow.com/dev'
-        r = requests.get(url, allow_redirects=True)
-        t = bpy.data.texts.new("Question")
-        t.write(r.text)
-        
-            
-        bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
-        
-        return {'FINISHED'} 
 
-
-
+        if bpy.context.object.showPricesBool == False:
+            bpy.context.object.showPricesBool = True
+        else:
+            bpy.context.object.showPricesBool = False
 
 #-----------------------------------------------------#  
+#     Get bitcoin price from the internet    
+#-----------------------------------------------------# 
+        btc_url = 'https://coinmarketcap.com/currencies/bitcoin'
+        btc_response = urlopen(btc_url)
+        #raw html code from url
+        btc_rawstring = btc_response.read().decode('utf-8')
+        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
+        btc_static = btc_rawstring.find('priceValue___11gHJ')
+        #add a character buffer to get closer to price positions in raw string
+        btc_buffer = 20  
+        #add the buffer to the static identifer to get the actual string start value for btc
+        btc_startprice = btc_static + btc_buffer
+        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
+        btc_endprice = btc_startprice + 10
+        #get the actual price of btc by searching the raw string within these parameters
+        btcprice = (btc_rawstring[btc_startprice:btc_endprice])
+        #set global btc_price variable
+        context.scene.btc_price = btcprice
+#-----------------------------------------------------#  
+#     Get Etherum price from the internet    
+#-----------------------------------------------------#        
+        eth_url = 'https://coinmarketcap.com/currencies/ethereum'
+        eth_response = urlopen(eth_url)
+        #raw html code from url
+        eth_rawstring = eth_response.read().decode('utf-8')
+        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
+        eth_static = eth_rawstring.find('priceValue___11gHJ')
+        #add a character buffer to get closer to price positions in raw string
+        eth_buffer = 20  
+        #add the buffer to the static identifer to get the actual string start value for btc
+        eth_startprice = eth_static + eth_buffer
+        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
+        eth_endprice = eth_startprice + 9
+        #get the actual price of btc by searching the raw string within these parameters
+        ethprice = (eth_rawstring[eth_startprice:eth_endprice])
+        #set global btc_price variable
+        context.scene.eth_price = ethprice
+#-----------------------------------------------------#  
+#     Get Ripple price from the internet    
+#-----------------------------------------------------#        
+        xrp_url = 'https://coinmarketcap.com/currencies/xrp/'
+        xrp_response = urlopen(xrp_url)
+        #raw html code from url
+        xrp_rawstring = xrp_response.read().decode('utf-8')
+        #find these specific characters in the raw html. These are right before the price of bitcoin, so they are static
+        xrp_static = xrp_rawstring.find('priceValue___11gHJ')
+        #add a character buffer to get closer to price positions in raw string
+        xrp_buffer = 20  
+        #add the buffer to the static identifer to get the actual string start value for btc
+        xrp_startprice = xrp_static + xrp_buffer
+        #add another buffer starting from the 'btc_startprice' to make sure we get the full price
+        xrp_endprice = xrp_startprice + 7
+        #get the actual price of btc by searching the raw string within these parameters
+        xrpprice = (xrp_rawstring[xrp_startprice:xrp_endprice])
+        #set global btc_price variable
+        context.scene.xrp_price = xrpprice
+        return {'FINISHED'} 
+    
+#-----------------------------------------------------#  
 #     handles reseting the suffix counter      
-#-----------------------------------------------------#             
+#-----------------------------------------------------# 
+            
 class DarrowCounterReset(bpy.types.Operator):
     bl_idname = "reset.counter"
     bl_description = "Resets FBX suffix counter"
@@ -303,7 +357,6 @@ class DarrowNormals(bpy.types.Operator):
         self.report({'INFO'}, "Normals calculated outside")
         return {'FINISHED'}
     
-
 #-----------------------------------------------------#  
 #     Button to smooth mesh
 #-----------------------------------------------------#    
@@ -340,7 +393,6 @@ class DarrowApply(bpy.types.Operator):
         bpy.ops.object.editmode_toggle()
         self.report({'INFO'}, "Applied transforms, smoothed mesh, and calculated normals")
         return {'FINISHED'}
-
 
 #-----------------------------------------------------#  
 #    Logic for exporting as FBX
@@ -457,6 +509,21 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             self.report({'INFO'}, "Exported with mesh name")
         return {'FINISHED'}
     
+    
+#-----------------------------------------------------#  
+#     Crypto Price Menu      
+#-----------------------------------------------------#                   
+class DarrowPriceMenu(bpy.types.Menu):
+    bl_label = "Cryptocurrency Prices"
+    bl_idname = "Darrow.PriceMenu"
+    
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(context.scene, "btc_price")
+        
+        #bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
+ 
+    
 #-----------------------------------------------------#  
 #	Registration classes
 #-----------------------------------------------------#  
@@ -476,6 +543,7 @@ def register():
     bpy.utils.register_class(DarrowSmooth)
     bpy.utils.register_class(DarrowGetPrices)
     bpy.utils.register_class(DarrowPriceMenu)
+    bpy.utils.register_class(DarrowUpdatePrices)
 
 
     bpy.types.Object.useprefixBool = BoolProperty(
@@ -490,6 +558,12 @@ def register():
     default = False
     )
     
+    bpy.types.Object.showPricesBool = BoolProperty(
+    name = "Show Crypto Prices",
+    description = "Toggle visabilty of crypto prices",
+    default = False
+    )
+    
     bpy.types.Scene.my_string_prop = bpy.props.StringProperty(
     name = "",
     description = "Custom Prefix",
@@ -500,8 +574,19 @@ def register():
     default = 0
     )
     
-    bpy.types.Scene.BTC_Price = bpy.props.IntProperty(
-    default = 0
+    bpy.types.Scene.btc_price = bpy.props.StringProperty(
+    name = "BTC",
+    description = "Current price of Bitcoin",
+    )
+    
+    bpy.types.Scene.eth_price = bpy.props.StringProperty(
+    name = "ETH",
+    description = "Current price of Ethereum"
+    )
+    
+    bpy.types.Scene.xrp_price = bpy.props.StringProperty(
+    name = "XRP",
+    description = "Current price of Ripple",
     )
     
     bpy.types.Object.PrefixOption = EnumProperty(
