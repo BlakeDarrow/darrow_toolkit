@@ -53,8 +53,7 @@ from bpy.types import (Panel,
                        Operator,
                        PropertyGroup,
                        )
-
-
+                       
 #-----------------------------------------------------#  
 #     handles checklist ui     
 #-----------------------------------------------------#  
@@ -66,6 +65,7 @@ class DarrowToolPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_toolPanel"
     
+
     def draw(self, context):
         
         layout = self.layout
@@ -74,29 +74,29 @@ class DarrowToolPanel(bpy.types.Panel):
         obj = context.object
         
         if obj is not None:  
-            if bpy.context.object.hidetoolkitBool == False:
+            #if bpy.context.object.hidetoolkitBool == False:
 
-                col.label(text = "Viewport Display Options")
-                col.operator('set.wireframe')
-                col.operator('reset.wireframe')
+            col.label(text = "Viewport Display Options")
+            col.operator('set.wireframe')
+            col.operator('reset.wireframe')
+            col.separator()
+            col.label(text = "Object Origin")   
+        
+            if context.mode == 'EDIT_MESH':
+                col.operator('set.origin')
+                
+            if context.mode == 'OBJECT':
+                col.operator('move.origin')
                 col.separator()
-                col.label(text = "Object Origin")   
-            
-                if context.mode == 'EDIT_MESH':
-                    col.operator('set.origin')
-                    
-                if context.mode == 'OBJECT':
-                    col.operator('move.origin')
-                    col.separator()
-                    #disabled "Apply All" button for orgin and move
-                    #col.operator('setsnap.origin')
+                #disabled "Apply All" button for orgin and move
+                #col.operator('setsnap.origin')
 
-                    col.label(text = "Export Checklist")
-                    layout.operator('apply_all.darrow')
-                    
-                    col.operator('shade.smooth')
-                    col.operator('apply.transforms')
-                    col.operator('apply.normals')
+                col.label(text = "Export Checklist")
+                layout.operator('apply_all.darrow')
+                
+                col.operator('shade.smooth')
+                col.operator('apply.transforms')
+                col.operator('apply.normals')
                     
 #-----------------------------------------------------#  
 #     handles export panel     
@@ -110,34 +110,38 @@ class DarrowExportPanel(bpy.types.Panel):
     
     def draw(self, context):
         
-        Var_prefix_bool = bpy.context.object.useprefixBool
-        Var_suffix_bool = bpy.context.object.usecounterBool
-        Var_custom_prefix = bpy.context.object.PrefixOption
+        Var_prefix_bool = bpy.context.scene.useprefixBool
+        Var_suffix_bool = bpy.context.scene.usecounterBool
+        Var_custom_prefix = bpy.context.scene.PrefixOption
         
-        layout = self.layout
-        obj = context.object  
-        box = layout.box()
+        obj = context.object
         
-        box.label(text = "FBX Exporter")
-        box.operator('export_selected.darrow')
+        if obj is not None:  
         
-        split=box.split()
-        split.prop(obj, 'useprefixBool')
-        split.prop(obj, 'usecounterBool')
-
-        if Var_suffix_bool == True:
-            box.label(text = "Increase the suffix by (+1)")
-            box.operator('reset.counter')
-            
-        #If use prefix is selected then these options show up
-        if Var_prefix_bool == True: 
-            #layout.label(text = "Prefix Options")
+            layout = self.layout
             box = layout.box()
-            box.prop(obj, 'PrefixOption')
-            #If the custom enum is selected these show up
-            if Var_custom_prefix == 'OP2':
-                box.prop(context.scene, "my_string_prop", text="Prefix") 
+            obj = context.scene
+            
+            box.label(text = "FBX Exporter")
+            box.operator('export_selected.darrow')
+            
+            split=box.split()
+            split.prop(obj, 'useprefixBool')
+            split.prop(obj, 'usecounterBool')
+
+            if Var_suffix_bool == True:
+                box.label(text = "Increase the suffix by (+1)")
+                box.operator('reset.counter')
                 
+            #If use prefix is selected then these options show up
+            if Var_prefix_bool == True: 
+                #layout.label(text = "Prefix Options")
+                box = layout.box()
+                box.prop(obj, 'PrefixOption')
+                #If the custom enum is selected these show up
+                if Var_custom_prefix == 'OP2':
+                    box.prop(context.scene, "my_string_prop", text="Prefix") 
+                        
 #-----------------------------------------------------#  
 #     handles crypto panel     
 #-----------------------------------------------------#            
@@ -151,16 +155,15 @@ class DarrowCryptoPanel(bpy.types.Panel):
     
     def draw(self, context):
 
-        Var_use_alerts = bpy.context.object.usealertsBool
-        Var_hidetools = bpy.types.Object.hidetoolkitBool
+        Var_use_alerts = bpy.context.scene.usealertsBool
+        Var_hidetools = bpy.context.scene.hidetoolkitBool
         
         layout = self.layout
         split=layout.split()
         col=split.column(align = True) 
-        obj = context.object
+        obj = context.scene
     
         #col.operator('get.prices')
-        
         #if bpy.context.object.showPricesBool == True:
 
         box = layout.box()
@@ -174,22 +177,40 @@ class DarrowCryptoPanel(bpy.types.Panel):
         split.operator('update.prices')
         split.operator('reset.prices')
     
-        layout.prop(obj, "alertsinheaderBool")
-        
-        if bpy.context.object.alertsinheaderBool == True:
-            layout.prop(obj, 'headerOptions')
     
-        layout.prop(obj, "usealertsBool")
+        #box = layout.box()
+        #box.prop(obj, 'autoupdateBool')
+        #timer_update_fnc()
+        
+        box = layout.box()
+        box.prop(obj, "alertsinheaderBool")
+    
+        if bpy.context.scene.alertsinheaderBool == True:
+            box.prop(obj, 'headerOptions')
+            
+        box = layout.box()
+        box.prop(obj, "usealertsBool")
         
         if Var_use_alerts == True:
+        
+            split=box.split()
             
-            box = layout.box()
-            box.label(text = "When price is:")
-            box.prop(obj, 'alertOptions')
+            split.label(text = "When prices are:")
             
-            #box.prop(context.scene, "btc_alert")
-            #box.prop(context.scene, "eth_alert")
-            box.prop(context.scene, "xrp_alert")
+            split.prop(obj, 'alertOptions')
+            
+            split=box.split()
+            split.prop(obj, 'btcalertBool')
+            split.prop(obj, 'ethalertBool')
+            split.prop(obj, 'xrpalertBool')
+            
+
+            if bpy.context.scene.btcalertBool == True:
+                box.prop(context.scene, "btc_alert")
+            if bpy.context.scene.ethalertBool == True:   
+                box.prop(context.scene, "eth_alert")
+            if bpy.context.scene.xrpalertBool == True: 
+                box.prop(context.scene, "xrp_alert")
             
 #-----------------------------------------------------#  
 #      Handles prices displayed in header 
@@ -206,9 +227,9 @@ class DarrowHeaderPanel(bpy.types.Operator):
         return {"FINISHED"}
 
 def draw(self, context):
-    if bpy.context.object.alertsinheaderBool == True:
+    if bpy.context.scene.alertsinheaderBool == True:
         
-        Var_header_options = bpy.context.object.headerOptions
+        Var_header_options = bpy.context.scene.headerOptions
         
         layout = self.layout
         box = layout.box()
@@ -275,11 +296,10 @@ class DarrowUpdatePrices(bpy.types.Operator):
     bl_label = "Check Update"
     
     def execute(self, context):
-        
         btc_url = context.scene.btc_url
         eth_url = context.scene.eth_url
         xrp_url = context.scene.xrp_url
-   
+      
 #-----------------------------------------------------#  
 #     Get bitcoin price from the internet    
 #-----------------------------------------------------# 
@@ -340,15 +360,45 @@ class DarrowUpdatePrices(bpy.types.Operator):
         
 #-----------------------------------------------------#  
 #     Alerts
-#-----------------------------------------------------#    
+#-----------------------------------------------------# 
+
+
+        print("",)
+        print("-----STRING VALUES-----",)
+        print("BTC:",btcprice)
+        print("ETH:",ethprice)
+        print("XRP:",xrpprice)
+        print("-----------------------",)
+        print("",)   
 
         # BTC Alerts
         btc_alert = context.scene.btc_alert
-        btc_alert = float(btc_alert)
+        btc_alert = str(btc_alert)
         
-        btc_str_price = xrpprice.replace("$", '')
-        btc_str_price = float(btc_str_price)
+        btc_str_bfprice = btcprice.replace("$", '')
+        btc_str_price = btc_str_bfprice.replace(",", '')
         
+        print("",)
+        print("BITCOIN",)
+        print("-----Price-----",)
+        print(btc_str_price)
+        print("-----Alert-----",)
+        print(btc_alert)
+        print("",)
+        
+        # ETH Alerts
+        eth_alert = context.scene.eth_alert
+        eth_alert = str(eth_alert)
+        
+        eth_str_bfprice = ethprice.replace("$", '')
+        eth_str_price = eth_str_bfprice.replace(",", '')
+
+        print("ETHEREUM",)
+        print("-----Price-----",)
+        print(eth_str_price)
+        print("-----Alert-----",)
+        print(eth_alert)
+        print("",)
         
         # XRP Alerts 
         xrp_alert = context.scene.xrp_alert
@@ -356,39 +406,68 @@ class DarrowUpdatePrices(bpy.types.Operator):
         
         xrp_str_price = xrpprice.replace("$", '')
         xrp_str_price = float(xrp_str_price)
-
+        
+        print("RIPPLE",)
+        print("-----Price-----",)
         print(xrp_str_price)
+        print("-----Alert-----",)
         print(xrp_alert)
+        print("",)
 
-        Var_alert_options = bpy.context.object.alertOptions
+        Var_alert_options = bpy.context.scene.alertOptions
+        Var_xrp = bpy.context.scene.xrpalertBool
+        Var_eth = bpy.context.scene.ethalertBool
+        Var_btc = bpy.context.scene.btcalertBool
     
-        if bpy.context.object.usealertsBool == True:
+        if bpy.context.scene.usealertsBool == True:
 
             if Var_alert_options == 'OP1':
-
-                if (xrp_str_price >= xrp_alert):
-                    print("",)
-                    print("XRP ABOVE")
+               
+                if Var_btc == True:     
+                    if (btc_str_price >= btc_alert):
+                        print("ALERT: BTC ABOVE")
+                        bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
+                        
+                if Var_eth == True:
+                    if (eth_str_price >= eth_alert):
+                        print("ALERT: ETH ABOVE")
+                        bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
+                        
+                if Var_xrp == True:
+                    if (xrp_str_price >= xrp_alert):
+                        print("ALERT: XRP ABOVE")
+                        bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
                     
             if Var_alert_options == 'OP2':
-
-                if (xrp_str_price <= xrp_alert):
-                    print("",)
-                    print("XRP BELOW")
-                    
-
-                  
-        print("",)
-        print("BTC:",btcprice)
-        print("ETH:",ethprice)
-        print("XRP:",xrpprice)
-
-        print("url:",btc_url)
-        print("url:",eth_url)
-        print("url:",xrp_url)
+        
+                if Var_btc == True:
+                    if (btc_str_price <= btc_alert):
+                        print("ALERT: BTC BELOW")
+                        bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
+                if Var_eth == True:
+                    if (eth_str_price <= eth_alert):
+                        print("ALERT: ETH BELOW")
+                        bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
+                if Var_xrp == True:
+                    if (xrp_str_price <= xrp_alert):
+                        print("ALERT: XRP BELOW")
+                        bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
+                        
+        #print("url:",btc_url)
+        #print("url:",eth_url)
+        #print("url:",xrp_url)
     
         self.report({'INFO'}, "Prices Refreshed")
         return {'FINISHED'}
+
+#-----------------------------------------------------#  
+#     Auto Update not working  
+#-----------------------------------------------------#     
+def timer_update_fnc():
+    if bpy.context.scene.autoupdateBool == True:
+         
+        print('TEST')
+        return 60.0 # call every x seconds
 
 #-----------------------------------------------------#  
 #     Show Crypto prices    
@@ -401,10 +480,10 @@ class DarrowGetPrices(bpy.types.Operator):
 
     def execute(self, context):
 
-        if bpy.context.object.showPricesBool == False:
-            bpy.context.object.showPricesBool = True
+        if bpy.context.scene.showPricesBool == False:
+            bpy.context.scene.showPricesBool = True
         else:
-            bpy.context.object.showPricesBool = False
+            bpy.context.scene.showPricesBool = False
         
         return {'FINISHED'}
 
@@ -699,13 +778,19 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
 #     Crypto Price Menu      
 #-----------------------------------------------------#                   
 class DarrowPriceMenu(bpy.types.Menu):
-    bl_label = "Cryptocurrency Prices"
+    bl_label = "Prices have moved!"
     bl_idname = "Darrow.PriceMenu"
     bl_idname = "DARROW_MT_priceMenu"
     
     def draw(self, context):
         layout = self.layout
-        layout.prop(context.scene, "btc_price")
+        
+        if bpy.context.scene.btcalertBool == True:
+            layout.prop(context.scene, "btc_price")
+        if bpy.context.scene.ethalertBool == True:
+            layout.prop(context.scene, "eth_price")
+        if bpy.context.scene.xrpalertBool == True:
+            layout.prop(context.scene, "xrp_price")
         
         #bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
         
@@ -720,37 +805,64 @@ def register():
         
     bpy.types.VIEW3D_HT_header.prepend(draw)
 
-    bpy.types.Object.usealertsBool = BoolProperty(
-    name = "Price alerts",
+    bpy.app.timers .register( timer_update_fnc )
+
+
+    bpy.types.Scene.autoupdateBool = bpy.props.BoolProperty(
+    name = "Auto Update",
+    description = "Auto update crypto prices",
+    default = False
+    )
+    
+    bpy.types.Scene.usealertsBool = bpy.props.BoolProperty(
+    name = "Alert me when",
     description = "Price alerts toggle",
     default = False
     )
     
-    bpy.types.Object.hidetoolkitBool = BoolProperty(
+    bpy.types.Scene.btcalertBool = bpy.props.BoolProperty(
+    name = "BTC",
+    description = "BTC Price alerts",
+    default = False
+    )
+    
+    bpy.types.Scene.ethalertBool = bpy.props.BoolProperty(
+    name = "ETH",
+    description = "ETH Price alerts",
+    default = False
+    )
+    
+    bpy.types.Scene.xrpalertBool = bpy.props.BoolProperty(
+    name = "XRP",
+    description = "XRP Price alerts",
+    default = False
+    )
+    
+    bpy.types.Scene.hidetoolkitBool = bpy.props.BoolProperty(
     name = "Crypto only",
     description = "Hide additional tools",
     default = False
     )
 
-    bpy.types.Object.useprefixBool = BoolProperty(
+    bpy.types.Scene.useprefixBool = bpy.props.BoolProperty(
     name = "Use Prefix",
     description = "Export selected object with custom text as a prefix",
     default = False
     )
 
-    bpy.types.Object.usecounterBool = BoolProperty(
+    bpy.types.Scene.usecounterBool = bpy.props.BoolProperty(
     name = "Use Suffix",
     description = "Count exports and use as suffex",
     default = False
     )
     
-    bpy.types.Object.showPricesBool = BoolProperty(
+    bpy.types.Scene.showPricesBool = bpy.props.BoolProperty(
     name = "Show Crypto Prices",
     description = "Toggle visabilty of crypto prices",
     default = False
     )
     
-    bpy.types.Object.alertsinheaderBool = BoolProperty(
+    bpy.types.Scene.alertsinheaderBool = bpy.props.BoolProperty(
     name = "Show prices in header",
     description = "Toggle visabilty of crypto prices",
     default = True
@@ -808,7 +920,7 @@ def register():
     name = "XRP:",
     )
     
-    bpy.types.Object.PrefixOption = EnumProperty(
+    bpy.types.Scene.PrefixOption = bpy.props.EnumProperty(
     name="",
     description="Apply Data to attribute.",
     items=[('OP1', ".blend", ""),
@@ -816,7 +928,7 @@ def register():
         ]
     )
     
-    bpy.types.Object.alertOptions = EnumProperty(
+    bpy.types.Scene.alertOptions = bpy.props.EnumProperty(
     name="",
     description="If price is:.",
     items=[('OP1', "Greater than:", ""),
@@ -824,7 +936,7 @@ def register():
         ]
     )
     
-    bpy.types.Object.headerOptions = EnumProperty(
+    bpy.types.Scene.headerOptions = bpy.props.EnumProperty(
     name="",
     description="If price is:.",
     default='OP4',
@@ -835,9 +947,9 @@ def register():
         ]
     )
     
-    
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw)
+    bpy.app.timers .unregister( timer_call_fnc )
     
     for cls in classes:
         bpy.utils.unregister_class(cls)
