@@ -677,9 +677,9 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         #get fbx name
         name = bpy.path.clean_name(fbxname.name)
         #Variables for UI, like bools and enums
-        Var_PrefixBool = bpy.context.object.useprefixBool
-        Var_custom_prefix = bpy.context.object.PrefixOption
-        Var_counterBool = bpy.context.object.usecounterBool
+        Var_PrefixBool = bpy.context.scene.useprefixBool
+        Var_custom_prefix = bpy.context.scene.PrefixOption
+        Var_counterBool = bpy.context.scene.usecounterBool
         
         #get the counter and add "1" to it, only when bool is checked
         if Var_counterBool == True:
