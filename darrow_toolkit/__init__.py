@@ -2,10 +2,10 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 10, 2),
+    "version": (0, 10, 3),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Toolkit to speed up common tasks.",
+    "description": "Toolkit to speed up common tasks, and display crytpo prices",
     "category": "Tools",
     "warning": "Still in development, might encounter bugs. Coin info taken from CoinMarketCap.com",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
@@ -13,6 +13,7 @@ bl_info = {
     
 #-----------------------------------------------------#  
 #	Imports
+#       Might be some unnecessary imports
 #-----------------------------------------------------#  
 import bpy
 import bgl
@@ -55,7 +56,6 @@ from bpy.types import (Panel,
 #-----------------------------------------------------#  
 #     handles checklist ui     
 #-----------------------------------------------------#  
-
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "Checklist"
     bl_category = "Darrow Toolkit"
@@ -90,11 +90,12 @@ class DarrowToolPanel(bpy.types.Panel):
 
                 col.label(text = "Export Checklist")
                 layout.operator('apply_all.darrow')
-                
+
+                col.operator('clean.mesh')
                 col.operator('shade.smooth')
                 col.operator('apply.transforms')
                 col.operator('apply.normals')
-                    
+                               
 #-----------------------------------------------------#  
 #     handles export panel     
 #-----------------------------------------------------#                    
@@ -116,9 +117,11 @@ class DarrowExportPanel(bpy.types.Panel):
         if obj is not None:  
         
             layout = self.layout
-            box = layout.box()
-            obj = context.scene
             
+            obj = context.scene
+
+            #layout.label(text = "Export Selected Mesh")
+            box = layout.box()
             box.label(text = "FBX Exporter")
             box.operator('export_selected.darrow')
             
@@ -126,19 +129,20 @@ class DarrowExportPanel(bpy.types.Panel):
             split.prop(obj, 'useprefixBool')
             split.prop(obj, 'usecounterBool')
 
-            if Var_suffix_bool == True:
-                box.label(text = "Increase the suffix by (+1)")
-                box.operator('reset.counter')
-                
             #If use prefix is selected then these options show up
             if Var_prefix_bool == True: 
-                #layout.label(text = "Prefix Options")
                 box = layout.box()
+                box.label(text = "Prefix Options")
                 box.prop(obj, 'PrefixOption')
                 #If the custom enum is selected these show up
                 if Var_custom_prefix == 'OP2':
-                    box.prop(context.scene, "my_string_prop", text="Prefix") 
-                        
+                    box.prop(context.scene, "custom_name_string", text="Prefix") 
+            if Var_suffix_bool == True:
+                box = layout.box()
+                box.label(text = "Suffix Options")
+                box.label(text = "Increase the suffix by (+1)")
+                box.operator('reset.counter')
+                                   
 #-----------------------------------------------------#  
 #     handles crypto panel     
 #-----------------------------------------------------#            
@@ -151,7 +155,6 @@ class DarrowCryptoPanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     
     def draw(self, context):
-
         Var_use_alerts = bpy.context.scene.usealertsBool
         Var_hidetools = bpy.context.scene.hidetoolkitBool
         
@@ -160,25 +163,16 @@ class DarrowCryptoPanel(bpy.types.Panel):
         col=split.column(align = True) 
         obj = context.scene
     
-        #col.operator('get.prices')
-        #if bpy.context.object.showPricesBool == True:
-
         box = layout.box()
         box.prop(context.scene, "btc_price")
         box.prop(context.scene, "eth_price")
         box.prop(context.scene, "xrp_price")
-        
-        #box.label(text = "[ Refreshed every few minutes ]")
+ 
+        box.prop(obj, 'autoupdateBool')
         split=box.split()
-        
         split.operator('update.prices')
         split.operator('reset.prices')
-    
-    
-        #box = layout.box()
-        #box.prop(obj, 'autoupdateBool')
-        #timer_update_fnc()
-        
+
         box = layout.box()
         box.prop(obj, "alertsinheaderBool")
     
@@ -191,17 +185,13 @@ class DarrowCryptoPanel(bpy.types.Panel):
         if Var_use_alerts == True:
         
             split=box.split()
-            
             split.label(text = "When prices are:")
-            
             split.prop(obj, 'alertOptions')
-            
             split=box.split()
             split.prop(obj, 'btcalertBool')
             split.prop(obj, 'ethalertBool')
             split.prop(obj, 'xrpalertBool')
             
-
             if bpy.context.scene.btcalertBool == True:
                 box.prop(context.scene, "btc_alert")
             if bpy.context.scene.ethalertBool == True:   
@@ -212,7 +202,6 @@ class DarrowCryptoPanel(bpy.types.Panel):
 #-----------------------------------------------------#  
 #      Handles prices displayed in header 
 #-----------------------------------------------------#     
-
 class DarrowHeaderPanel(bpy.types.Operator):
     bl_idname = "header.prices"
     bl_label = "BTC PRICE"
@@ -221,11 +210,12 @@ class DarrowHeaderPanel(bpy.types.Operator):
     
     def execute(self, context):
         print("Hello")
+        bpy.ops.auto.update()
         return {"FINISHED"}
 
 def draw(self, context):
     if bpy.context.scene.alertsinheaderBool == True:
-        
+
         Var_header_options = bpy.context.scene.headerOptions
         
         layout = self.layout
@@ -252,9 +242,8 @@ def draw(self, context):
             box.prop(context.scene, "xrp_price")
 
 #-----------------------------------------------------#  
-#     handles reseting/refreshing of the crypto prices     
+#     handles reseting of crypto prices     
 #-----------------------------------------------------#   
-       
 class DarrowResetPrices(bpy.types.Operator):
     bl_idname = "reset.prices"
     bl_description = "Reset/restart all values"
@@ -285,21 +274,19 @@ class DarrowResetPrices(bpy.types.Operator):
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     handles updating of prices     
+#     handles crypto prices from the internet, as well as alert system   
 #-----------------------------------------------------#  
 class DarrowUpdatePrices(bpy.types.Operator):
     bl_idname = "update.prices"
-    bl_description = "Check for updated prices"
+    bl_description = "Check internet for prices"
     bl_label = "Check Update"
     
     def execute(self, context):
         btc_url = context.scene.btc_url
         eth_url = context.scene.eth_url
         xrp_url = context.scene.xrp_url
-      
-#-----------------------------------------------------#  
-#     Get bitcoin price from the internet    
-#-----------------------------------------------------# 
+ 
+        #       Get bitcoin price from the internet    
         btc_url = 'https://coinmarketcap.com/'
         btc_response = urlopen(btc_url)
         #raw html code from url
@@ -316,9 +303,7 @@ class DarrowUpdatePrices(bpy.types.Operator):
         btcprice = (btc_rawstring[btc_startprice:btc_endprice])
         #set global btc_price variable
         context.scene.btc_price = btcprice
-#-----------------------------------------------------#  
-#     Get Etherum price from the internet    
-#-----------------------------------------------------#        
+        #     Get Etherum price from the internet    
         eth_url = 'https://coinmarketcap.com/'
         eth_response = urlopen(eth_url)
         #raw html code from url
@@ -335,9 +320,7 @@ class DarrowUpdatePrices(bpy.types.Operator):
         ethprice = (eth_rawstring[eth_startprice:eth_endprice])
         #set global btc_price variable
         context.scene.eth_price = ethprice
-#-----------------------------------------------------#  
-#     Get Ripple price from the internet    
-#-----------------------------------------------------#        
+        #     Get Ripple price from the internet    
         xrp_url = 'https://coinmarketcap.com/'
         xrp_response = urlopen(xrp_url)
         #raw html code from url
@@ -354,11 +337,10 @@ class DarrowUpdatePrices(bpy.types.Operator):
         xrpprice = (xrp_rawstring[xrp_startprice:xrp_endprice])
         #set global btc_price variable
         context.scene.xrp_price = xrpprice
-        
-#-----------------------------------------------------#  
-#     Alerts
-#-----------------------------------------------------# 
 
+        #-----------------------------------------------------#  
+        #     Alerts
+        #-----------------------------------------------------# 
         print("",)
         print("-----STRING VALUES-----",)
         print("BTC:",btcprice)
@@ -457,35 +439,23 @@ class DarrowUpdatePrices(bpy.types.Operator):
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     Auto Update not working  
+#     Auto Update prices on toolkit interaction 
 #-----------------------------------------------------#     
-#def timer_update_fnc():
-    #if bpy.context.scene.autoupdateBool == True:
-        #print('TEST')
-        #return 60.0 # call every x seconds
-
-#-----------------------------------------------------#  
-#     Show Crypto prices    
-#-----------------------------------------------------#      
-        
-class DarrowGetPrices(bpy.types.Operator):
-    bl_idname = "get.prices"
-    bl_description = "Crypto prices from the internet"
-    bl_label = "Show/Hide"
+class DarrowAutoUpdate(bpy.types.Operator):
+    bl_idname = "auto.update"
+    bl_description = ""
+    bl_label = ""
 
     def execute(self, context):
+        if bpy.context.scene.autoupdateBool == True:
+            bpy.ops.update.prices()
 
-        if bpy.context.scene.showPricesBool == False:
-            bpy.context.scene.showPricesBool = True
-        else:
-            bpy.context.scene.showPricesBool = False
-        
+        self.report({'INFO'}, "Prices Refreshed")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
 #     handles reseting the suffix counter      
 #-----------------------------------------------------# 
-            
 class DarrowCounterReset(bpy.types.Operator):
     bl_idname = "reset.counter"
     bl_description = "Resets FBX suffix counter"
@@ -493,6 +463,9 @@ class DarrowCounterReset(bpy.types.Operator):
 
     def execute(self, context):
         context.scene.counter = 0
+
+        bpy.ops.auto.update()
+
         self.report({'INFO'}, "Set suffix count to 0")
         return {'FINISHED'} 
                     
@@ -513,6 +486,8 @@ class DarrowWireframe(bpy.types.Operator):
         bpy.context.space_data.overlay.show_cursor = False
         bpy.context.space_data.overlay.show_object_origins = False
         bpy.context.space_data.overlay.show_wireframes = True
+
+        bpy.ops.auto.update()
         
         self.report({'INFO'}, "Viewport Wireframe only")
         return {'FINISHED'} 
@@ -534,12 +509,36 @@ class DarrowWireframeReset(bpy.types.Operator):
         bpy.context.space_data.overlay.show_cursor = True
         bpy.context.space_data.overlay.show_object_origins = True
         bpy.context.space_data.overlay.show_wireframes = False
+
+        bpy.ops.auto.update()
     
         self.report({'INFO'}, "Reset viewport")
         return {'FINISHED'}   
 
 #-----------------------------------------------------#  
-#    Button to apply all transformations
+#    Handles mesh clean up
+#-----------------------------------------------------#  
+class DarrowCleanMesh(bpy.types.Operator):
+    bl_idname = "clean.mesh"
+    bl_description = "Delete loose, remove doubles, and dissolve degenerate"
+    bl_label = "Clean Mesh"
+
+    def execute(self, context):
+        if context.mode == 'OBJECT':
+            bpy.ops.object.editmode_toggle()
+
+        bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='VERT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.delete_loose()
+        bpy.ops.mesh.remove_doubles()
+        bpy.ops.mesh.dissolve_degenerate()
+        bpy.ops.object.editmode_toggle()   
+        bpy.ops.auto.update()     
+        self.report({'INFO'}, "Mesh cleaned")
+        return {'FINISHED'}
+
+#-----------------------------------------------------#  
+#    handle apply transforms
 #-----------------------------------------------------#  
 class DarrowTransforms(bpy.types.Operator):
     bl_idname = "apply.transforms"
@@ -548,11 +547,14 @@ class DarrowTransforms(bpy.types.Operator):
 
     def execute(self, context):
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+        bpy.ops.auto.update()
+
         self.report({'INFO'}, "Transforms applied")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#    Set Objects origin
+#    Handles Objects origin
 #-----------------------------------------------------#  
 class DarrowSetOrigin(bpy.types.Operator):
     bl_idname = "set.origin"
@@ -565,11 +567,14 @@ class DarrowSetOrigin(bpy.types.Operator):
         bpy.ops.view3d.snap_cursor_to_selected()
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
+
+        bpy.ops.auto.update()
+
         self.report({'INFO'}, "Selected is now origin")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     Snap object to world center
+#     Handles snapping object to world center
 #-----------------------------------------------------#   
 class DarrowMoveOrigin(bpy.types.Operator):
     bl_idname = "move.origin"
@@ -579,11 +584,14 @@ class DarrowMoveOrigin(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.view3d.snap_cursor_to_center()
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+
+        bpy.ops.auto.update()
+
         self.report({'INFO'}, "Moved selected to object origin")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#    Set Objects origin and move to world origin
+#    Handles setting Objects origin and move to world origin
 #-----------------------------------------------------#   
 class DarrowSetSnapOrigin(bpy.types.Operator):
     bl_idname = "setsnap.origin"
@@ -598,10 +606,13 @@ class DarrowSetSnapOrigin(bpy.types.Operator):
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         bpy.ops.view3d.snap_cursor_to_center()
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+
+        bpy.ops.auto.update()
+
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     Button to apply outside calculated normals
+#     Handles apply outside calculated normals
 #-----------------------------------------------------#    
 class DarrowNormals(bpy.types.Operator):
     bl_idname = "apply.normals"
@@ -613,11 +624,14 @@ class DarrowNormals(bpy.types.Operator):
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.normals_make_consistent(inside=False)
         bpy.ops.object.editmode_toggle()
+
+        bpy.ops.auto.update()
+
         self.report({'INFO'}, "Normals calculated outside")
         return {'FINISHED'}
     
 #-----------------------------------------------------#  
-#     Button to smooth mesh
+#     Handles smooth mesh
 #-----------------------------------------------------#    
 class DarrowSmooth(bpy.types.Operator):
     bl_idname = "shade.smooth"
@@ -627,11 +641,14 @@ class DarrowSmooth(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.object.shade_smooth()
         bpy.context.object.data.use_auto_smooth = True
+
+        bpy.ops.auto.update()
+
         self.report({'INFO'}, "Object smoothed")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     Button to apply all checklisted items
+#     Handles 'apply all' checklisted items
 #-----------------------------------------------------#         
 class DarrowApply(bpy.types.Operator):
     bl_idname = "apply_all.darrow"
@@ -640,21 +657,16 @@ class DarrowApply(bpy.types.Operator):
 
     def execute(self, context):
         
-        bpy.ops.object.shade_smooth()
-        bpy.context.object.data.use_auto_smooth = True
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    
-        if context.mode == 'OBJECT':
-            bpy.ops.object.editmode_toggle()
-            
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.normals_make_consistent(inside=False)
-        bpy.ops.object.editmode_toggle()
-        self.report({'INFO'}, "Applied transforms, smoothed mesh, and calculated normals")
+        bpy.ops.shade.smooth()
+        bpy.ops.apply.transforms()
+        bpy.ops.apply.normals()
+        bpy.ops.clean.mesh()
+
+        self.report({'INFO'}, "Applied all checklist items")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#    Logic for exporting as FBX
+#    Handles logic for exporting as FBX
 #-----------------------------------------------------#  
 class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     bl_idname = "export_selected.darrow"
@@ -671,7 +683,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         #get the name of the active object
         fbxname = bpy.context.view_layer.objects.active
         #get string of custom prefix user input
-        customprefix = bpy.context.scene.my_string_prop
+        customprefix = bpy.context.scene.custom_name_string
         #get blend name
         blendName = bpy.path.basename(bpy.context.blend_data.filepath).replace(".blend", "")
         #get fbx name
@@ -704,6 +716,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     self.report({'INFO'}, "Added Counter to the end of mesh") 
                 else: 
                     saveLoc = self.filepath + "_" + name
+                print(saveLoc)
                 #handles actual export    
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace('.fbx', '')+ ".fbx",
@@ -713,7 +726,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
-                    
                 self.report({'INFO'}, "Exported with .blend prefix and mesh name") 
                 return {'FINISHED'}
             else:
@@ -726,8 +738,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     customname = customprefix + "_" + name + Var_exportnumber
                 else:
                     customname = customprefix + "_" + name
-                
                 saveLoc = self.filepath.replace(blendName,'') + customname  
+                print(saveLoc)
                 #export logic
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace(".fbx", '')+ ".fbx",
@@ -764,13 +776,12 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 use_selection=True, 
                 global_scale=1, 
                 path_mode='AUTO')
-                
+            print(saveLoc)  
             self.report({'INFO'}, "Exported with mesh name")
         return {'FINISHED'}
     
-    
 #-----------------------------------------------------#  
-#     Crypto Price Menu      
+#     Hanldes crypto Price Menu      
 #-----------------------------------------------------#                   
 class DarrowPriceMenu(bpy.types.Menu):
     bl_label = "Prices have moved!"
@@ -792,7 +803,7 @@ class DarrowPriceMenu(bpy.types.Menu):
 #-----------------------------------------------------#  
 #	Registration classes
 #-----------------------------------------------------#  
-classes = (DarrowHeaderPanel, DarrowCounterReset, DarrowApply, DarrowWireframe, DarrowWireframeReset, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowExportFBX, DarrowCryptoPanel, DarrowToolPanel, DarrowExportPanel, DarrowTransforms, DarrowNormals, DarrowSmooth, DarrowGetPrices, DarrowPriceMenu, DarrowUpdatePrices, DarrowResetPrices,)
+classes = (DarrowHeaderPanel, DarrowAutoUpdate, DarrowCounterReset, DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowWireframeReset, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowExportFBX, DarrowCryptoPanel, DarrowToolPanel, DarrowExportPanel, DarrowTransforms, DarrowNormals, DarrowSmooth, DarrowPriceMenu, DarrowUpdatePrices, DarrowResetPrices,)
 
 def register():
     for cls in classes:
@@ -800,12 +811,9 @@ def register():
         
     bpy.types.VIEW3D_HT_header.prepend(draw)
 
-    #bpy.app.timers.register(timer_update_fnc)
-
-
     bpy.types.Scene.autoupdateBool = bpy.props.BoolProperty(
     name = "Auto Update",
-    description = "Auto update crypto prices",
+    description = "Update crypto prices with interaction in toolkit items",
     default = False
     )
     
@@ -851,24 +859,18 @@ def register():
     default = False
     )
     
-    bpy.types.Scene.showPricesBool = bpy.props.BoolProperty(
-    name = "Show Crypto Prices",
-    description = "Toggle visabilty of crypto prices",
-    default = False
-    )
-    
     bpy.types.Scene.alertsinheaderBool = bpy.props.BoolProperty(
     name = "Show prices in header",
-    description = "Toggle visabilty of crypto prices",
+    description = "Toggle visabilty of crypto prices in 3d viewport header",
     default = True
     )
     
-    bpy.types.Scene.my_string_prop = bpy.props.StringProperty(
+    bpy.types.Scene.custom_name_string = bpy.props.StringProperty(
     name = "",
     description = "Custom Prefix",
     default = "Assets"
     )
-    
+
     bpy.types.Scene.counter = bpy.props.IntProperty(
     default = 0
     )
@@ -941,7 +943,6 @@ def register():
            ('OP4', "Only XRP", ""),
         ]
     )
-    
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw)
     #bpy.app.timers.unregister(timer_update_fnc)
