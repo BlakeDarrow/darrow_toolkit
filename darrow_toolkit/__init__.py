@@ -15,6 +15,7 @@ bl_info = {
 #	Imports
 #       Might be some unnecessary imports
 #-----------------------------------------------------#  
+
 import bpy
 import bgl
 import gpu
