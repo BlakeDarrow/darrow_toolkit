@@ -2,7 +2,7 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 10, 4),
+    "version": (0, 10, 5),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Toolkit to speed up common tasks, and display crytpo prices",
@@ -12,7 +12,7 @@ bl_info = {
     }
     
 #-----------------------------------------------------#  
-#	Imports
+#   Imports
 #       Might be some unnecessary imports
 #-----------------------------------------------------#  
 
@@ -53,7 +53,32 @@ from bpy.types import (Panel,
                        Operator,
                        PropertyGroup,
                        )
-                       
+  
+  
+  
+                
+class Darrowproperties(bpy.types.PropertyGroup):
+
+    crypto_module_bool: bpy.props.BoolProperty(
+        name='Crypto module',
+        default=False
+    )
+    
+#-----------------------------------------------------#  
+#     Hanldes preferences in addon menu      
+#     NOT WORKING
+#-----------------------------------------------------#    
+
+class DarrowPreferences(bpy.types.AddonPreferences):
+    bl_idname = __name__
+  
+    def draw(self, context):
+        layout = self.layout
+        row = layout.row()
+        obj = context.object
+        my_tool = context.scene.my_tool
+        row.prop(my_tool, "crypto_module_bool")
+    
 #-----------------------------------------------------#  
 #     handles checklist ui     
 #-----------------------------------------------------#  
@@ -112,16 +137,15 @@ class DarrowExportPanel(bpy.types.Panel):
         Var_prefix_bool = bpy.context.scene.useprefixBool
         Var_suffix_bool = bpy.context.scene.usecounterBool
         Var_custom_prefix = bpy.context.scene.PrefixOption
-        
         obj = context.object
         
         if obj is not None:  
-        
             layout = self.layout
-            
             obj = context.scene
 
             #layout.label(text = "Export Selected Mesh")
+
+            layout.prop(obj, 'isanimBool')
             box = layout.box()
             box.label(text = "FBX Exporter")
             box.operator('export_selected.darrow')
@@ -143,10 +167,11 @@ class DarrowExportPanel(bpy.types.Panel):
                 box.label(text = "Suffix Options")
                 box.label(text = "Increase the suffix by (+1)")
                 box.operator('reset.counter')
-                                   
+        
 #-----------------------------------------------------#  
 #     handles crypto panel     
-#-----------------------------------------------------#            
+#-----------------------------------------------------#  
+
 class DarrowCryptoPanel(bpy.types.Panel):
     bl_label = "Cryptocurrency"
     bl_category = "Darrow Toolkit"
@@ -154,11 +179,14 @@ class DarrowCryptoPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_cryptoPanel"
     bl_options = {'DEFAULT_CLOSED'}
-    
+            
     def draw(self, context):
+        
+
+        crypto_module = bpy.types.BoolProperty
         Var_use_alerts = bpy.context.scene.usealertsBool
         Var_hidetools = bpy.context.scene.hidetoolkitBool
-        
+
         layout = self.layout
         split=layout.split()
         col=split.column(align = True) 
@@ -168,7 +196,7 @@ class DarrowCryptoPanel(bpy.types.Panel):
         box.prop(context.scene, "btc_price")
         box.prop(context.scene, "eth_price")
         box.prop(context.scene, "xrp_price")
- 
+
         box.prop(obj, 'autoupdateBool')
         split=box.split()
         split.operator('update.prices')
@@ -199,7 +227,7 @@ class DarrowCryptoPanel(bpy.types.Panel):
                 box.prop(context.scene, "eth_alert")
             if bpy.context.scene.xrpalertBool == True: 
                 box.prop(context.scene, "xrp_alert")
-            
+
 #-----------------------------------------------------#  
 #      Handles prices displayed in header 
 #-----------------------------------------------------#     
@@ -679,6 +707,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     
     #meat of exporting the FBX
     def execute(self, context):
+
+
         #option to show in exporter
         path_mode = path_reference_mode
         #get the name of the active object
@@ -690,6 +720,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         #get fbx name
         name = bpy.path.clean_name(fbxname.name)
         #Variables for UI, like bools and enums
+        Var_animBool = bpy.context.scene.isanimBool
         Var_PrefixBool = bpy.context.scene.useprefixBool
         Var_custom_prefix = bpy.context.scene.PrefixOption
         Var_counterBool = bpy.context.scene.usecounterBool
@@ -800,17 +831,32 @@ class DarrowPriceMenu(bpy.types.Menu):
             layout.prop(context.scene, "xrp_price")
         
         #bpy.ops.wm.call_menu(name=DarrowPriceMenu.bl_idname)
-        
+
 #-----------------------------------------------------#  
-#	Registration classes
+#   Registration classes
 #-----------------------------------------------------#  
-classes = (DarrowHeaderPanel, DarrowAutoUpdate, DarrowCounterReset, DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowWireframeReset, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowExportFBX, DarrowCryptoPanel, DarrowToolPanel, DarrowExportPanel, DarrowTransforms, DarrowNormals, DarrowSmooth, DarrowPriceMenu, DarrowUpdatePrices, DarrowResetPrices,)
+classes = (Darrowproperties, DarrowCryptoPanel, DarrowPreferences, DarrowHeaderPanel, DarrowAutoUpdate, DarrowCounterReset, DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowWireframeReset, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowExportFBX, DarrowToolPanel, DarrowExportPanel, DarrowTransforms, DarrowNormals, DarrowSmooth, DarrowPriceMenu, DarrowUpdatePrices, DarrowResetPrices,)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+          
         
     bpy.types.VIEW3D_HT_header.prepend(draw)
+    
+    bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=Darrowproperties)
+  
+    crypto_module_bool: bpy.props.BoolProperty(
+    name = "Crypto Module",
+    description = "Toggle crypto module",
+    default = False
+    )
+ 
+    bpy.types.Scene.isanimBool = bpy.props.BoolProperty(
+    name = "Has animation",
+    description = "Exporting with animations",
+    default = False
+    )
 
     bpy.types.Scene.autoupdateBool = bpy.props.BoolProperty(
     name = "Auto Update",
@@ -863,7 +909,7 @@ def register():
     bpy.types.Scene.alertsinheaderBool = bpy.props.BoolProperty(
     name = "Show prices in header",
     description = "Toggle visabilty of crypto prices in 3d viewport header",
-    default = True
+    default = False
     )
     
     bpy.types.Scene.custom_name_string = bpy.props.StringProperty(
@@ -937,7 +983,7 @@ def register():
     bpy.types.Scene.headerOptions = bpy.props.EnumProperty(
     name="",
     description="If price is:.",
-    default='OP4',
+    default='OP2',
     items=[('OP1', "Show All", ""),
            ('OP2', "Only BTC", ""),
            ('OP3', "Only ETH", ""),
@@ -946,7 +992,6 @@ def register():
     )
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw)
-    #bpy.app.timers.unregister(timer_update_fnc)
     
     for cls in classes:
         bpy.utils.unregister_class(cls)
