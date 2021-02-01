@@ -752,6 +752,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 #handles actual export    
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace('.fbx', '')+ ".fbx",
+                    use_mesh_modifiers=True,
                     check_existing=True, 
                     axis_forward= '-Z', 
                     axis_up= 'Y', 
@@ -775,6 +776,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 #export logic
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace(".fbx", '')+ ".fbx",
+                    use_mesh_modifiers=True,
                     check_existing=True, 
                     axis_forward='-Z', 
                     axis_up='Y', 
@@ -802,6 +804,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             else:
                 bpy.ops.export_scene.fbx(
                 filepath = saveLoc.replace('.fbx', '')+  ".fbx",
+                use_mesh_modifiers=True,
                 check_existing=True, 
                 axis_forward='-Z', 
                 axis_up='Y', 
