@@ -54,9 +54,9 @@ from bpy.types import (Panel,
                        PropertyGroup,
                        )
   
-  
-  
-                
+#-----------------------------------------------------#  
+#     global properties      
+#-----------------------------------------------------#          
 class Darrowproperties(bpy.types.PropertyGroup):
 
     crypto_module_bool: bpy.props.BoolProperty(
@@ -68,7 +68,6 @@ class Darrowproperties(bpy.types.PropertyGroup):
 #     Hanldes preferences in addon menu      
 #     NOT WORKING
 #-----------------------------------------------------#    
-
 class DarrowPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
   
@@ -143,9 +142,13 @@ class DarrowExportPanel(bpy.types.Panel):
             layout = self.layout
             obj = context.scene
 
-            #layout.label(text = "Export Selected Mesh")
+            box = layout.box()
+            box.label(text = "Animation Export")
+            split=box.split()
+            split.prop(obj, 'isleafBool')
+            split.prop(obj, 'allactionsBool')
 
-            layout.prop(obj, 'isanimBool')
+            #layout.label(text = "Export Selected Mesh")
             box = layout.box()
             box.label(text = "FBX Exporter")
             box.operator('export_selected.darrow')
@@ -167,11 +170,10 @@ class DarrowExportPanel(bpy.types.Panel):
                 box.label(text = "Suffix Options")
                 box.label(text = "Increase the suffix by (+1)")
                 box.operator('reset.counter')
-        
+         
 #-----------------------------------------------------#  
 #     handles crypto panel     
 #-----------------------------------------------------#  
-
 class DarrowCryptoPanel(bpy.types.Panel):
     bl_label = "Cryptocurrency"
     bl_category = "Darrow Toolkit"
@@ -181,8 +183,7 @@ class DarrowCryptoPanel(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
             
     def draw(self, context):
-        
-
+    
         crypto_module = bpy.types.BoolProperty
         Var_use_alerts = bpy.context.scene.usealertsBool
         Var_hidetools = bpy.context.scene.hidetoolkitBool
@@ -707,8 +708,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     
     #meat of exporting the FBX
     def execute(self, context):
-
-
+        
         #option to show in exporter
         path_mode = path_reference_mode
         #get the name of the active object
@@ -720,10 +720,12 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         #get fbx name
         name = bpy.path.clean_name(fbxname.name)
         #Variables for UI, like bools and enums
-        Var_animBool = bpy.context.scene.isanimBool
+        Var_actionsBool = bpy.context.scene.allactionsBool
+        Var_leafBool = bpy.context.scene.isleafBool
         Var_PrefixBool = bpy.context.scene.useprefixBool
         Var_custom_prefix = bpy.context.scene.PrefixOption
         Var_counterBool = bpy.context.scene.usecounterBool
+
         
         #get the counter and add "1" to it, only when bool is checked
         if Var_counterBool == True:
@@ -753,12 +755,16 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace('.fbx', '')+ ".fbx",
                     use_mesh_modifiers=True,
+                    bake_anim_use_all_actions = Var_actionsBool,
+                    add_leaf_bones = Var_leafBool,
                     check_existing=True, 
                     axis_forward= '-Z', 
                     axis_up= 'Y', 
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
+                print(Var_actionsBool)
+                print(Var_leafBool)
                 self.report({'INFO'}, "Exported with .blend prefix and mesh name") 
                 return {'FINISHED'}
             else:
@@ -777,12 +783,16 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace(".fbx", '')+ ".fbx",
                     use_mesh_modifiers=True,
+                    bake_anim_use_all_actions = Var_actionsBool,
+                    add_leaf_bones = Var_leafBool,
                     check_existing=True, 
                     axis_forward='-Z', 
                     axis_up='Y', 
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
+                print(Var_actionsBool)
+                print(Var_leafBool)
                 self.report({'INFO'}, "Exported with custom prefix and mesh name")
             else:
                 print("No Prefix Defined", context.mode)
@@ -805,6 +815,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 bpy.ops.export_scene.fbx(
                 filepath = saveLoc.replace('.fbx', '')+  ".fbx",
                 use_mesh_modifiers=True,
+                bake_anim_use_all_actions = Var_actionsBool,
+                add_leaf_bones = Var_leafBool,
                 check_existing=True, 
                 axis_forward='-Z', 
                 axis_up='Y', 
@@ -812,6 +824,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 global_scale=1, 
                 path_mode='AUTO')
             print(saveLoc)  
+            print(Var_actionsBool)
+            print(Var_leafBool)
             self.report({'INFO'}, "Exported with mesh name")
         return {'FINISHED'}
     
@@ -844,7 +858,6 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
           
-        
     bpy.types.VIEW3D_HT_header.prepend(draw)
     
     bpy.types.Scene.my_tool = bpy.props.PointerProperty(type=Darrowproperties)
@@ -855,9 +868,15 @@ def register():
     default = False
     )
  
-    bpy.types.Scene.isanimBool = bpy.props.BoolProperty(
-    name = "Has animation",
-    description = "Exporting with animations",
+    bpy.types.Scene.allactionsBool = bpy.props.BoolProperty(
+    name = "All actions",
+    description = "Export each action separated separately",
+    default = False
+    )
+
+    bpy.types.Scene.isleafBool = bpy.props.BoolProperty(
+    name = "Leaf bones",
+    description = "Exporting using leaf bones",
     default = False
     )
 
@@ -993,6 +1012,7 @@ def register():
            ('OP4', "Only XRP", ""),
         ]
     )
+
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw)
     
