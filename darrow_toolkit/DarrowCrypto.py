@@ -6,7 +6,6 @@ from urllib import request
 from urllib.request import urlopen
 from html.parser import HTMLParser
 
-
 #-----------------------------------------------------#  
 #     handles crypto UI panel    
 #-----------------------------------------------------#  
@@ -18,6 +17,11 @@ class DarrowCryptoPanel(bpy.types.Panel):
     bl_idname = "DARROW_PT_cryptoPanel"
     bl_options = {'DEFAULT_CLOSED'}
 
+    @classmethod
+    def poll(cls, context):
+        return bpy.context.scene.crypto_moduleBool == True
+            #print("poll")
+ 
     #def draw_header(self, context):
         # Example property to display a checkbox, can be anything
         #self.layout.prop(context.scene.render, "use_border", text="")
@@ -356,6 +360,7 @@ def register():
     #-----------------------------------------------------#  
     #    Properties for crypto module 
     #-----------------------------------------------------#     
+
     bpy.types.Scene.btc_price = bpy.props.StringProperty(
     name = "BTC",
     description = "Current price of Bitcoin",

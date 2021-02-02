@@ -41,7 +41,12 @@ class DarrowToolPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_toolPanel"
-    
+
+    @classmethod
+    def poll(cls, context):
+        return bpy.context.scene.checklist_moduleBool == True
+            #print("poll")
+
     def draw(self, context):
         
         layout = self.layout
@@ -84,7 +89,12 @@ class DarrowExportPanel(bpy.types.Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_exportPanel"
-    
+
+    @classmethod
+    def poll(cls, context):
+        return bpy.context.scene.export_moduleBool == True
+            #print("poll")
+
     def draw(self, context):
         
         Var_prefix_bool = bpy.context.scene.useprefixBool
