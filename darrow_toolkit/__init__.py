@@ -1,7 +1,6 @@
 #-----------------------------------------------------#  
 #     Plugin information     
 #-----------------------------------------------------#  
-
 bl_info = {
     "name": "DarrowToolkit",
     "author": "Blake Darrow",
@@ -17,7 +16,7 @@ bl_info = {
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-modulesNames = ['DarrowCrypto', 'DarrowTools', 'DarrowSettings']
+modulesNames = ['DarrowCrypto', 'DarrowChecklist', 'DarrowSettings', 'DarrowExport']
 
 #-----------------------------------------------------#  
 #     imports    

@@ -4,8 +4,6 @@
 
 import bpy
 import sys
-from bpy.types import Panel
-import bl_ui
 from bpy.props import StringProperty, IntProperty, BoolProperty
 from bpy.types import Operator, AddonPreferences
 

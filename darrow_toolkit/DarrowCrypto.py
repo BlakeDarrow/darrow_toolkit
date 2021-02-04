@@ -1,3 +1,6 @@
+#-----------------------------------------------------#  
+#   Imports
+#-----------------------------------------------------#  
 import bpy
 from bpy.props import BoolProperty
 from bpy.types import Panel
@@ -348,10 +351,11 @@ class DarrowAutoUpdate(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# classes for registering
+#-----------------------------------------------------#  
+#     Class registration 
+#-----------------------------------------------------#    
 classes = (DarrowCryptoPanel, DarrowPriceMenu, DarrowHeaderPanel, DarrowResetPrices, DarrowUpdatePrices, DarrowAutoUpdate)
 
-# registration
 def register():
     bpy.types.VIEW3D_HT_header.prepend(draw)
     for cls in classes:
@@ -464,7 +468,6 @@ def register():
         ]
     )
 
-# unregister
 def unregister():
     bpy.types.VIEW3D_HT_header.remove(draw)
     for cls in classes:
