@@ -137,21 +137,29 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             Var_exportnumber = "_" + count
         
         #If "Use Prefix" box selected, the 2 prefix options will show up in the enum
-        if not bpy.data.is_saved:
-                raise Exception("Blend file is not saved")
-                print("SAVE YOUR FILE")
+    
+        #if not bpy.data.is_saved:
+                #raise Exception("Blend file is not saved")
+                #print("SAVE YOUR FILE")
         
         if Var_PrefixBool == True:
             print("USED PREFIX")
 
         #if ".blend enum" is selected, the object will export with custom prefix + mesh name
             if Var_custom_prefix == 'OP1':
+                
+                if not bpy.data.is_saved:
+                        raise Exception("Blend file is not saved")
+                        print("SAVE YOUR FILE")
+                
                 #If the "export counter" bool is true then we add the counter varable to the end of the save location          
                 if Var_counterBool == True:
                     saveLoc = self.filepath + "_" + name + Var_exportnumber
+                
                     self.report({'INFO'}, "Added Counter to the end of mesh") 
                 else: 
                     saveLoc = self.filepath + "_" + name
+                    
                 print(saveLoc)
                 #handles actual export    
                 bpy.ops.export_scene.fbx(
@@ -181,7 +189,13 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     customname = customprefix + "_" + name + Var_exportnumber
                 else:
                     customname = customprefix + "_" + name
-                saveLoc = self.filepath.replace(blendName,'') + customname  
+                            
+                if not bpy.data.is_saved:
+                    saveLoc = self.filepath.replace("untitled","") + customname
+                else:
+                    saveLoc = self.filepath.replace(blendName,'') + customname  
+                    
+                
                 print(saveLoc)
                 #export logic
                 bpy.ops.export_scene.fbx(
@@ -209,16 +223,24 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             print("DID NOT USE PREFIX")
             #If the "export counter" bool is true then we add the counter varable to the end of the save location
             if Var_counterBool == True:
-                saveLoc = self.filepath.replace(blendName,"") + name + Var_exportnumber
+                if not bpy.data.is_saved:
+                    #raise Exception("Blend file is not saved")
+                    saveLoc = self.filepath.replace("untitled","") + name + Var_exportnumber
+                else:
+                    saveLoc = self.filepath.replace(blendName,"") + name + Var_exportnumber  
+                
             else:
                 saveLoc = self.filepath.replace(blendName,"") + name
                 
-            if not bpy.data.is_saved:
-                raise Exception("Blend file is not saved")
+                if not bpy.data.is_saved:
+                    #raise Exception("Blend file is not saved")
+                    saveLoc = self.filepath.replace("untitled","") + name
                 print("SAVE YOUR FILE")
                 
-            else:
-                bpy.ops.export_scene.fbx(
+            #else:
+
+            
+            bpy.ops.export_scene.fbx(
                 filepath = saveLoc.replace('.fbx', '')+  ".fbx",
                 use_mesh_modifiers=True,
                 bake_anim_use_all_actions = Var_actionsBool,

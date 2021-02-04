@@ -249,14 +249,10 @@ class DarrowApply(bpy.types.Operator):
     bl_description = "Apply all checklist functions, and prepare mesh for export"
 
     def execute(self, context):
-        if bpy.types.Scene.shadesmoothBool == True:
-            bpy.ops.shade.smooth()
-        if bpy.types.Scene.applytransformsBool == True:
-            bpy.ops.apply.transforms()
-        if bpy.types.Scene.normalsBool == True:
-            bpy.ops.apply.normals()
-        if bpy.types.Scene.cleanmeshBool == True:
-            bpy.ops.clean.mesh()
+        bpy.ops.shade.smooth()
+        bpy.ops.apply.transforms()
+        bpy.ops.apply.normals()
+        bpy.ops.clean.mesh()
 
         self.report({'INFO'}, "Applied all checklist items")
         return {'FINISHED'}
@@ -270,22 +266,6 @@ classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowWireframeReset, 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-
-    bpy.types.Scene.cleanmeshBool = bpy.props.BoolProperty(
-    name = "",
-    description = "Export selected object with custom text as a prefix",
-    default = False
-    )
-    bpy.types.Scene.applytransformsBool = bpy.props.BoolProperty(
-    name = "",
-    description = "Export selected object with custom text as a prefix",
-    default = False
-    )
-    bpy.types.Scene.normalsBool = bpy.props.BoolProperty(
-    name = "",
-    description = "Export selected object with custom text as a prefix",
-    default = False
-    )
         
 def unregister():
     
