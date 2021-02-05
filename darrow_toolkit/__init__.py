@@ -2,21 +2,21 @@
 #     Plugin information     
 #-----------------------------------------------------#  
 bl_info = {
-    "name": "DarrowToolkit",
+    "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 10, 5),
+    "version": (0, 10, 6),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Toolkit to speed up common tasks, and display crytpo prices",
+    "description": "Menu panel to speed up common tasks",
     "category": "Tools",
-    "warning": "Still in development. Coin info taken from CoinMarketCap.com",
+    #"warning": "Still in development. Coin info taken from CoinMarketCap.com",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
     }
     
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-modulesNames = ['DarrowCrypto', 'DarrowChecklist', 'DarrowSettings', 'DarrowExport']
+modulesNames = ['DarrowCrypto', 'DarrowTools', 'DarrowSettings', 'DarrowExport']
 
 #-----------------------------------------------------#  
 #     imports    

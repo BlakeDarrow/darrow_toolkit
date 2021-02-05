@@ -22,7 +22,7 @@ from bpy.types import (Panel,
 #     handles export panel     
 #-----------------------------------------------------#                    
 class DarrowExportPanel(bpy.types.Panel):
-    bl_label = "Exporter"
+    bl_label = "DarrowFBX"
     bl_category = "Darrow Toolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -40,43 +40,46 @@ class DarrowExportPanel(bpy.types.Panel):
         Var_custom_prefix = bpy.context.scene.PrefixOption
         obj = context.object
         
-        if obj is not None:  
-            layout = self.layout
-            obj = context.scene
+        if context.mode == 'OBJECT':
+            if obj is not None:  
+                layout = self.layout
+                obj = context.scene
         
-            layout.prop(obj, 'exportPresets')
+                layout.prop(obj, 'exportPresets')
 
-            #layout.operator('apply_all.darrow')
-            #box = layout.box()
-            #box.label(text = "Animation Export")
-            #split=box.split()
-            #split.prop(obj, 'isleafBool')
-            #split.prop(obj, 'allactionsBool')
-        
-
-            #layout.label(text = "Export Selected Mesh")
-            box = layout.box()
-            box.label(text = "FBX Exporter")
-            box.operator('export_selected.darrow')
+                #layout.operator('apply_all.darrow')
+                #box = layout.box()
+                #box.label(text = "Animation Export")
+                #split=box.split()
+                #split.prop(obj, 'isleafBool')
+                #split.prop(obj, 'allactionsBool')
             
-            split=box.split()
-            split.prop(obj, 'useprefixBool')
-            split.prop(obj, 'usecounterBool')
+                #layout.label(text = "Export Selected Mesh")
+                box = layout.box()
+                box.label(text = "FBX Exporter")
+                box.operator('export_selected.darrow')
+                
+                split=box.split()
+                split.prop(obj, 'useprefixBool')
+                split.prop(obj, 'usecounterBool')
 
-            #If use prefix is selected then these options show up
-            if Var_prefix_bool == True: 
-                box = layout.box()
-                box.label(text = "Prefix Options")
-                box.prop(obj, 'PrefixOption')
-                #If the custom enum is selected these show up
-                if Var_custom_prefix == 'OP2':
-                    box.prop(context.scene, "custom_name_string", text="Prefix") 
-            if Var_suffix_bool == True:
-                box = layout.box()
-                box.label(text = "Suffix Options")
-                box.label(text = "Increase the suffix by (+1)")
-                box.operator('reset.counter')
-          
+                #If use prefix is selected then these options show up
+                if Var_prefix_bool == True: 
+                    box = layout.box()
+                    box.label(text = "Prefix Options")
+                    box.prop(obj, 'PrefixOption')
+                    #If the custom enum is selected these show up
+                    if Var_custom_prefix == 'OP2':
+                        box.prop(context.scene, "custom_name_string", text="Prefix") 
+                if Var_suffix_bool == True:
+                    box = layout.box()
+                    box.label(text = "Suffix Options")
+                    box.label(text = "Increase the suffix by (+1)")
+                    box.operator('reset.counter')
+
+        if context.mode == 'EDIT_MESH':
+            layout = self.layout
+        
 #-----------------------------------------------------#  
 #    Handles logic for exporting as FBX
 #-----------------------------------------------------#  
@@ -90,7 +93,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     
     #meat of exporting the FBX
     def execute(self, context):
-        
         #option to show in exporter
         path_mode = path_reference_mode
         #get the name of the active object
@@ -325,7 +327,7 @@ def register():
 
     bpy.types.Scene.exportPresets = bpy.props.EnumProperty(
     name="Preset",
-    description="Export Presets",
+    description="Animation Export Presets",
     items=[('OP1', "Unity", ""),
            ('OP2', "Unreal", ""),
         ]

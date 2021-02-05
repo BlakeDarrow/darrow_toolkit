@@ -13,11 +13,15 @@ class DarrowAddonPreferences(bpy.types.AddonPreferences):
     def draw(self, context):
         layout = self.layout
         obj = context.scene
+        box = layout.box()
+        
 
-        layout.label(text='Toggle specific panels')
-        layout.prop(obj, 'crypto_moduleBool')
-        layout.prop(obj, 'checklist_moduleBool')
-        layout.prop(obj, 'export_moduleBool')
+        box.label(text='Turn off panels')
+        split=box.split()
+        
+        split.prop(obj, 'crypto_moduleBool')
+        split.prop(obj, 'checklist_moduleBool')
+        split.prop(obj, 'export_moduleBool')
 
 #-----------------------------------------------------#  
 #   Registration classes
@@ -34,14 +38,14 @@ def register():
     )
 
     bpy.types.Scene.checklist_moduleBool = bpy.props.BoolProperty(
-    name = "Checklist Panel",
+    name = "Tool Panel",
     description = "Turn on crypto panel",
     default = True
     )
 
     bpy.types.Scene.export_moduleBool = bpy.props.BoolProperty(
-    name = "Crypto Panel",
-    description = "Turn on crypto panel",
+    name = "Export Panel",
+    description = "Turn on export panel",
     default = True
     )
 

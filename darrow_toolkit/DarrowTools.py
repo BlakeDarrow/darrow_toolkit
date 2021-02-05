@@ -11,7 +11,7 @@ from bpy.types import (Panel,
 #     handles checklist ui     
 #-----------------------------------------------------#  
 class DarrowToolPanel(bpy.types.Panel):
-    bl_label = "Checklist"
+    bl_label = "DarrowTools"
     bl_category = "Darrow Toolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -31,13 +31,11 @@ class DarrowToolPanel(bpy.types.Panel):
         scn = context.scene
         
         if obj is not None:  
-            #if bpy.context.object.hidetoolkitBool == False:
-
-            col.label(text = "Viewport Display Options")
+            col.label(text = "Additional Options")
+            #col.label(text = "Viewport Display")
             col.operator('set.wireframe')
-            col.operator('reset.wireframe')
-            col.separator()
-            col.label(text = "Object Origin")   
+            #col.separator()
+            #col.label(text = "Object Origin")   
         
             if context.mode == 'EDIT_MESH':
                 col.operator('set.origin')
@@ -68,46 +66,38 @@ class DarrowToolPanel(bpy.types.Panel):
 class DarrowWireframe(bpy.types.Operator):
     bl_idname = "set.wireframe"
     bl_description = "Display Wireframe Overlay Only"
-    bl_label = "Isolate Wireframe"
+    bl_label = "Toggle Wireframe"
 
     def execute(self, context):
-        bpy.context.active_object.select_set(False)
-        bpy.context.space_data.show_gizmo = False
-        bpy.context.space_data.overlay.show_floor = False
-        bpy.context.space_data.overlay.show_axis_y = False
-        bpy.context.space_data.overlay.show_axis_x = False
-        bpy.context.space_data.overlay.show_cursor = False
-        bpy.context.space_data.overlay.show_object_origins = False
-        bpy.context.space_data.overlay.show_wireframes = True
+
+        if bpy.context.scene.showWireframeBool == False:
+            bpy.context.scene.showWireframeBool = True
+
+            bpy.context.active_object.select_set(False)
+            bpy.context.space_data.show_gizmo = False
+            bpy.context.space_data.overlay.show_floor = False
+            bpy.context.space_data.overlay.show_axis_y = False
+            bpy.context.space_data.overlay.show_axis_x = False
+            bpy.context.space_data.overlay.show_cursor = False
+            bpy.context.space_data.overlay.show_object_origins = False
+            bpy.context.space_data.overlay.show_wireframes = True
+        else:
+            bpy.context.scene.showWireframeBool = False
+
+            bpy.context.active_object.select_set(False)
+            bpy.context.space_data.show_gizmo = True
+            bpy.context.space_data.overlay.show_floor = True
+            bpy.context.space_data.overlay.show_axis_y = True
+            bpy.context.space_data.overlay.show_axis_x = True
+            bpy.context.space_data.overlay.show_cursor = True
+            bpy.context.space_data.overlay.show_object_origins = True
+            bpy.context.space_data.overlay.show_wireframes = False
 
         bpy.ops.auto.update()
         
         self.report({'INFO'}, "Viewport Wireframe only")
         return {'FINISHED'} 
     
-#-----------------------------------------------------#  
-#     handles reseting the wireframe display  
-#-----------------------------------------------------#   
-class DarrowWireframeReset(bpy.types.Operator):
-    bl_idname = "reset.wireframe"
-    bl_description = "Reset display overlays"
-    bl_label = "Reset Overlay"
-
-    def execute(self, context):
-        bpy.context.active_object.select_set(False)
-        bpy.context.space_data.show_gizmo = True
-        bpy.context.space_data.overlay.show_floor = True
-        bpy.context.space_data.overlay.show_axis_y = True
-        bpy.context.space_data.overlay.show_axis_x = True
-        bpy.context.space_data.overlay.show_cursor = True
-        bpy.context.space_data.overlay.show_object_origins = True
-        bpy.context.space_data.overlay.show_wireframes = False
-
-        bpy.ops.auto.update()
-    
-        self.report({'INFO'}, "Reset viewport")
-        return {'FINISHED'}   
-
 #-----------------------------------------------------#  
 #    Handles mesh clean up
 #-----------------------------------------------------#  
@@ -172,7 +162,7 @@ class DarrowSetOrigin(bpy.types.Operator):
 class DarrowMoveOrigin(bpy.types.Operator):
     bl_idname = "move.origin"
     bl_description = "Move selected to world origin"
-    bl_label = "Align to world"
+    bl_label = "Move to Origin"
 
     def execute(self, context):
         bpy.ops.view3d.snap_cursor_to_center()
@@ -261,12 +251,19 @@ class DarrowApply(bpy.types.Operator):
 #   Registration classes
 #-----------------------------------------------------#  
 
-classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowWireframeReset, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
+classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-        
+
+bpy.types.Scene.showWireframeBool = bpy.props.BoolProperty(
+name = "Toggle Wireframe",
+description = "Toggle visabilty of wireframe mode",
+default = False
+)
+
+
 def unregister():
     
     for cls in classes:

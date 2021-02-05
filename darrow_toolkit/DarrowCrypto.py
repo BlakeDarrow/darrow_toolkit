@@ -13,7 +13,7 @@ from html.parser import HTMLParser
 #     handles crypto UI panel    
 #-----------------------------------------------------#  
 class DarrowCryptoPanel(bpy.types.Panel):
-    bl_label = "Cryptocurrency"
+    bl_label = "DarrowCrypto"
     bl_category = "Darrow Toolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
