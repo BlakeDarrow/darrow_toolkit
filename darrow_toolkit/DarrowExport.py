@@ -4,6 +4,7 @@
 import bpy
 import os
 from pathlib import Path
+import math
 from bpy_extras.io_utils import (ImportHelper,
                                  ExportHelper,
                                  path_reference_mode,
@@ -114,12 +115,20 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
 
         # NOT WORKING
         if Var_presets == 'OP1':
-            Var_axisUp = '-Y'
-            Var_axisForward = 'Z'
+            bpy.context.active_object.rotation_euler[0] = math.radians(-90)
+            print("rotated -90")
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+            print("rotations applied")
+            bpy.context.active_object.rotation_euler[0] = math.radians(90)
+            print("rotated 90")
+            Var_axisUp = 'Y'
+            Var_axisForward = 'X'
+            print("Unity Exporter")
 
         if Var_presets == 'OP2':
             Var_axisUp = 'Z'
             Var_axisForward = '-Y'
+            print("Unreal Exporter")
         # NOT WORKING
 
         Var_nlaBool = False
@@ -130,16 +139,14 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         	Var_actionsBool = False
         	Var_nlaBool = False
         	Var_forcestartkey = False
-
-        	print("OP1")
-        	print("Leafs off, NLA off, allactions off, no forcestartkey")
+        	print("Unity Vars")
 
         if Var_presets == 'OP2':
         	Var_nlaBool = False
         	Var_leafBool = False
         	Var_actionsBool = False
         	Var_forcestartkey = True
-        	print("OP2")
+        	print("Unreal Vars")
 
         #get the counter and add "1" to it, only when bool is checked
         if Var_counterBool == True:
@@ -172,7 +179,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 else: 
                     saveLoc = self.filepath + "_" + name
                     
-                print(saveLoc)
+                #print(saveLoc)
 
                 #handles actual export    
                 bpy.ops.export_scene.fbx(
@@ -189,8 +196,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     global_scale=1, 
                     path_mode='AUTO')
 
-                print(Var_actionsBool)
-                print(Var_leafBool)
+                #print(Var_actionsBool)
+                #print(Var_leafBool)
                 self.report({'INFO'}, "Exported with .blend prefix and mesh name") 
                 return {'FINISHED'}
             else:
@@ -209,8 +216,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 else:
                     saveLoc = self.filepath.replace(blendName,'') + customname  
                     
-                print(saveLoc)
-
+                #print(saveLoc)
                 #export logic
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace(".fbx", '')+ ".fbx",
@@ -225,8 +231,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
-                print(Var_actionsBool)
-                print(Var_leafBool)
+                #print(Var_actionsBool)
+                #print(Var_leafBool)
                 self.report({'INFO'}, "Exported with custom prefix and mesh name")
             else:
                 print("No Prefix Defined", context.mode)
@@ -234,7 +240,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         #If the user does not check "use prefix" the object will be exported as the mesh name only
         #this is the default "export selected" button
         else:
-            print("DID NOT USE PREFIX")
+            #print("DID NOT USE PREFIX")
             #If the "export counter" bool is true then we add the counter varable to the end of the save location
             if Var_counterBool == True:
                 if not bpy.data.is_saved:
@@ -266,10 +272,16 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 use_selection=True, 
                 global_scale=1, 
                 path_mode='AUTO')
-            print(saveLoc)  
-            print(Var_actionsBool)
-            print(Var_leafBool)
+            #print(saveLoc)  
+            #print(Var_actionsBool)
+            #print(Var_leafBool)
             self.report({'INFO'}, "Exported with mesh name")
+
+        if Var_presets == 'OP1':
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+            print("applied rotations")
+            print("OBJ should be nack to normal")
+
         return {'FINISHED'}
    
 #-----------------------------------------------------#  
