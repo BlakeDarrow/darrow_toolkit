@@ -112,6 +112,16 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         Var_presets = bpy.context.scene.exportPresets
         Var_counterBool = bpy.context.scene.usecounterBool
 
+        # NOT WORKING
+        if Var_presets == 'OP1':
+            Var_axisUp = '-Y'
+            Var_axisForward = 'Z'
+
+        if Var_presets == 'OP2':
+            Var_axisUp = 'Z'
+            Var_axisForward = '-Y'
+        # NOT WORKING
+
         Var_nlaBool = False
         Var_forcestartkey = False
 
@@ -120,6 +130,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         	Var_actionsBool = False
         	Var_nlaBool = False
         	Var_forcestartkey = False
+
         	print("OP1")
         	print("Leafs off, NLA off, allactions off, no forcestartkey")
 
@@ -162,6 +173,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     saveLoc = self.filepath + "_" + name
                     
                 print(saveLoc)
+
                 #handles actual export    
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace('.fbx', '')+ ".fbx",
@@ -171,11 +183,12 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     bake_anim_use_nla_strips = Var_nlaBool,
         			bake_anim_force_startend_keying = Var_forcestartkey,
                     check_existing=True, 
-                    axis_forward= '-Y', 
-                    axis_up= 'Z', 
+                    axis_forward= Var_axisForward, 
+                    axis_up= Var_axisUp, 
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
+
                 print(Var_actionsBool)
                 print(Var_leafBool)
                 self.report({'INFO'}, "Exported with .blend prefix and mesh name") 
@@ -196,8 +209,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 else:
                     saveLoc = self.filepath.replace(blendName,'') + customname  
                     
-                
                 print(saveLoc)
+
                 #export logic
                 bpy.ops.export_scene.fbx(
                     filepath = saveLoc.replace(".fbx", '')+ ".fbx",
@@ -207,8 +220,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     bake_anim_use_nla_strips = Var_nlaBool,
         			bake_anim_force_startend_keying = Var_forcestartkey,
                     check_existing=True, 
-                    axis_forward='-Y', 
-                    axis_up='Z', 
+                    axis_forward= Var_axisForward, 
+                    axis_up= Var_axisUp, 
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
@@ -240,7 +253,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 
             #else:
 
-            
             bpy.ops.export_scene.fbx(
                 filepath = saveLoc.replace('.fbx', '')+  ".fbx",
                 use_mesh_modifiers=True,
@@ -249,8 +261,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 bake_anim_use_nla_strips = Var_nlaBool,
         		bake_anim_force_startend_keying = Var_forcestartkey,
                 check_existing=True, 
-                axis_forward='-Z', 
-                axis_up='Y', 
+                axis_forward=Var_axisForward, 
+                axis_up= Var_axisUp, 
                 use_selection=True, 
                 global_scale=1, 
                 path_mode='AUTO')
