@@ -123,11 +123,13 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             print("rotated 90")
             Var_axisUp = 'Y'
             Var_axisForward = 'X'
+            Var_scale = 1
             print("Unity Exporter")
 
         if Var_presets == 'OP2':
             Var_axisUp = 'Z'
             Var_axisForward = '-Y'
+            Var_scale = 1
             print("Unreal Exporter")
         # NOT WORKING
 
@@ -193,7 +195,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     axis_forward= Var_axisForward, 
                     axis_up= Var_axisUp, 
                     use_selection=True, 
-                    global_scale=1, 
+                    global_scale= Var_scale, 
                     path_mode='AUTO')
 
                 #print(Var_actionsBool)
@@ -229,7 +231,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     axis_forward= Var_axisForward, 
                     axis_up= Var_axisUp, 
                     use_selection=True, 
-                    global_scale=1, 
+                    global_scale= Var_scale, 
                     path_mode='AUTO')
                 #print(Var_actionsBool)
                 #print(Var_leafBool)
@@ -270,7 +272,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 axis_forward=Var_axisForward, 
                 axis_up= Var_axisUp, 
                 use_selection=True, 
-                global_scale=1, 
+                global_scale= Var_scale, 
                 path_mode='AUTO')
             #print(saveLoc)  
             #print(Var_actionsBool)
