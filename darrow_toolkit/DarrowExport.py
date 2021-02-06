@@ -123,14 +123,13 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         	print("OP1")
         	print("Leafs off, NLA off, allactions off, no forcestartkey")
 
-        if Var_presets == 'OP1':
+        if Var_presets == 'OP2':
         	Var_nlaBool = False
         	Var_leafBool = False
         	Var_actionsBool = False
         	Var_forcestartkey = True
         	print("OP2")
 
-        
         #get the counter and add "1" to it, only when bool is checked
         if Var_counterBool == True:
             context.scene.counter += 1
@@ -172,8 +171,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     bake_anim_use_nla_strips = Var_nlaBool,
         			bake_anim_force_startend_keying = Var_forcestartkey,
                     check_existing=True, 
-                    axis_forward= '-Z', 
-                    axis_up= 'Y', 
+                    axis_forward= '-Y', 
+                    axis_up= 'Z', 
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
@@ -208,8 +207,8 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     bake_anim_use_nla_strips = Var_nlaBool,
         			bake_anim_force_startend_keying = Var_forcestartkey,
                     check_existing=True, 
-                    axis_forward='-Z', 
-                    axis_up='Y', 
+                    axis_forward='-Y', 
+                    axis_up='Z', 
                     use_selection=True, 
                     global_scale=1, 
                     path_mode='AUTO')
