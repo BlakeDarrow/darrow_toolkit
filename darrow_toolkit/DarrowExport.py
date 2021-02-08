@@ -34,26 +34,34 @@ class DarrowExportPanel(bpy.types.Panel):
         return bpy.context.scene.export_moduleBool == True
             #print("poll")
 
+
+    def draw_header(self, context):
+        layout = self.layout
+        obj = context.scene
+        self.layout.prop(obj, 'advancedBool')
+
     def draw(self, context):
         
         Var_prefix_bool = bpy.context.scene.useprefixBool
         Var_suffix_bool = bpy.context.scene.usecounterBool
         Var_custom_prefix = bpy.context.scene.PrefixOption
+        Var_advanced_bool = bpy.context.scene.advancedBool
+
         obj = context.object
         
         if context.mode == 'OBJECT':
             if obj is not None:  
                 layout = self.layout
                 obj = context.scene
+                
+                if Var_advanced_bool ==True:
+                    box = layout.box()
+                    box.label(text = "Animation Options")
+                    split=box.split()
+                    split.prop(obj, 'isleafBool')
+                    split.prop(obj, 'allactionsBool')
         
                 layout.prop(obj, 'exportPresets')
-
-                #layout.operator('apply_all.darrow')
-                #box = layout.box()
-                #box.label(text = "Animation Export")
-                #split=box.split()
-                #split.prop(obj, 'isleafBool')
-                #split.prop(obj, 'allactionsBool')
             
                 #layout.label(text = "Export Selected Mesh")
                 box = layout.box()
@@ -162,6 +170,10 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         #if not bpy.data.is_saved:
                 #raise Exception("Blend file is not saved")
                 #print("SAVE YOUR FILE")
+                
+        # Hopefull these vars (deteremined in advanced panel) will overwrite all presets 
+        Var_actionsBool = bpy.context.scene.allactionsBool
+        Var_leafBool = bpy.context.scene.isleafBool
         
         if Var_PrefixBool == True:
             print("USED PREFIX")
@@ -283,6 +295,10 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
             print("applied rotations")
             print("OBJ should be nack to normal")
+            
+            
+        print(Var_leafBool)
+        print(Var_actionsBool)
 
         return {'FINISHED'}
    
@@ -307,6 +323,12 @@ classes = (DarrowExportPanel, DarrowExportFBX, DarrowCounterReset)
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+        
+    bpy.types.Scene.advancedBool = bpy.props.BoolProperty(
+    name = "Advanced",
+    description = "Show advanced options",
+    default = False
+    )
 
     bpy.types.Scene.allactionsBool = bpy.props.BoolProperty(
     name = "All actions",

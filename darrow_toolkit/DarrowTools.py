@@ -22,6 +22,11 @@ class DarrowToolPanel(bpy.types.Panel):
         return bpy.context.scene.checklist_moduleBool == True
             #print("poll")
 
+    def draw_header(self, context):
+        layout = self.layout
+        obj = context.scene
+        self.layout.prop(obj, 'compactBool')
+
     def draw(self, context):
         
         layout = self.layout
@@ -30,35 +35,51 @@ class DarrowToolPanel(bpy.types.Panel):
         obj = context.object
         scn = context.scene
         
-        if obj is not None:  
-            col.label(text = "Additional Options")
-            #col.label(text = "Viewport Display")
-            col.operator('set.wireframe')
-            #col.separator()
-            #col.label(text = "Object Origin")   
+        Var_compactBool = bpy.context.scene.compactBool
         
-            if context.mode == 'EDIT_MESH':
-                col.operator('set.origin')
+        if obj is not None:  
+        
+            if Var_compactBool == True:
                 
-            if context.mode == 'OBJECT':
-                col.operator('move.origin')
-                col.separator()
-                #disabled "Apply All" button for orgin and move
-                #col.operator('setsnap.origin')
-
-                col.label(text = "Export Checklist")
-                layout.operator('apply_all.darrow')
-
+                if context.mode == 'OBJECT':
+                    col.operator('set.wireframe', text="Toggle Wireframe")
+                    col.operator('apply_all.darrow', text="Prepare for Export")
                 
-                #col.prop(scn, 'cleanmeshBool')
-                #col.prop(scn, 'applytransformsBool')
-                #col.prop(scn, 'shadesmoothBool')
-                #col.prop(scn, 'normalsBool')
+                if context.mode == 'EDIT_MESH':
+                    col.separator()
+                    col.operator('set.origin')
+                
+                
+            
+            if Var_compactBool == False:
+                col.label(text = "Additional Options")
+                #col.label(text = "Viewport Display")
+                col.operator('set.wireframe')
+                #col.separator()
+                #col.label(text = "Object Origin") 
+                
+                if context.mode == 'EDIT_MESH':
+                    col.operator('set.origin')
+                    
+                if context.mode == 'OBJECT':
+                    col.operator('move.origin')
+                    col.separator()
+                    #disabled "Apply All" button for orgin and move
+                    #col.operator('setsnap.origin')
 
-                col.operator('clean.mesh')
-                col.operator('shade.smooth')
-                col.operator('apply.transforms')
-                col.operator('apply.normals')
+                    col.label(text = "Export Checklist")
+                    layout.operator('apply_all.darrow')
+
+                    
+                    #col.prop(scn, 'cleanmeshBool')
+                    #col.prop(scn, 'applytransformsBool')
+                    #col.prop(scn, 'shadesmoothBool')
+                    #col.prop(scn, 'normalsBool')
+
+                    col.operator('clean.mesh')
+                    col.operator('shade.smooth')
+                    col.operator('apply.transforms')
+                    col.operator('apply.normals')
                                                 
 #-----------------------------------------------------#  
 #     handles wireframe display   
@@ -179,7 +200,7 @@ class DarrowMoveOrigin(bpy.types.Operator):
 class DarrowSetSnapOrigin(bpy.types.Operator):
     bl_idname = "setsnap.origin"
     bl_description = "Set selected as object origin and move to world origin"
-    bl_label = "Apply All"
+    bl_label = "Move to origin"
 
     def execute(self, context):
         if context.mode == 'OBJECT':
@@ -239,10 +260,13 @@ class DarrowApply(bpy.types.Operator):
     bl_description = "Apply all checklist functions, and prepare mesh for export"
 
     def execute(self, context):
+        
         bpy.ops.shade.smooth()
+        bpy.ops.move.origin()
         bpy.ops.apply.transforms()
         bpy.ops.apply.normals()
         bpy.ops.clean.mesh()
+        bpy.ops.move.origin()
 
         self.report({'INFO'}, "Applied all checklist items")
         return {'FINISHED'}
@@ -256,6 +280,12 @@ classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, Darro
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+
+bpy.types.Scene.compactBool = bpy.props.BoolProperty(
+name = "Compact",
+description = "Toggle Compact Mode",
+default = False
+)
 
 bpy.types.Scene.showWireframeBool = bpy.props.BoolProperty(
 name = "Toggle Wireframe",

@@ -4,7 +4,7 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 10, 7),
+    "version": (0, 11, 1),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Menu panel to speed up common tasks",
