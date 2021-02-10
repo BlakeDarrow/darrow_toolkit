@@ -4,10 +4,10 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 11, 2),
+    "version": (0, 11, 3),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Menu panel to speed up common tasks",
+    "description": "Toolkit for efficient FBX exporting",
     "category": "Tools",
     #"warning": "Still in development. Coin info taken from CoinMarketCap.com",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",

@@ -54,8 +54,6 @@ class DarrowToolPanel(bpy.types.Panel):
         obj = context.active_object
         if obj is not None: 
             obj = context.active_object
-            test = bpy.context.selected_objects
-            objs = bpy.context.object.data
             objs = bpy.context.object.data
             for obj in bpy.context.selected_objects:
                 if obj.type =='CURVE' : return False
@@ -302,7 +300,7 @@ class DarrowSmooth(bpy.types.Operator):
 class DarrowApply(bpy.types.Operator):
     bl_idname = "apply_all.darrow"
     bl_label = "Apply All"
-    bl_description = "Apply all checklist functions, and prepare mesh for export"
+    bl_description = "Apply all checklist functions, and prepare mesh for export(not be compatable with animations)"
 
     def execute(self, context):
 

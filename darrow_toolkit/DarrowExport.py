@@ -64,16 +64,18 @@ class DarrowExportPanel(bpy.types.Panel):
             if obj is not None:  
                 layout = self.layout
                 obj = context.scene
-                
+                layout.prop(obj, 'exportPresets')
+
                 if Var_advanced_bool ==True:
                     box = layout.box()
                     box.label(text = "Animation Options")
                     split=box.split()
                     split.prop(obj, 'isleafBool')
                     split.prop(obj, 'allactionsBool')
+                    box = layout.box()
+                    split=box.split()
+                    split.prop(obj, 'collectionBool')
         
-                layout.prop(obj, 'exportPresets')
-            
                 #layout.label(text = "Export Selected Mesh")
                 box = layout.box()
                 box.label(text = "FBX Exporter")
@@ -101,8 +103,26 @@ class DarrowExportPanel(bpy.types.Panel):
             layout = self.layout
         
 #-----------------------------------------------------#  
-#    Handles logic for exporting as FBX
+#    Find selected parent collection
 #-----------------------------------------------------#  
+def get_parent_collection_names(collection, parent_names):
+  for parent_collection in bpy.data.collections:
+    if collection.name in parent_collection.children.keys():
+      parent_names.append(parent_collection.name)
+      get_parent_collection_names(parent_collection, parent_names)
+      return
+
+def turn_collection_hierarchy_into_path(obj):
+    parent_collection = obj.users_collection[0]
+    parent_names      = []
+    parent_names.append(parent_collection.name)
+    get_parent_collection_names(parent_collection, parent_names)
+    parent_names.reverse()
+    return '\\'.join(parent_names)
+
+#-----------------------------------------------------#  
+#    Handles logic for exporting as FBX
+#-----------------------------------------------------#
 class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     bl_idname = "export_selected.darrow"
     bl_label = 'Export Selected'
@@ -111,18 +131,35 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     filename_ext    = ".fbx";
 
     def execute(self, context):
+        C = bpy.context
+        fbxname = bpy.context.view_layer.objects.active
+        #get fbx name
+        name = bpy.path.clean_name(fbxname.name)
+        Var_collectionBool = bpy.context.scene.collectionBool
+        
+        # Find amount of objects in selection
+        amt = len(C.selected_objects)
+        one = 1
+
+        obj = bpy.context.view_layer.objects.active
+        parent_coll = turn_collection_hierarchy_into_path(obj)
+
+        if (Var_collectionBool == True) and (amt > one):
+            fbxname = parent_coll
+            name = bpy.path.clean_name(fbxname)
+            print(name)
+            print("MORE THAN 1 MESH, SELECTED. USING COLLECTION NAME TO EXPORT")
+
         bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
         #option to show in exporter
         path_mode = path_reference_mode
         #get the name of the active object
-        fbxname = bpy.context.view_layer.objects.active
-
         #get string of custom prefix user input
         customprefix = bpy.context.scene.custom_name_string
+
         #get blend name
         blendName = bpy.path.basename(bpy.context.blend_data.filepath).replace(".blend", "")
-        #get fbx name
-        name = bpy.path.clean_name(fbxname.name)
+    
         #Variables for UI, like bools and enums
 
         Var_actionsBool = bpy.context.scene.allactionsBool
@@ -131,8 +168,9 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         Var_custom_prefix = bpy.context.scene.PrefixOption
         Var_presets = bpy.context.scene.exportPresets
         Var_counterBool = bpy.context.scene.usecounterBool
-
+        
         if Var_presets == 'OP1':
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
             bpy.context.active_object.rotation_euler[0] = math.radians(-90)
             print("rotated -90")
             bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
@@ -149,7 +187,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             Var_axisForward = '-Y'
             Var_scale = 1
             print("Unreal Exporter")
-        # NOT WORKING
 
         Var_nlaBool = False
         Var_forcestartkey = False
@@ -176,11 +213,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             Var_exportnumber = "_" + count
         
         #If "Use Prefix" box selected, the 2 prefix options will show up in the enum
-    
-        #if not bpy.data.is_saved:
-                #raise Exception("Blend file is not saved")
-                #print("SAVE YOUR FILE")
-                
         # Hopefull these vars (deteremined in advanced panel) will overwrite all presets 
         Var_actionsBool = bpy.context.scene.allactionsBool
         Var_leafBool = bpy.context.scene.isleafBool
@@ -288,7 +320,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 bake_anim_use_all_actions = Var_actionsBool,
                 add_leaf_bones = Var_leafBool,
                 bake_anim_use_nla_strips = Var_nlaBool,
-        		bake_anim_force_startend_keying = Var_forcestartkey,
+                bake_anim_force_startend_keying = Var_forcestartkey,
                 check_existing=True, 
                 axis_forward=Var_axisForward, 
                 axis_up= Var_axisUp, 
@@ -303,10 +335,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
             print("applied rotations")
             print("OBJ should be nack to normal")
-            
-            
-        print(Var_leafBool)
-        print(Var_actionsBool)
 
         return {'FINISHED'}
    
@@ -336,6 +364,12 @@ def register():
     name = "Advanced",
     description = "Show advanced options",
     default = False
+    )
+
+    bpy.types.Scene.collectionBool = bpy.props.BoolProperty(
+    name = "Multi-object smart naming",
+    description = "Use the parent collection name when exporting more than 1 object",
+    default = True
     )
 
     bpy.types.Scene.allactionsBool = bpy.props.BoolProperty(
