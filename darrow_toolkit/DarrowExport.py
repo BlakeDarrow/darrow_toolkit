@@ -31,6 +31,17 @@ class DarrowExportPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+
+        for obj in bpy.context.selected_objects:
+            if obj.type =='CURVE' : return False
+            if obj.type =='CAMERA' : return False
+            if obj.type =='LIGHT' : return False
+            if obj.type =='FONT' : return False
+            if obj.type =='LATTICE' : return False
+            if obj.type =='LIGHT_PROBE' : return False
+            if obj.type =='IMAGE' : return False
+            if obj.type =='SPEAKER' : return False
+
         return bpy.context.scene.export_moduleBool == True
             #print("poll")
 
@@ -98,14 +109,14 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     bl_description = "Export selected as FBX using mesh name"
     bl_options = {'PRESET'}
     filename_ext    = ".fbx";
-    check_extension = True
-    
-    #meat of exporting the FBX
+
     def execute(self, context):
+        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
         #option to show in exporter
         path_mode = path_reference_mode
         #get the name of the active object
         fbxname = bpy.context.view_layer.objects.active
+
         #get string of custom prefix user input
         customprefix = bpy.context.scene.custom_name_string
         #get blend name
@@ -121,7 +132,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         Var_presets = bpy.context.scene.exportPresets
         Var_counterBool = bpy.context.scene.usecounterBool
 
-        # NOT WORKING
         if Var_presets == 'OP1':
             bpy.context.active_object.rotation_euler[0] = math.radians(-90)
             print("rotated -90")
@@ -270,11 +280,10 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     #raise Exception("Blend file is not saved")
                     saveLoc = self.filepath.replace("untitled","") + name
                 print("SAVE YOUR FILE")
-                
-            #else:
 
             bpy.ops.export_scene.fbx(
                 filepath = saveLoc.replace('.fbx', '')+  ".fbx",
+                use_selection=True, 
                 use_mesh_modifiers=True,
                 bake_anim_use_all_actions = Var_actionsBool,
                 add_leaf_bones = Var_leafBool,
@@ -283,7 +292,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 check_existing=True, 
                 axis_forward=Var_axisForward, 
                 axis_up= Var_axisUp, 
-                use_selection=True, 
                 global_scale= Var_scale, 
                 path_mode='AUTO')
             #print(saveLoc)  

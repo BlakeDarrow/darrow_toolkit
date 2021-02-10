@@ -10,6 +10,38 @@ from bpy.types import (Panel,
 #-----------------------------------------------------#  
 #     handles checklist ui     
 #-----------------------------------------------------#  
+
+class DarrowNullPanel(bpy.types.Panel):
+    bl_label = ""
+    bl_category = "Darrow Toolkit"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_idname = "DARROW_PT_nullPanel"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+
+        for obj in bpy.context.selected_objects:
+            if obj is not None: 
+                #if obj.type =='MESH' : return True
+                if obj.type =='EMPTY' : return True
+                if obj.type =='CAMERA' : return True
+                if obj.type =='LIGHT' : return True
+                if obj.type =='CURVE' : return True
+                if obj.type =='FONT' : return True
+                if obj.type =='LATTICE' : return True
+                if obj.type =='LIGHT_PROBE' : return True
+                if obj.type =='IMAGE' : return True
+                if obj.type =='SPEAKER' : return True
+
+    def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        box.separator()
+        box.label(text = "Please select only mesh(s)")
+        box.separator()
+ 
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "DarrowTools"
     bl_category = "Darrow Toolkit"
@@ -19,6 +51,22 @@ class DarrowToolPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        obj = context.active_object
+        if obj is not None: 
+            obj = context.active_object
+            test = bpy.context.selected_objects
+            objs = bpy.context.object.data
+            objs = bpy.context.object.data
+            for obj in bpy.context.selected_objects:
+                if obj.type =='CURVE' : return False
+                if obj.type =='FONT' : return False
+                if obj.type =='CAMERA' : return False
+                if obj.type =='LIGHT' : return False
+                if obj.type =='LATTICE' : return False
+                if obj.type =='LIGHT_PROBE' : return False
+                if obj.type =='IMAGE' : return False
+                if obj.type =='SPEAKER' : return False
+
         return bpy.context.scene.checklist_moduleBool == True
             #print("poll")
 
@@ -34,13 +82,12 @@ class DarrowToolPanel(bpy.types.Panel):
         col=split.column(align = True) 
         obj = context.object
         scn = context.scene
-        
         Var_compactBool = bpy.context.scene.compactBool
-        
+    
         if obj is not None:  
-        
+
             if Var_compactBool == True:
-                
+                 
                 if context.mode == 'OBJECT':
                     col.operator('set.wireframe', text="Toggle Wireframe")
                     col.operator('apply_all.darrow', text="Prepare for Export")
@@ -49,8 +96,6 @@ class DarrowToolPanel(bpy.types.Panel):
                     col.separator()
                     col.operator('set.origin')
                 
-                
-            
             if Var_compactBool == False:
                 col.label(text = "Additional Options")
                 #col.label(text = "Viewport Display")
@@ -150,8 +195,8 @@ class DarrowTransforms(bpy.types.Operator):
     bl_label = "Apply Transforms"
 
     def execute(self, context):
+        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
         bpy.ops.auto.update()
 
         self.report({'INFO'}, "Transforms applied")
@@ -260,7 +305,7 @@ class DarrowApply(bpy.types.Operator):
     bl_description = "Apply all checklist functions, and prepare mesh for export"
 
     def execute(self, context):
-        
+
         bpy.ops.shade.smooth()
         bpy.ops.move.origin()
         bpy.ops.apply.transforms()
@@ -275,24 +320,23 @@ class DarrowApply(bpy.types.Operator):
 #   Registration classes
 #-----------------------------------------------------#  
 
-classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
+classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowNullPanel, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-bpy.types.Scene.compactBool = bpy.props.BoolProperty(
-name = "Compact",
-description = "Toggle Compact Mode",
-default = False
-)
+    bpy.types.Scene.compactBool = bpy.props.BoolProperty(
+    name = "Compact",
+    description = "Toggle Compact Mode",
+    default = False
+    )
 
-bpy.types.Scene.showWireframeBool = bpy.props.BoolProperty(
-name = "Toggle Wireframe",
-description = "Toggle visabilty of wireframe mode",
-default = False
-)
-
+    bpy.types.Scene.showWireframeBool = bpy.props.BoolProperty(
+    name = "Toggle Wireframe",
+    description = "Toggle visabilty of wireframe mode",
+    default = False
+    )
 
 def unregister():
     
