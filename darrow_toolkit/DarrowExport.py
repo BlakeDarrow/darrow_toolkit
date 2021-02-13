@@ -170,16 +170,23 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
         Var_counterBool = bpy.context.scene.usecounterBool
         
         if Var_presets == 'OP1':
-            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-            bpy.context.active_object.rotation_euler[0] = math.radians(-90)
-            print("rotated -90")
-            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-            print("rotations applied")
-            bpy.context.active_object.rotation_euler[0] = math.radians(90)
-            print("rotated 90")
-            Var_axisUp = 'Y'
-            Var_axisForward = 'X'
-            Var_scale = 1
+            if (amt > one):
+                Var_axisUp = 'Y'
+                Var_axisForward = 'X'
+                Var_scale = 1
+                print("more than one, not rotating")
+            else:
+                bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+                bpy.context.active_object.rotation_euler[0] = math.radians(-90)
+                print("rotated -90")
+                bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+                print("rotations applied")
+                bpy.context.active_object.rotation_euler[0] = math.radians(90)
+                print("rotated 90")
+                Var_axisUp = 'Y'
+                Var_axisForward = 'X'
+                Var_scale = 1
+                print("rotating")
             print("Unity Exporter")
 
         if Var_presets == 'OP2':
@@ -235,7 +242,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 else: 
                     saveLoc = self.filepath + "_" + name
                     
-                #print(saveLoc)
+                print(saveLoc)
 
                 #handles actual export    
                 bpy.ops.export_scene.fbx(
@@ -332,9 +339,12 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             self.report({'INFO'}, "Exported with mesh name")
 
         if Var_presets == 'OP1':
-            bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-            print("applied rotations")
-            print("OBJ should be nack to normal")
+            if (amt > one):
+                print("more than one, not rotating")
+            else:
+                bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+                print("applied rotations")
+                print("OBJ should be nack to normal")
 
         return {'FINISHED'}
    
