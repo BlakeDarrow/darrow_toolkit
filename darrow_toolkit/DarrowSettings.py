@@ -7,6 +7,8 @@ import sys
 from bpy.props import StringProperty, IntProperty, BoolProperty
 from bpy.types import Operator, AddonPreferences
 from . import addon_updater_ops
+
+@addon_updater_ops.make_annotations
 class DarrowAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
 
