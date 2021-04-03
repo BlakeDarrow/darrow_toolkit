@@ -359,8 +359,6 @@ class DarrowCounterReset(bpy.types.Operator):
     def execute(self, context):
         context.scene.counter = 0
 
-        bpy.ops.auto.update()
-
         self.report({'INFO'}, "Set suffix count to 0")
         return {'FINISHED'} 
   

@@ -29,7 +29,7 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 11, 4),
+    "version": (0, 11, 5),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Toolkit for efficient FBX exporting",
@@ -41,12 +41,13 @@ bl_info = {
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-modulesNames = ['DarrowCrypto', 'DarrowTools', 'DarrowSettings', 'DarrowExport']
+modulesNames = ['DarrowTools', 'DarrowSettings', 'DarrowExport']
 
 #-----------------------------------------------------#  
 #     imports    
 #-----------------------------------------------------#  
 import bpy
+from . import addon_updater_ops
 import sys
 import importlib
 
@@ -67,6 +68,7 @@ for currentModuleFullName in modulesFullNames.values():
         globals()[currentModuleFullName] = importlib.import_module(currentModuleFullName)
         setattr(globals()[currentModuleFullName], 'modulesNames', modulesFullNames)
 
+
 #-----------------------------------------------------#  
 #     register the modules    
 #-----------------------------------------------------# 
@@ -76,6 +78,7 @@ classes = ()
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+    addon_updater_ops.register(bl_info)
 
     for currentModuleName in modulesFullNames.values():
         if currentModuleName in sys.modules:

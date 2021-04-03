@@ -76,15 +76,15 @@ class DarrowToolPanel(bpy.types.Panel):
     def draw(self, context):
         
         layout = self.layout
-        split=layout.split()
+        split=layout.box()
         col=split.column(align = True) 
         obj = context.object
         scn = context.scene
         Var_compactBool = bpy.context.scene.compactBool
     
         if obj is not None:  
-
-            if Var_compactBool == True:
+            
+            if Var_compactBool == False:
                  
                 if context.mode == 'OBJECT':
                     col.operator('set.wireframe', text="Toggle Wireframe")
@@ -94,31 +94,15 @@ class DarrowToolPanel(bpy.types.Panel):
                     col.separator()
                     col.operator('set.origin')
                 
-            if Var_compactBool == False:
-                col.label(text = "Additional Options")
-                #col.label(text = "Viewport Display")
+            if Var_compactBool == True:
+                col.label(text = "Q.O.L Operators")
                 col.operator('set.wireframe')
-                #col.separator()
-                #col.label(text = "Object Origin") 
-                
+
                 if context.mode == 'EDIT_MESH':
                     col.operator('set.origin')
-                    
                 if context.mode == 'OBJECT':
                     col.operator('move.origin')
                     col.separator()
-                    #disabled "Apply All" button for orgin and move
-                    #col.operator('setsnap.origin')
-
-                    col.label(text = "Export Checklist")
-                    layout.operator('apply_all.darrow')
-
-                    
-                    #col.prop(scn, 'cleanmeshBool')
-                    #col.prop(scn, 'applytransformsBool')
-                    #col.prop(scn, 'shadesmoothBool')
-                    #col.prop(scn, 'normalsBool')
-
                     col.operator('clean.mesh')
                     col.operator('shade.smooth')
                     col.operator('apply.transforms')
@@ -157,8 +141,6 @@ class DarrowWireframe(bpy.types.Operator):
             bpy.context.space_data.overlay.show_object_origins = True
             bpy.context.space_data.overlay.show_wireframes = False
 
-        bpy.ops.auto.update()
-        
         self.report({'INFO'}, "Viewport Wireframe only")
         return {'FINISHED'} 
     
@@ -180,7 +162,7 @@ class DarrowCleanMesh(bpy.types.Operator):
         bpy.ops.mesh.remove_doubles()
         bpy.ops.mesh.dissolve_degenerate()
         bpy.ops.object.editmode_toggle()   
-        bpy.ops.auto.update()     
+    
         self.report({'INFO'}, "Mesh cleaned")
         return {'FINISHED'}
 
@@ -195,7 +177,6 @@ class DarrowTransforms(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        bpy.ops.auto.update()
 
         self.report({'INFO'}, "Transforms applied")
         return {'FINISHED'}
@@ -215,7 +196,6 @@ class DarrowSetOrigin(bpy.types.Operator):
         bpy.ops.object.editmode_toggle()
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
 
-        bpy.ops.auto.update()
 
         self.report({'INFO'}, "Selected is now origin")
         return {'FINISHED'}
@@ -231,8 +211,6 @@ class DarrowMoveOrigin(bpy.types.Operator):
     def execute(self, context):
         bpy.ops.view3d.snap_cursor_to_center()
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
-
-        bpy.ops.auto.update()
 
         self.report({'INFO'}, "Moved selected to object origin")
         return {'FINISHED'}
@@ -254,8 +232,6 @@ class DarrowSetSnapOrigin(bpy.types.Operator):
         bpy.ops.view3d.snap_cursor_to_center()
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
 
-        bpy.ops.auto.update()
-
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
@@ -272,8 +248,6 @@ class DarrowNormals(bpy.types.Operator):
         bpy.ops.mesh.normals_make_consistent(inside=False)
         bpy.ops.object.editmode_toggle()
 
-        bpy.ops.auto.update()
-
         self.report({'INFO'}, "Normals calculated outside")
         return {'FINISHED'}
     
@@ -289,8 +263,6 @@ class DarrowSmooth(bpy.types.Operator):
         bpy.ops.object.shade_smooth()
         bpy.context.object.data.use_auto_smooth = True
 
-        bpy.ops.auto.update()
-
         self.report({'INFO'}, "Object smoothed")
         return {'FINISHED'}
 
@@ -303,13 +275,20 @@ class DarrowApply(bpy.types.Operator):
     bl_description = "Apply all checklist functions, and prepare mesh for export(not be compatable with animations)"
 
     def execute(self, context):
-
-        bpy.ops.shade.smooth()
-        bpy.ops.move.origin()
-        bpy.ops.apply.transforms()
-        bpy.ops.apply.normals()
-        bpy.ops.clean.mesh()
-        bpy.ops.move.origin()
+        context = bpy.context
+        if (len(context.selected_objects)> 1):
+            print ("more than 1 selected")
+            bpy.ops.shade.smooth()
+            bpy.ops.clean.mesh()
+            bpy.ops.apply.normals()
+        else:
+            print("only 1")  
+            bpy.ops.shade.smooth()
+            bpy.ops.move.origin()
+            bpy.ops.apply.transforms()
+            bpy.ops.apply.normals()
+            bpy.ops.clean.mesh()
+            bpy.ops.move.origin()
 
         self.report({'INFO'}, "Applied all checklist items")
         return {'FINISHED'}
@@ -325,9 +304,9 @@ def register():
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.compactBool = bpy.props.BoolProperty(
-    name = "Compact",
-    description = "Toggle Compact Mode",
-    default = False
+    name = "Advanced",
+    description = "Toggle Advanced Mode",
+    default = True
     )
 
     bpy.types.Scene.showWireframeBool = bpy.props.BoolProperty(
