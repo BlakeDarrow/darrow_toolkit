@@ -1,3 +1,3 @@
 # DarrowToolkit
 
-# For more information check out [blakedarrow.com](http://blakedarrow.com) and [Gumroad](https://gumroad.com/l/darrowtools)
+# For more information check out [my Gumroad listing](https://gumroad.com/l/darrowtools)
