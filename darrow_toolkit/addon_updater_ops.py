@@ -57,7 +57,7 @@ except Exception as e:
 # Must declare this before classes are loaded
 # otherwise the bl_idname's will not match and have errors.
 # Must be all lowercase and no spaces
-updater.addon = "darrowtools_updater"
+updater.addon = "darrowtools"
 
 # -----------------------------------------------------------------------------
 # Blender version utils
@@ -1343,10 +1343,11 @@ def register(bl_info):
 	# Addon subfolder path
 	# "sample/path/to/addon"
 	# default is "" or None, meaning root
-	updater.subfolder_path = ""
+	updater.subfolder_path = "darrow_toolkit"
 
 	# used to check/compare versions
 	updater.current_version = bl_info["version"]
+	updater.version_min_update = (0,12,1)
 
 	# Optional, to hard-set update frequency, use this here - however,
 	# this demo has this set via UI properties.
