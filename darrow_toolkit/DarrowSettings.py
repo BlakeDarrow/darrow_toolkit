@@ -20,6 +20,7 @@ class DarrowAddonPreferences(bpy.types.AddonPreferences):
         split=box.split()
         split.prop(obj, 'checklist_moduleBool')
         split.prop(obj, 'export_moduleBool')
+        split.prop(obj, 'library_moduleBool')
 
         addon_updater_ops.update_settings_ui(self,context)
 
@@ -72,6 +73,12 @@ def register():
     bpy.types.Scene.export_moduleBool = bpy.props.BoolProperty(
     name = "Export Panel",
     description = "Turn on export panel",
+    default = True
+    )
+
+    bpy.types.Scene.library_moduleBool = bpy.props.BoolProperty(
+    name = "Library Panel",
+    description = "Turn on library panel",
     default = True
     )
 

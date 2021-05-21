@@ -34,14 +34,13 @@ bl_info = {
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Toolkit for efficient FBX exporting",
     "category": "Tools",
-    #"warning": "Still in development. Coin info taken from CoinMarketCap.com",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
     }
     
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-modulesNames = ['DarrowTools', 'DarrowSettings', 'DarrowExport']
+modulesNames = ['DarrowDev', 'DarrowTools', 'DarrowSettings', 'DarrowExport']
 
 #-----------------------------------------------------#  
 #     imports    

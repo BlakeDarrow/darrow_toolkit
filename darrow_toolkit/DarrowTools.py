@@ -76,13 +76,14 @@ class DarrowToolPanel(bpy.types.Panel):
     def draw(self, context):
         
         layout = self.layout
-        split=layout.box()
-        col=split.column(align = True) 
+
         obj = context.object
         scn = context.scene
         Var_compactBool = bpy.context.scene.compactBool
     
         if obj is not None:  
+            split=layout.box()
+            col=split.column(align = True) 
             
             if Var_compactBool == False:
                  
