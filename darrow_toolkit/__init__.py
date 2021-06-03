@@ -29,10 +29,10 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 12, 5),
+    "version": (0, 14, 1),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Toolkit for efficient FBX exporting",
+    "description": "Toolkit for efficient FBX exporting, Q.O.L, and external mesh libraries",
     "category": "Tools",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
     }
@@ -40,7 +40,7 @@ bl_info = {
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-modulesNames = ['DarrowLibrary', 'DarrowTools', 'DarrowSettings', 'DarrowExport']
+modulesNames = ['DarrowTools', 'DarrowSettings', 'DarrowExport','DarrowLibrary', 'addon_updater_ops', 'addon_updater']
 
 #-----------------------------------------------------#  
 #     imports    
@@ -66,7 +66,6 @@ for currentModuleFullName in modulesFullNames.values():
     else:
         globals()[currentModuleFullName] = importlib.import_module(currentModuleFullName)
         setattr(globals()[currentModuleFullName], 'modulesNames', modulesFullNames)
-
 
 #-----------------------------------------------------#  
 #     register the modules    

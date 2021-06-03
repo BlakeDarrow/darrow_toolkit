@@ -49,7 +49,7 @@ class DarrowExportPanel(bpy.types.Panel):
     def draw_header(self, context):
         layout = self.layout
         obj = context.scene
-        self.layout.prop(obj, 'advancedBool')
+        self.layout.prop(obj, 'advancedBool', icon="SETTINGS",text="")
 
     def draw(self, context):
         
@@ -79,7 +79,7 @@ class DarrowExportPanel(bpy.types.Panel):
                 #layout.label(text = "Export Selected Mesh")
                 box = layout.box()
                 box.label(text = "FBX Exporter")
-                box.operator('export_selected.darrow')
+                box.operator('export_selected.darrow', icon="EXPORT")
                 
                 split=box.split()
                 split.prop(obj, 'useprefixBool')
