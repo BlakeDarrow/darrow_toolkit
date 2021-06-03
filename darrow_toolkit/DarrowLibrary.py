@@ -37,9 +37,10 @@ class meshFolder(bpy.types.Operator):
         try :
             addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
             meshpath = addonpath + "\mesh\\" #add folder with the custom mesh inside
+            os.makedirs(os.path.dirname(meshpath), exist_ok=True)
             path = meshpath
         except ValueError:
-            self.report({'INFO'}, "No project folder yet")
+            self.report({'INFO'}, "No folder yet")
             return {'FINISHED'}
         
         bpy.ops.wm.path_open(filepath=path)
@@ -62,9 +63,10 @@ class renderFolder(bpy.types.Operator):
         try :
             addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
             meshpath = addonpath + "\\thumbnails\\" #add folder with the custom mesh inside
+            os.makedirs(os.path.dirname(meshpath), exist_ok=True)
             path = meshpath
         except ValueError:
-            self.report({'INFO'}, "No project folder yet")
+            self.report({'INFO'}, "No folder yet")
             return {'FINISHED'}
         
         bpy.ops.wm.path_open(filepath=path)
@@ -231,30 +233,6 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
             box=box.column(align = True)
             box.label(text = "Please select a mesh")
 
-class DarrowSubPanel(DarrowDevPanel, bpy.types.Panel):
-    bl_parent_id = "DARROW_PT_devPanel1"
-    bl_label = "Current Geometry List"
-    bl_idname = "DARROW_PT_devPanel2"
-    bl_options = {"DEFAULT_CLOSED"}
-
-    @classmethod
-    def poll(cls, context):
-
-        return bpy.context.scene.meshAdvancedBool == True
-            #print("poll")
-
-    def draw(self, context):
-        layout = self.layout
-        f = []
-        addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
-        meshpath = addonpath + "\mesh\\" #add folder with the custom mesh inside
-        for (dirpath, dirnames, filenames) in walk(meshpath):
-            f.extend(filenames)
-            break
-
-        for m in f:
-            layout.label(text=m.replace('.fbx',''))
-
 #-----------------------------------------------------#  
 #    Handles Thumbnail Creation
 #-----------------------------------------------------#  
@@ -326,6 +304,7 @@ class DarrowThumbnail(bpy.types.Operator):
             bpy.context.space_data.overlay.show_object_origins = True
             #bpy.context.space_data.overlay.show_wireframes = False
 
+        fbxname.select_set(state=True)
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
@@ -386,6 +365,7 @@ class OBJECT_OT_mesh_library(bpy.types.Operator):
   
         addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
         meshpath = addonpath + "\mesh\\" #add folder with the custom mesh inside
+        
         tagpath = meshpath + currentTag
 
         finalpath = tagpath + name #add name of custom mesh to the end
@@ -412,12 +392,14 @@ class DarrowAddMeshtoLibrary(Operator):
     filename_ext    = ".fbx";
     
     def execute(self, context):
-
+        
         tagString = bpy.context.scene.tag_name #if this is null, no folder is created
         fbxname = bpy.context.view_layer.objects.active
         exportmeshName = bpy.path.clean_name(fbxname.name)
         addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
+        tryPath = addonpath + "\mesh\\"
         meshpath = addonpath + "\mesh\\" #add folder with the custom mesh inside
+        os.makedirs(os.path.dirname(meshpath), exist_ok=True)
         finalpath = meshpath + tagString + "\\"+ exportmeshName + ".fbx" #add name of selected mesh to the end
 
         os.chdir(meshpath)
@@ -439,7 +421,7 @@ class DarrowAddMeshtoLibrary(Operator):
 #-----------------------------------------------------#  
 
 preview_collections = {}
-classes = (DarrowMainPanel,DarrowSubPanel,DarrowThumbnail, DarrowAddMeshtoLibrary,OBJECT_OT_mesh_library,meshFolder,renderFolder)
+classes = (DarrowMainPanel,DarrowThumbnail, DarrowAddMeshtoLibrary,OBJECT_OT_mesh_library,meshFolder,renderFolder)
 
 def register():
 #-----------------------------------------------------#  
