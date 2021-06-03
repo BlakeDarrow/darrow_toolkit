@@ -313,6 +313,7 @@ class DarrowThumbnail(bpy.types.Operator):
 
 def mesh_items(scene, context):
     f = []
+
     currentTag = bpy.context.scene.tag_enum_prop
     addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
     meshpath = addonpath + "\mesh\\" + currentTag #add folder with the custom mesh inside
@@ -340,9 +341,11 @@ def tag_items(scene,context):
         if os.path.isdir(os.path.join(os.path.abspath("."), name)): # check whether the current object is a folder or not
             tags.append(name)
     tagData = { i : tags[i] for i in range(0, len(tags) ) }
+
     folders = []
     for name, name in tagData.items():
         folders.append((name, name, str(name)))  # name is used as identifier
+    print(folders)
     return folders
 
 #-----------------------------------------------------#  
@@ -366,7 +369,7 @@ class OBJECT_OT_mesh_library(bpy.types.Operator):
         addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
         meshpath = addonpath + "\mesh\\" #add folder with the custom mesh inside
         
-        tagpath = meshpath + currentTag
+        tagpath = meshpath + currentTag + "\\"
 
         finalpath = tagpath + name #add name of custom mesh to the end
         print(finalpath)
@@ -450,7 +453,9 @@ def register():
     )
 
     bpy.types.Scene.tag_name = bpy.props.StringProperty(
-       
+        name = "",
+        description = "Master",
+        default = "Master"
     )
 
     bpy.types.Scene.cursorLocBool = bpy.props.BoolProperty(
