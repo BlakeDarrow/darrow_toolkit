@@ -19,27 +19,27 @@ class DarrowAddonPreferences(bpy.types.AddonPreferences):
         box.label(text='Turn off panels')
         split=box.split()
         split.prop(obj, 'checklist_moduleBool')
+        split.prop(obj, 'rgb_moduleBool')
         split.prop(obj, 'export_moduleBool')
         split.prop(obj, 'library_moduleBool')
-        split.prop(obj, 'rgb_moduleBool')
 
         addon_updater_ops.update_settings_ui(self,context)
 
     auto_check_update = bpy.props.BoolProperty(
         name = "Auto-check for Update",
         description = "If enabled, auto-check for updates using an interval",
-        default = False,
+        default = True,
     )
     updater_intrval_months = bpy.props.IntProperty(
         name='Months',
         description = "Number of months between checking for updates",
-        default=0,
+        default=3,
         min=0
     )
     updater_intrval_days = bpy.props.IntProperty(
         name='Days',
         description = "Number of days between checking for updates",
-        default=7,
+        default=0,
         min=0,
     )
     updater_intrval_hours = bpy.props.IntProperty(
