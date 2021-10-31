@@ -29,7 +29,7 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 14, 3),
+    "version": (0, 14, 4),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Toolkit for efficient FBX exporting, Q.O.L, and external mesh libraries",
@@ -40,7 +40,7 @@ bl_info = {
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-modulesNames = ['DarrowTools', 'DarrowSettings', 'DarrowExport','DarrowLibrary']
+modulesNames = ['DarrowTools','DarrowRGB', 'DarrowSettings', 'DarrowExport','DarrowLibrary',]
 
 #-----------------------------------------------------#  
 #     imports    

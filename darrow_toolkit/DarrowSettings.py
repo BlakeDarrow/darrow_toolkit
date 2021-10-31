@@ -21,6 +21,7 @@ class DarrowAddonPreferences(bpy.types.AddonPreferences):
         split.prop(obj, 'checklist_moduleBool')
         split.prop(obj, 'export_moduleBool')
         split.prop(obj, 'library_moduleBool')
+        split.prop(obj, 'rgb_moduleBool')
 
         addon_updater_ops.update_settings_ui(self,context)
 
@@ -79,6 +80,12 @@ def register():
     bpy.types.Scene.library_moduleBool = bpy.props.BoolProperty(
     name = "Library Panel",
     description = "Turn on library panel",
+    default = True
+    )
+    
+    bpy.types.Scene.rgb_moduleBool = bpy.props.BoolProperty(
+    name = "Vertex Panel",
+    description = "Turn on vertex panel",
     default = True
     )
 
