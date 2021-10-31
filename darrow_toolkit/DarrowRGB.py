@@ -116,7 +116,8 @@ class DarrowSetColor(bpy.types.Operator):
     bl_label = "Set Color"
 
     def execute(self, context):
-        if context.mode == 'OBJECT':
+        current_mode = bpy.context.object.mode
+        if current_mode == 'OBJECT':
             view_layer = bpy.context.view_layer
             obj_active = view_layer.objects.active
             selection = bpy.context.selected_objects
@@ -130,6 +131,13 @@ class DarrowSetColor(bpy.types.Operator):
                 bpy.ops.paint.vertex_color_set()
                 bpy.ops.object.mode_set(mode='OBJECT')
                 obj.select_set(True)
+    
+        if current_mode == 'EDIT':
+            self.report({'INFO'}, "EDIT MODE")
+            bpy.ops.paint.vertex_paint_toggle()
+            bpy.context.object.data.use_paint_mask = True
+            bpy.ops.paint.vertex_color_set()
+            bpy.ops.object.mode_set(mode='EDIT')
 
         return {'FINISHED'} 
     
