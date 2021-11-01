@@ -17,7 +17,6 @@ class DarrowVertexPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_rgbPanel"
 
-
     @classmethod
     def poll(cls, context):
         Var_displayBool = bpy.context.scene.vertexDisplayBool
@@ -133,11 +132,16 @@ class DarrowSetColor(bpy.types.Operator):
                 obj.select_set(True)
     
         if current_mode == 'EDIT':
-            self.report({'INFO'}, "EDIT MODE")
-            bpy.ops.paint.vertex_paint_toggle()
-            bpy.context.object.data.use_paint_mask = True
-            bpy.ops.paint.vertex_color_set()
-            bpy.ops.object.mode_set(mode='EDIT')
+            view_layer = bpy.context.view_layer
+            obj_active = view_layer.objects.active
+            selection = bpy.context.selected_objects
+
+            for obj in selection:
+                view_layer.objects.active = obj
+                bpy.ops.paint.vertex_paint_toggle()
+                bpy.context.object.data.use_paint_mask = True
+                bpy.ops.paint.vertex_color_set()
+                bpy.ops.object.mode_set(mode='EDIT')
 
         return {'FINISHED'} 
     
