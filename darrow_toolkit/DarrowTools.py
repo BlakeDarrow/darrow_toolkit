@@ -1,47 +1,24 @@
+#
+#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#
+#    See the LICENSE file for your full rights.
+#
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------#  
+
 import bpy
+from .addon_updater_ops import get_user_preferences
+from .DarrowSettings import DarrowAddonPreferences
 from bpy.types import (Panel,
                        Menu,
                        Operator,
                        )
-  
-#-----------------------------------------------------#  
-#     handles checklist ui     
-#-----------------------------------------------------#  
-
-class DarrowNullPanel(bpy.types.Panel):
-    bl_label = ""
-    bl_category = "Darrow Toolkit"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_idname = "DARROW_PT_nullPanel"
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.active_object
-
-        for obj in bpy.context.selected_objects:
-            if obj is not None: 
-                #if obj.type =='MESH' : return True
-                if obj.type =='EMPTY' : return True
-                if obj.type =='CAMERA' : return True
-                if obj.type =='LIGHT' : return True
-                if obj.type =='CURVE' : return True
-                if obj.type =='FONT' : return True
-                if obj.type =='LATTICE' : return True
-                if obj.type =='LIGHT_PROBE' : return True
-                if obj.type =='IMAGE' : return True
-                if obj.type =='SPEAKER' : return True
-
-    def draw(self, context):
-        layout = self.layout
-        box = layout.box()
-        box.separator()
-        box.label(text = "Please select only mesh(s)")
-        box.separator()
  
+#-----------------------------------------------------#         
+#     handles ui panel 
+#-----------------------------------------------------#  
+
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "DarrowTools"
     bl_category = "Darrow Toolkit"
@@ -52,9 +29,12 @@ class DarrowToolPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
+        settings = get_user_preferences(context)
+
         if obj is not None: 
             obj = context.active_object
             objs = bpy.context.object.data
+
             for obj in bpy.context.selected_objects:
                 if obj.type =='CURVE' : return False
                 if obj.type =='FONT' : return False
@@ -65,7 +45,7 @@ class DarrowToolPanel(bpy.types.Panel):
                 if obj.type =='IMAGE' : return False
                 if obj.type =='SPEAKER' : return False
 
-        return bpy.context.scene.checklist_moduleBool == True
+        return settings.checklist_moduleBool == True
             #print("poll")
 
     def draw_header(self, context):
@@ -75,7 +55,7 @@ class DarrowToolPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        obj = context.object
+        obj = context.active_object
         scn = context.scene
         Var_compactBool = bpy.context.scene.compactBool
     
@@ -139,7 +119,7 @@ class DarrowWireframe(bpy.types.Operator):
         return {'FINISHED'} 
     
 #-----------------------------------------------------#  
-#    Handles mesh clean up
+#    handles mesh clean up
 #-----------------------------------------------------#  
 class DarrowCleanMesh(bpy.types.Operator):
     bl_idname = "clean.mesh"
@@ -147,17 +127,20 @@ class DarrowCleanMesh(bpy.types.Operator):
     bl_label = "Clean Mesh"
 
     def execute(self, context):
-        if context.mode == 'OBJECT':
-            bpy.ops.object.editmode_toggle()
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            if context.mode == 'OBJECT':
+                bpy.ops.object.editmode_toggle()
 
-        bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='VERT')
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.delete_loose()
-        bpy.ops.mesh.remove_doubles()
-        bpy.ops.mesh.dissolve_degenerate()
-        bpy.ops.object.editmode_toggle()   
-    
-        self.report({'INFO'}, "Mesh cleaned")
+            bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='VERT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.delete_loose()
+            bpy.ops.mesh.remove_doubles()
+            bpy.ops.mesh.dissolve_degenerate()
+            bpy.ops.object.editmode_toggle()   
+            self.report({'INFO'}, "Mesh cleaned")
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
@@ -169,14 +152,17 @@ class DarrowTransforms(bpy.types.Operator):
     bl_label = "Apply Transforms"
 
     def execute(self, context):
-        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
-        self.report({'INFO'}, "Transforms applied")
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
+            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+            self.report({'INFO'}, "Transforms applied")
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#    Handles Objects origin
+#    handles Objects origin
 #-----------------------------------------------------#  
 class DarrowSetOrigin(bpy.types.Operator):
     bl_idname = "set.origin"
@@ -184,16 +170,20 @@ class DarrowSetOrigin(bpy.types.Operator):
     bl_label = "Set Origin"
 
     def execute(self, context):
-        if context.mode == 'OBJECT':
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            if context.mode == 'OBJECT':
+                bpy.ops.object.editmode_toggle()
+            bpy.ops.view3d.snap_cursor_to_selected()
             bpy.ops.object.editmode_toggle()
-        bpy.ops.view3d.snap_cursor_to_selected()
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
-        self.report({'INFO'}, "Selected is now origin")
+            bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
+            self.report({'INFO'}, "Selected is now origin")
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     Handles snapping object to world center
+#     handles snapping object to world center
 #-----------------------------------------------------#   
 class DarrowMoveOrigin(bpy.types.Operator):
     bl_idname = "move.origin"
@@ -201,14 +191,17 @@ class DarrowMoveOrigin(bpy.types.Operator):
     bl_label = "Move to Origin"
 
     def execute(self, context):
-        bpy.ops.view3d.snap_cursor_to_center()
-        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
-
-        self.report({'INFO'}, "Moved selected to object origin")
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            bpy.ops.view3d.snap_cursor_to_center()
+            bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+            self.report({'INFO'}, "Moved selected to object origin")
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#    Handles setting Objects origin and move to world origin
+#    handles setting Objects origin and move to world origin
 #-----------------------------------------------------#   
 class DarrowSetSnapOrigin(bpy.types.Operator):
     bl_idname = "setsnap.origin"
@@ -216,17 +209,21 @@ class DarrowSetSnapOrigin(bpy.types.Operator):
     bl_label = "Move to origin"
 
     def execute(self, context):
-        if context.mode == 'OBJECT':
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            if context.mode == 'OBJECT':
+                bpy.ops.object.editmode_toggle()
+            bpy.ops.view3d.snap_cursor_to_selected()
             bpy.ops.object.editmode_toggle()
-        bpy.ops.view3d.snap_cursor_to_selected()
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
-        bpy.ops.view3d.snap_cursor_to_center()
-        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+            bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
+            bpy.ops.view3d.snap_cursor_to_center()
+            bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     Handles apply outside calculated normals
+#     handles apply outside calculated normals
 #-----------------------------------------------------#    
 class DarrowNormals(bpy.types.Operator):
     bl_idname = "apply.normals"
@@ -234,15 +231,19 @@ class DarrowNormals(bpy.types.Operator):
     bl_label = "Calculate Normals"
 
     def execute(self, context):
-        bpy.ops.object.editmode_toggle()
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.mesh.normals_make_consistent(inside=False)
-        bpy.ops.object.editmode_toggle()
-        self.report({'INFO'}, "Normals calculated outside")
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            bpy.ops.object.editmode_toggle()
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.normals_make_consistent(inside=False)
+            bpy.ops.object.editmode_toggle()
+            self.report({'INFO'}, "Normals calculated outside")
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
     
 #-----------------------------------------------------#  
-#     Handles smooth mesh
+#     handles smooth mesh
 #-----------------------------------------------------#    
 class DarrowSmooth(bpy.types.Operator):
     bl_idname = "shade.smooth"
@@ -250,13 +251,17 @@ class DarrowSmooth(bpy.types.Operator):
     bl_description = "Smooth the selected object"
 
     def execute(self, context):
-        bpy.ops.object.shade_smooth()
-        bpy.context.object.data.use_auto_smooth = True
-        self.report({'INFO'}, "Object smoothed")
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            bpy.ops.object.shade_smooth()
+            bpy.context.object.data.use_auto_smooth = True
+            self.report({'INFO'}, "Object smoothed")
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     Handles 'apply all' checklisted items
+#     handles 'apply all' checklisted items
 #-----------------------------------------------------#         
 class DarrowApply(bpy.types.Operator):
     bl_idname = "apply_all.darrow"
@@ -264,29 +269,32 @@ class DarrowApply(bpy.types.Operator):
     bl_description = "Apply all checklist functions, and prepare mesh for export(not be compatable with animations)"
 
     def execute(self, context):
-        context = bpy.context
-        if (len(context.selected_objects)> 1):
-            print ("more than 1 selected")
-            bpy.ops.shade.smooth()
-            bpy.ops.clean.mesh()
-            bpy.ops.apply.normals()
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            context = bpy.context
+            if (len(context.selected_objects)> 1):
+                print ("more than 1 selected")
+                bpy.ops.shade.smooth()
+                bpy.ops.clean.mesh()
+                bpy.ops.apply.normals()
+            else:
+                print("only 1")  
+                bpy.ops.shade.smooth()
+                bpy.ops.move.origin()
+                bpy.ops.apply.transforms()
+                bpy.ops.apply.normals()
+                bpy.ops.clean.mesh()
+                bpy.ops.move.origin()
+            self.report({'INFO'}, "Applied all checklist items")
         else:
-            print("only 1")  
-            bpy.ops.shade.smooth()
-            bpy.ops.move.origin()
-            bpy.ops.apply.transforms()
-            bpy.ops.apply.normals()
-            bpy.ops.clean.mesh()
-            bpy.ops.move.origin()
-
-        self.report({'INFO'}, "Applied all checklist items")
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
  
 #-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#  
 
-classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowNullPanel, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
+classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
 
 def register():
     for cls in classes:

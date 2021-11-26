@@ -1,10 +1,17 @@
+#
+#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#
+#    See the LICENSE file for your full rights.
+#
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------#  
+
 import bpy
 import os
 from pathlib import Path
 import math
+from .addon_updater_ops import get_user_preferences
 from bpy_extras.io_utils import (ImportHelper,
                                  ExportHelper,
                                  path_reference_mode,
@@ -31,8 +38,11 @@ class DarrowExportPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        settings = get_user_preferences(context)
+        obj = context.active_object
 
         for obj in bpy.context.selected_objects:
+
             if obj.type =='CURVE' : return False
             if obj.type =='CAMERA' : return False
             if obj.type =='LIGHT' : return False
@@ -42,9 +52,8 @@ class DarrowExportPanel(bpy.types.Panel):
             if obj.type =='IMAGE' : return False
             if obj.type =='SPEAKER' : return False
 
-        return bpy.context.scene.export_moduleBool == True
+        return settings.export_moduleBool == True
             #print("poll")
-
 
     def draw_header(self, context):
         layout = self.layout
@@ -79,7 +88,13 @@ class DarrowExportPanel(bpy.types.Panel):
                 #layout.label(text = "Export Selected Mesh")
                 box = layout.box()
                 box.label(text = "FBX Exporter")
+                objs = context.selected_objects
+
+                #if len(objs) is not 0: 
                 box.operator('export_selected.darrow', icon="EXPORT")
+                #else:
+                    #""" Temporary. Need to make a seperate class so that we can raise an excpetion instead of letting the user be prompted"""
+                    #box.label(text = "Please Select a Mesh", icon="EXPORT")
                 
                 split=box.split()
                 split.prop(obj, 'useprefixBool')
@@ -120,6 +135,13 @@ def turn_collection_hierarchy_into_path(obj):
     parent_names.reverse()
     return '\\'.join(parent_names)
 
+def DarrowExportVarify(self, context):
+    objs = context.selected_objects
+    if len(objs) is not 0: 
+        DarrowExportFBX()
+    else:
+        self.report({'INFO'}, "None Selected")
+
 #-----------------------------------------------------#  
 #    Handles logic for exporting as FBX
 #-----------------------------------------------------#
@@ -130,221 +152,229 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     bl_options = {'PRESET'}
     filename_ext    = ".fbx";
 
+    """ 
+    This class needs massive amount of refactoring. Very slow.
+    """
+
     def execute(self, context):
-        C = bpy.context
-        fbxname = bpy.context.view_layer.objects.active
-        #get fbx name
-        name = bpy.path.clean_name(fbxname.name)
-        Var_collectionBool = bpy.context.scene.collectionBool
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            C = bpy.context
+            fbxname = bpy.context.view_layer.objects.active
+            #get fbx name
+            name = bpy.path.clean_name(fbxname.name)
+            Var_collectionBool = bpy.context.scene.collectionBool
+            
+            # Find amount of objects in selection
+            amt = len(C.selected_objects)
+            one = 1
+
+            obj = bpy.context.view_layer.objects.active
+            parent_coll = turn_collection_hierarchy_into_path(obj)
+
+            if (Var_collectionBool == True) and (amt > one):
+                fbxname = parent_coll
+                name = bpy.path.clean_name(fbxname)
+                print(name)
+                print("MORE THAN 1 MESH, SELECTED. USING COLLECTION NAME TO EXPORT")
+
+            bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
+            #option to show in exporter
+            path_mode = path_reference_mode
+            #get the name of the active object
+            #get string of custom prefix user input
+            customprefix = bpy.context.scene.custom_name_string
+
+            #get blend name
+            blendName = bpy.path.basename(bpy.context.blend_data.filepath).replace(".blend", "")
         
-        # Find amount of objects in selection
-        amt = len(C.selected_objects)
-        one = 1
+            #Variables for UI, like bools and enums
 
-        obj = bpy.context.view_layer.objects.active
-        parent_coll = turn_collection_hierarchy_into_path(obj)
+            Var_actionsBool = bpy.context.scene.allactionsBool
+            Var_leafBool = bpy.context.scene.isleafBool
+            Var_PrefixBool = bpy.context.scene.useprefixBool
+            Var_custom_prefix = bpy.context.scene.PrefixOption
+            Var_presets = bpy.context.scene.exportPresets
+            Var_counterBool = bpy.context.scene.usecounterBool
+            
+            if Var_presets == 'OP1':
+                if (amt > one):
+                    Var_axisUp = 'Y'
+                    Var_axisForward = 'X'
+                    Var_scale = 1
+                    print("more than one, not rotating")
+                else:
+                    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+                    bpy.context.active_object.rotation_euler[0] = math.radians(-90)
+                    print("rotated -90")
+                    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+                    print("rotations applied")
+                    bpy.context.active_object.rotation_euler[0] = math.radians(90)
+                    print("rotated 90")
+                    Var_axisUp = 'Y'
+                    Var_axisForward = 'X'
+                    Var_scale = 1
+                    print("rotating")
+                print("Unity Exporter")
 
-        if (Var_collectionBool == True) and (amt > one):
-            fbxname = parent_coll
-            name = bpy.path.clean_name(fbxname)
-            print(name)
-            print("MORE THAN 1 MESH, SELECTED. USING COLLECTION NAME TO EXPORT")
-
-        bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
-        #option to show in exporter
-        path_mode = path_reference_mode
-        #get the name of the active object
-        #get string of custom prefix user input
-        customprefix = bpy.context.scene.custom_name_string
-
-        #get blend name
-        blendName = bpy.path.basename(bpy.context.blend_data.filepath).replace(".blend", "")
-    
-        #Variables for UI, like bools and enums
-
-        Var_actionsBool = bpy.context.scene.allactionsBool
-        Var_leafBool = bpy.context.scene.isleafBool
-        Var_PrefixBool = bpy.context.scene.useprefixBool
-        Var_custom_prefix = bpy.context.scene.PrefixOption
-        Var_presets = bpy.context.scene.exportPresets
-        Var_counterBool = bpy.context.scene.usecounterBool
-        
-        if Var_presets == 'OP1':
-            if (amt > one):
-                Var_axisUp = 'Y'
-                Var_axisForward = 'X'
+            if Var_presets == 'OP2':
+                Var_axisUp = 'Z'
+                Var_axisForward = '-Y'
                 Var_scale = 1
-                print("more than one, not rotating")
-            else:
-                bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-                bpy.context.active_object.rotation_euler[0] = math.radians(-90)
-                print("rotated -90")
-                bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-                print("rotations applied")
-                bpy.context.active_object.rotation_euler[0] = math.radians(90)
-                print("rotated 90")
-                Var_axisUp = 'Y'
-                Var_axisForward = 'X'
-                Var_scale = 1
-                print("rotating")
-            print("Unity Exporter")
+                print("Unreal Exporter")
 
-        if Var_presets == 'OP2':
-            Var_axisUp = 'Z'
-            Var_axisForward = '-Y'
-            Var_scale = 1
-            print("Unreal Exporter")
+            Var_nlaBool = False
+            Var_forcestartkey = False
 
-        Var_nlaBool = False
-        Var_forcestartkey = False
+            if Var_presets == 'OP1':
+                Var_leafBool = False
+                Var_actionsBool = False
+                Var_nlaBool = False
+                Var_forcestartkey = False
+                print("Unity Vars")
 
-        if Var_presets == 'OP1':
-        	Var_leafBool = False
-        	Var_actionsBool = False
-        	Var_nlaBool = False
-        	Var_forcestartkey = False
-        	print("Unity Vars")
+            if Var_presets == 'OP2':
+                Var_nlaBool = False
+                Var_leafBool = False
+                Var_actionsBool = False
+                Var_forcestartkey = True
+                print("Unreal Vars")
 
-        if Var_presets == 'OP2':
-        	Var_nlaBool = False
-        	Var_leafBool = False
-        	Var_actionsBool = False
-        	Var_forcestartkey = True
-        	print("Unreal Vars")
+            #get the counter and add "1" to it, only when bool is checked
+            if Var_counterBool == True:
+                context.scene.counter += 1
+                count = context.scene.counter
+                count = str(count)
+                Var_exportnumber = "_" + count
+            
+            #If "Use Prefix" box selected, the 2 prefix options will show up in the enum
+            # Hopefull these vars (deteremined in advanced panel) will overwrite all presets 
+            Var_actionsBool = bpy.context.scene.allactionsBool
+            Var_leafBool = bpy.context.scene.isleafBool
+            
+            if Var_PrefixBool == True:
+                print("USED PREFIX")
 
-        #get the counter and add "1" to it, only when bool is checked
-        if Var_counterBool == True:
-            context.scene.counter += 1
-            count = context.scene.counter
-            count = str(count)
-            Var_exportnumber = "_" + count
-        
-        #If "Use Prefix" box selected, the 2 prefix options will show up in the enum
-        # Hopefull these vars (deteremined in advanced panel) will overwrite all presets 
-        Var_actionsBool = bpy.context.scene.allactionsBool
-        Var_leafBool = bpy.context.scene.isleafBool
-        
-        if Var_PrefixBool == True:
-            print("USED PREFIX")
-
-        #if ".blend enum" is selected, the object will export with custom prefix + mesh name
-            if Var_custom_prefix == 'OP1':
-                
-                if not bpy.data.is_saved:
-                        raise Exception("Blend file is not saved")
-                        print("SAVE YOUR FILE")
-                
-                #If the "export counter" bool is true then we add the counter varable to the end of the save location          
-                if Var_counterBool == True:
-                    saveLoc = self.filepath + "_" + name + Var_exportnumber
-                
-                    self.report({'INFO'}, "Added Counter to the end of mesh") 
-                else: 
-                    saveLoc = self.filepath + "_" + name
+            #if ".blend enum" is selected, the object will export with custom prefix + mesh name
+                if Var_custom_prefix == 'OP1':
                     
-                print(saveLoc)
+                    if not bpy.data.is_saved:
+                            raise Exception("Blend file is not saved")
+                            print("SAVE YOUR FILE")
+                    
+                    #If the "export counter" bool is true then we add the counter varable to the end of the save location          
+                    if Var_counterBool == True:
+                        saveLoc = self.filepath + "_" + name + Var_exportnumber
+                    
+                        self.report({'INFO'}, "Added Counter to the end of mesh") 
+                    else: 
+                        saveLoc = self.filepath + "_" + name
+                        
+                    print(saveLoc)
 
-                #handles actual export    
-                bpy.ops.export_scene.fbx(
-                    filepath = saveLoc.replace('.fbx', '')+ ".fbx",
-                    use_mesh_modifiers=True,
-                    bake_anim_use_all_actions = Var_actionsBool,
-                    add_leaf_bones = Var_leafBool,
-                    bake_anim_use_nla_strips = Var_nlaBool,
-        			bake_anim_force_startend_keying = Var_forcestartkey,
-                    check_existing=True, 
-                    axis_forward= Var_axisForward, 
-                    axis_up= Var_axisUp, 
-                    use_selection=True, 
-                    global_scale= Var_scale, 
-                    path_mode='AUTO')
+                    #handles actual export    
+                    bpy.ops.export_scene.fbx(
+                        filepath = saveLoc.replace('.fbx', '')+ ".fbx",
+                        use_mesh_modifiers=True,
+                        bake_anim_use_all_actions = Var_actionsBool,
+                        add_leaf_bones = Var_leafBool,
+                        bake_anim_use_nla_strips = Var_nlaBool,
+                        bake_anim_force_startend_keying = Var_forcestartkey,
+                        check_existing=True, 
+                        axis_forward= Var_axisForward, 
+                        axis_up= Var_axisUp, 
+                        use_selection=True, 
+                        global_scale= Var_scale, 
+                        path_mode='AUTO')
 
-                #print(Var_actionsBool)
-                #print(Var_leafBool)
-                self.report({'INFO'}, "Exported with .blend prefix and mesh name") 
-                return {'FINISHED'}
+                    #print(Var_actionsBool)
+                    #print(Var_leafBool)
+                    self.report({'INFO'}, "Exported with .blend prefix and mesh name") 
+                    return {'FINISHED'}
+                else:
+                    print("No Prefix Defined", context.mode)
+
+            #If use "custom" enum is selected, the object will export with custom prefix + mesh name
+                if Var_custom_prefix == 'OP2':
+                    #If the "export counter" bool is true then we add the counter varable to the end of the save location
+                    if Var_counterBool == True:
+                        customname = customprefix + "_" + name + Var_exportnumber
+                    else:
+                        customname = customprefix + "_" + name
+                                
+                    if not bpy.data.is_saved:
+                        saveLoc = self.filepath.replace("untitled","") + customname
+                    else:
+                        saveLoc = self.filepath.replace(blendName,'') + customname  
+                        
+                    #print(saveLoc)
+                    #export logic
+                    bpy.ops.export_scene.fbx(
+                        filepath = saveLoc.replace(".fbx", '')+ ".fbx",
+                        use_mesh_modifiers=True,
+                        bake_anim_use_all_actions = Var_actionsBool,
+                        add_leaf_bones = Var_leafBool,
+                        bake_anim_use_nla_strips = Var_nlaBool,
+                        bake_anim_force_startend_keying = Var_forcestartkey,
+                        check_existing=True, 
+                        axis_forward= Var_axisForward, 
+                        axis_up= Var_axisUp, 
+                        use_selection=True, 
+                        global_scale= Var_scale, 
+                        path_mode='AUTO')
+                    #print(Var_actionsBool)
+                    #print(Var_leafBool)
+                    self.report({'INFO'}, "Exported with custom prefix and mesh name")
+                else:
+                    print("No Prefix Defined", context.mode)
+
+            #If the user does not check "use prefix" the object will be exported as the mesh name only
+            #this is the default "export selected" button
             else:
-                print("No Prefix Defined", context.mode)
-
-        #If use "custom" enum is selected, the object will export with custom prefix + mesh name
-            if Var_custom_prefix == 'OP2':
+                #print("DID NOT USE PREFIX")
                 #If the "export counter" bool is true then we add the counter varable to the end of the save location
                 if Var_counterBool == True:
-                    customname = customprefix + "_" + name + Var_exportnumber
-                else:
-                    customname = customprefix + "_" + name
-                            
-                if not bpy.data.is_saved:
-                    saveLoc = self.filepath.replace("untitled","") + customname
-                else:
-                    saveLoc = self.filepath.replace(blendName,'') + customname  
+                    if not bpy.data.is_saved:
+                        #raise Exception("Blend file is not saved")
+                        saveLoc = self.filepath.replace("untitled","") + name + Var_exportnumber
+                    else:
+                        saveLoc = self.filepath.replace(blendName,"") + name + Var_exportnumber  
                     
-                #print(saveLoc)
-                #export logic
+                else:
+                    saveLoc = self.filepath.replace(blendName,"") + name
+                    
+                    if not bpy.data.is_saved:
+                        #raise Exception("Blend file is not saved")
+                        saveLoc = self.filepath.replace("untitled","") + name
+                    print("SAVE YOUR FILE")
+
                 bpy.ops.export_scene.fbx(
-                    filepath = saveLoc.replace(".fbx", '')+ ".fbx",
+                    filepath = saveLoc.replace('.fbx', '')+  ".fbx",
+                    use_selection=True, 
                     use_mesh_modifiers=True,
                     bake_anim_use_all_actions = Var_actionsBool,
                     add_leaf_bones = Var_leafBool,
                     bake_anim_use_nla_strips = Var_nlaBool,
-        			bake_anim_force_startend_keying = Var_forcestartkey,
+                    bake_anim_force_startend_keying = Var_forcestartkey,
                     check_existing=True, 
-                    axis_forward= Var_axisForward, 
+                    axis_forward=Var_axisForward, 
                     axis_up= Var_axisUp, 
-                    use_selection=True, 
                     global_scale= Var_scale, 
                     path_mode='AUTO')
+                #print(saveLoc)  
                 #print(Var_actionsBool)
                 #print(Var_leafBool)
-                self.report({'INFO'}, "Exported with custom prefix and mesh name")
-            else:
-                print("No Prefix Defined", context.mode)
+                self.report({'INFO'}, "Exported with mesh name")
 
-        #If the user does not check "use prefix" the object will be exported as the mesh name only
-        #this is the default "export selected" button
-        else:
-            #print("DID NOT USE PREFIX")
-            #If the "export counter" bool is true then we add the counter varable to the end of the save location
-            if Var_counterBool == True:
-                if not bpy.data.is_saved:
-                    #raise Exception("Blend file is not saved")
-                    saveLoc = self.filepath.replace("untitled","") + name + Var_exportnumber
+            if Var_presets == 'OP1':
+                if (amt > one):
+                    print("more than one, not rotating")
                 else:
-                    saveLoc = self.filepath.replace(blendName,"") + name + Var_exportnumber  
-                
-            else:
-                saveLoc = self.filepath.replace(blendName,"") + name
-                
-                if not bpy.data.is_saved:
-                    #raise Exception("Blend file is not saved")
-                    saveLoc = self.filepath.replace("untitled","") + name
-                print("SAVE YOUR FILE")
-
-            bpy.ops.export_scene.fbx(
-                filepath = saveLoc.replace('.fbx', '')+  ".fbx",
-                use_selection=True, 
-                use_mesh_modifiers=True,
-                bake_anim_use_all_actions = Var_actionsBool,
-                add_leaf_bones = Var_leafBool,
-                bake_anim_use_nla_strips = Var_nlaBool,
-                bake_anim_force_startend_keying = Var_forcestartkey,
-                check_existing=True, 
-                axis_forward=Var_axisForward, 
-                axis_up= Var_axisUp, 
-                global_scale= Var_scale, 
-                path_mode='AUTO')
-            #print(saveLoc)  
-            #print(Var_actionsBool)
-            #print(Var_leafBool)
-            self.report({'INFO'}, "Exported with mesh name")
-
-        if Var_presets == 'OP1':
-            if (amt > one):
-                print("more than one, not rotating")
-            else:
-                bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-                print("applied rotations")
-                print("OBJ should be nack to normal")
+                    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+                    print("applied rotations")
+                    print("OBJ should be nack to normal")
+        else:
+            self.report({'INFO'}, "None Selected")
 
         return {'FINISHED'}
    
@@ -367,7 +397,7 @@ classes = (DarrowExportPanel, DarrowExportFBX, DarrowCounterReset)
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
-        
+
     bpy.types.Scene.advancedBool = bpy.props.BoolProperty(
     name = "Advanced",
     description = "Show advanced options",
@@ -427,7 +457,8 @@ def register():
     description="Animation Export Presets",
     items=[('OP1', "Unity", ""),
            ('OP2', "Unreal", ""),
-        ]
+        ],
+    default = 'OP2'
     )
 
 def unregister():

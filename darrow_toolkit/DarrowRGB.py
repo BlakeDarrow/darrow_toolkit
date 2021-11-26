@@ -1,11 +1,52 @@
+#
+#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#
+#    See the LICENSE file for your full rights.
+#
 #-----------------------------------------------------#  
 #   Imports
-#-----------------------------------------------------#  
+#-----------------------------------------------------# 
+ 
 import bpy
+from .addon_updater_ops import get_user_preferences
 from bpy.types import (Panel,
                        Menu,
                        Operator,
                        )
+
+#-----------------------------------------------------#         
+#     handles panel if null  
+#-----------------------------------------------------#  
+class DarrowNullPanel(bpy.types.Panel):
+    bl_label = ""
+    bl_category = "Darrow Toolkit"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_idname = "DARROW_PT_nullPanel"
+
+    @classmethod
+    def poll(cls, context):
+        obj = context.active_object
+
+        for obj in bpy.context.selected_objects:
+            if obj is not None: 
+                #if obj.type =='MESH' : return True
+                if obj.type =='EMPTY' : return True
+                if obj.type =='CAMERA' : return True
+                if obj.type =='LIGHT' : return True
+                if obj.type =='CURVE' : return True
+                if obj.type =='FONT' : return True
+                if obj.type =='LATTICE' : return True
+                if obj.type =='LIGHT_PROBE' : return True
+                if obj.type =='IMAGE' : return True
+                if obj.type =='SPEAKER' : return True
+
+    def draw(self, context):
+        layout = self.layout
+        box = layout.box()
+        box.separator()
+        box.label(text = "Please select only mesh(s)")
+        box.separator()
   
 #-----------------------------------------------------#  
 #     handles ui     
@@ -19,12 +60,26 @@ class DarrowVertexPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        settings = get_user_preferences(context)
+        obj = context.active_object
         Var_displayBool = bpy.context.scene.vertexDisplayBool
         if(Var_displayBool == True):
             bpy.context.space_data.shading.color_type = 'VERTEX'
         else:
             bpy.context.space_data.shading.color_type = 'MATERIAL'
-        return bpy.context.scene.rgb_moduleBool == True
+        if obj is not None: 
+            obj = context.active_object
+            objs = bpy.context.object.data
+            for obj in bpy.context.selected_objects:
+                if obj.type =='CURVE' : return False
+                if obj.type =='FONT' : return False
+                if obj.type =='CAMERA' : return False
+                if obj.type =='LIGHT' : return False
+                if obj.type =='LATTICE' : return False
+                if obj.type =='LIGHT_PROBE' : return False
+                if obj.type =='IMAGE' : return False
+                if obj.type =='SPEAKER' : return False
+        return settings.rgb_moduleBool == True
 
     def draw_header(self, context):
         layout = self.layout
@@ -148,7 +203,7 @@ class DarrowSetColor(bpy.types.Operator):
 #-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#  
-classes = (DarrowSetBlack, DarrowSetWhite, DarrowSetRed, DarrowSetGreen, DarrowSetBlue, DarrowSetColor, DarrowVertexPanel)
+classes = (DarrowSetBlack, DarrowSetWhite, DarrowSetRed, DarrowSetGreen, DarrowSetBlue, DarrowSetColor, DarrowNullPanel, DarrowVertexPanel)
 
 def register():
     for cls in classes:

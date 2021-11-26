@@ -1,11 +1,18 @@
+#
+#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#
+#    See the LICENSE file for your full rights.
+#
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------#  
+
 import bpy
 from bpy.types import WindowManager
 import addon_utils
 import os
 from platform import system as currentOS
+from .addon_updater_ops import get_user_preferences
 import math
 import random
 import bpy.utils.previews
@@ -42,10 +49,7 @@ class meshFolder(bpy.types.Operator):
         except ValueError:
             self.report({'INFO'}, "No folder yet")
             return {'FINISHED'}
-        
         bpy.ops.wm.path_open(filepath=path)
-
-        
         return {'FINISHED'}
 
     def path(self):
@@ -126,7 +130,9 @@ class DarrowDevPanel:
 
     @classmethod
     def poll(cls, context):
-        return bpy.context.scene.library_moduleBool == True
+        settings = get_user_preferences(context)
+
+        return settings.library_moduleBool == True
 
 class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
     bl_label = "DarrowLibrary"
@@ -134,6 +140,8 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
+        settings = get_user_preferences(context)
+        obj = context.active_object
         for obj in bpy.context.selected_objects:
             if obj.type =='CURVE' : return False
             if obj.type =='CAMERA' : return False
@@ -144,9 +152,8 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
             if obj.type =='IMAGE' : return False
             if obj.type =='SPEAKER' : return False
 
-        return bpy.context.scene.library_moduleBool == True
+        return settings.library_moduleBool == True
             #print("poll")
-
 
     def draw_header(self, context):
         layout = self.layout
@@ -310,7 +317,6 @@ class DarrowThumbnail(bpy.types.Operator):
 #-----------------------------------------------------#  
 #    Returns a dict of all mesh with unique identifier
 #-----------------------------------------------------#  
-
 def mesh_items(scene, context):
     f = []
 
@@ -351,7 +357,6 @@ def tag_items(scene,context):
 #-----------------------------------------------------#  
 #    Get mesh from library
 #-----------------------------------------------------#  
-
 class OBJECT_OT_mesh_library(bpy.types.Operator):
     """Get mesh from current library"""
     bl_idname = "object.asset_library"
@@ -387,7 +392,6 @@ class OBJECT_OT_mesh_library(bpy.types.Operator):
 #-----------------------------------------------------#  
 #    Add mesh to library
 #-----------------------------------------------------#  
-
 class DarrowAddMeshtoLibrary(Operator):
     """Add selected mesh to the library using the current tag"""
     bl_idname = "darrow.add_to_library"
@@ -395,34 +399,36 @@ class DarrowAddMeshtoLibrary(Operator):
     filename_ext    = ".fbx";
     
     def execute(self, context):
-        
-        tagString = bpy.context.scene.tag_name #if this is null, no folder is created
-        fbxname = bpy.context.view_layer.objects.active
-        exportmeshName = bpy.path.clean_name(fbxname.name)
-        addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
-        tryPath = addonpath + "\mesh\\"
-        meshpath = addonpath + "\mesh\\" #add folder with the custom mesh inside
-        os.makedirs(os.path.dirname(meshpath), exist_ok=True)
-        finalpath = meshpath + tagString + "\\"+ exportmeshName + ".fbx" #add name of selected mesh to the end
+        objs = context.selected_objects
+        if len(objs) is not 0: 
+            tagString = bpy.context.scene.tag_name #if this is null, no folder is created
+            fbxname = bpy.context.view_layer.objects.active
+            exportmeshName = bpy.path.clean_name(fbxname.name)
+            addonpath = os.path.dirname(os.path.abspath(__file__)) #find path of current addon
+            tryPath = addonpath + "\mesh\\"
+            meshpath = addonpath + "\mesh\\" #add folder with the custom mesh inside
+            os.makedirs(os.path.dirname(meshpath), exist_ok=True)
+            finalpath = meshpath + tagString + "\\"+ exportmeshName + ".fbx" #add name of selected mesh to the end
 
-        os.chdir(meshpath)
-        try:
-            os.mkdir(tagString)
-        except:
-            print("tag folder already created")
+            os.chdir(meshpath)
+            try:
+                os.mkdir(tagString)
+            except:
+                print("tag folder already created")
 
-        bpy.ops.export_scene.fbx(
-        filepath = finalpath,
-        use_selection=True,
-            )
+            bpy.ops.export_scene.fbx(
+            filepath = finalpath,
+            use_selection=True,
+                )
 
-        DarrowThumbnail.execute(self,context)
+            DarrowThumbnail.execute(self,context)
+        else:
+            self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#  
-
 preview_collections = {}
 classes = (DarrowMainPanel,DarrowThumbnail, DarrowAddMeshtoLibrary,OBJECT_OT_mesh_library,meshFolder,renderFolder)
 
@@ -483,9 +489,9 @@ def register():
     )
 
     bpy.types.Scene.autoCamGenBool = bpy.props.BoolProperty(
-    name = "Auto Generate Camera",
+    name = "Generate Thumbnail Camera",
     default = True,
-    description = "Generate camera for thumnnail automatically(limited)"
+    description = "Generate camera for thumbnail automatically(limited)"
     )
 
     bpy.types.Scene.getBool = bpy.props.BoolProperty(
@@ -504,7 +510,6 @@ def register():
     name = "",
     default = False
     )
-
 
 def unregister():
 

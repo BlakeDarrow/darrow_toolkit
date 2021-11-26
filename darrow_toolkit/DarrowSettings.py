@@ -1,5 +1,10 @@
+#
+#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#
+#    See the LICENSE file for your full rights.
+#
 #-----------------------------------------------------#  
-#    Imports
+#   Imports
 #-----------------------------------------------------#  
 
 import bpy
@@ -11,19 +16,6 @@ from . import addon_updater_ops
 @addon_updater_ops.make_annotations
 class DarrowAddonPreferences(bpy.types.AddonPreferences):
     bl_idname = __package__
-
-    def draw(self, context):
-        layout = self.layout
-        obj = context.scene
-        box = layout.box()
-        box.label(text='Turn off panels')
-        split=box.split()
-        split.prop(obj, 'checklist_moduleBool')
-        split.prop(obj, 'rgb_moduleBool')
-        split.prop(obj, 'export_moduleBool')
-        split.prop(obj, 'library_moduleBool')
-
-        addon_updater_ops.update_settings_ui(self,context)
 
     auto_check_update = bpy.props.BoolProperty(
         name = "Auto-check for Update",
@@ -57,6 +49,43 @@ class DarrowAddonPreferences(bpy.types.AddonPreferences):
         max=59
     )
 
+    checklist_moduleBool = bpy.props.BoolProperty(
+    name = "Tool Panel",
+    description = "Toggle tool panel",
+    default = True
+    )
+
+    export_moduleBool = bpy.props.BoolProperty(
+    name = "Export Panel",
+    description = "Toggle export panel",
+    default = True
+    )
+
+    library_moduleBool = bpy.props.BoolProperty(
+    name = "Library Panel",
+    description = "Toggle library panel",
+    default = True
+    )
+    
+    rgb_moduleBool = bpy.props.BoolProperty(
+    name = "Vertex Panel",
+    description = "Toggle vertex panel",
+    default = True
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.preferences
+        box = layout.box()
+        box.label(text='Toggle Menu Modules')
+        split=box.split()
+        split.prop(self, 'checklist_moduleBool')
+        split.prop(self, 'rgb_moduleBool')
+        split=box.split()
+        split.prop(self, 'export_moduleBool')
+        split.prop(self, 'library_moduleBool')
+
+        addon_updater_ops.update_settings_ui(self,context)
 
 #-----------------------------------------------------#  
 #   Registration classes
@@ -65,30 +94,6 @@ class DarrowAddonPreferences(bpy.types.AddonPreferences):
 classes = (DarrowAddonPreferences,)
 
 def register():
-    bpy.types.Scene.checklist_moduleBool = bpy.props.BoolProperty(
-    name = "Tool Panel",
-    description = "Turn on crypto panel",
-    default = True
-    )
-
-    bpy.types.Scene.export_moduleBool = bpy.props.BoolProperty(
-    name = "Export Panel",
-    description = "Turn on export panel",
-    default = True
-    )
-
-    bpy.types.Scene.library_moduleBool = bpy.props.BoolProperty(
-    name = "Library Panel",
-    description = "Turn on library panel",
-    default = True
-    )
-    
-    bpy.types.Scene.rgb_moduleBool = bpy.props.BoolProperty(
-    name = "Vertex Panel",
-    description = "Turn on vertex panel",
-    default = True
-    )
-
     for cls in classes:
         bpy.utils.register_class(cls)
 
