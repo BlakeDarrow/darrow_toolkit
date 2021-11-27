@@ -29,7 +29,7 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 15, 2),
+    "version": (0, 15, 4),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Custom toolkit for efficient FBX exporting, custom tools, and external mesh libraries",
@@ -40,19 +40,23 @@ bl_info = {
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
+
+if __package__ != "darrow_toolkit":
+    sys.modules["darrow_toolkit"] = sys.modules[__package__]
+
 modulesNames = ['DarrowTools','DarrowRGB', 'DarrowSettings', 'DarrowExport','DarrowLibrary',]
 
 #-----------------------------------------------------#  
 #     imports    
 #-----------------------------------------------------#  
-from . import addon_updater_ops
 import bpy
+from . import addon_updater_ops
 import sys
 import importlib
-
 #-----------------------------------------------------#  
 #     create a dictonary for module names    
 #-----------------------------------------------------# 
+
 modulesFullNames = {}
 for currentModuleName in modulesNames:
     modulesFullNames[currentModuleName] = ('{}.{}'.format(__name__, currentModuleName))
@@ -70,16 +74,13 @@ for currentModuleFullName in modulesFullNames.values():
 #-----------------------------------------------------#  
 #     register the modules    
 #-----------------------------------------------------# 
-
 classes = ()
 
 def register():
-    
+    addon_updater_ops.register(bl_info)
     for cls in classes:
         bpy.utils.register_class(cls)
         
-    addon_updater_ops.register(bl_info)
-
     for currentModuleName in modulesFullNames.values():
         if currentModuleName in sys.modules:
             if hasattr(sys.modules[currentModuleName], 'register'):
@@ -89,6 +90,7 @@ def register():
 #     unregister the modules    
 #-----------------------------------------------------# 
 def unregister():
+    addon_updater_ops.unregister()
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

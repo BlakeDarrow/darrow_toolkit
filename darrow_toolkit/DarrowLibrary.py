@@ -12,7 +12,6 @@ from bpy.types import WindowManager
 import addon_utils
 import os
 from platform import system as currentOS
-from .addon_updater_ops import get_user_preferences
 import math
 import random
 import bpy.utils.previews
@@ -130,7 +129,7 @@ class DarrowDevPanel:
 
     @classmethod
     def poll(cls, context):
-        settings = get_user_preferences(context)
+        settings = context.preferences.addons['darrow_toolkit'].preferences
 
         return settings.library_moduleBool == True
 
@@ -140,7 +139,7 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        settings = get_user_preferences(context)
+        settings = context.preferences.addons[__package__].preferences
         obj = context.active_object
         for obj in bpy.context.selected_objects:
             if obj.type =='CURVE' : return False

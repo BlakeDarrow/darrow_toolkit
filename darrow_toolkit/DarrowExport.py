@@ -11,7 +11,6 @@ import bpy
 import os
 from pathlib import Path
 import math
-from .addon_updater_ops import get_user_preferences
 from bpy_extras.io_utils import (ImportHelper,
                                  ExportHelper,
                                  path_reference_mode,
@@ -38,9 +37,9 @@ class DarrowExportPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        settings = get_user_preferences(context)
+        settings = context.preferences.addons['darrow_toolkit'].preferences
         obj = context.active_object
-       
+        preferences = context.preferences
         for obj in bpy.context.selected_objects:
             if obj.type =='CURVE' : return False
             if obj.type =='CAMERA' : return False

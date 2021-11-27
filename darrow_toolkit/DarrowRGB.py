@@ -8,7 +8,6 @@
 #-----------------------------------------------------# 
  
 import bpy
-from .addon_updater_ops import get_user_preferences
 from bpy.types import (Panel,
                        Menu,
                        Operator,
@@ -60,7 +59,7 @@ class DarrowVertexPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        settings = get_user_preferences(context)
+        settings = context.preferences.addons['darrow_toolkit'].preferences
         obj = context.active_object
         Var_displayBool = bpy.context.scene.vertexDisplayBool
         if(Var_displayBool == True):

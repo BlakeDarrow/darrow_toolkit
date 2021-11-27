@@ -6,10 +6,7 @@
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------#  
-
 import bpy
-from .addon_updater_ops import get_user_preferences
-from .DarrowSettings import DarrowAddonPreferences
 from bpy.types import (Panel,
                        Menu,
                        Operator,
@@ -29,7 +26,7 @@ class DarrowToolPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        settings = get_user_preferences(context)
+        settings = context.preferences.addons['darrow_toolkit'].preferences
 
         if obj is not None: 
             obj = context.active_object
