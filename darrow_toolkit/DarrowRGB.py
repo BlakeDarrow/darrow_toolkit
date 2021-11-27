@@ -1,3 +1,4 @@
+#-----------------------------------------------------#  
 #
 #    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
 #
@@ -61,11 +62,7 @@ class DarrowVertexPanel(bpy.types.Panel):
     def poll(cls, context):
         settings = context.preferences.addons['darrow_toolkit'].preferences
         obj = context.active_object
-        Var_displayBool = bpy.context.scene.vertexDisplayBool
-        if(Var_displayBool == True):
-            bpy.context.space_data.shading.color_type = 'VERTEX'
-        else:
-            bpy.context.space_data.shading.color_type = 'MATERIAL'
+
         if obj is not None: 
             obj = context.active_object
             objs = bpy.context.object.data
@@ -83,13 +80,17 @@ class DarrowVertexPanel(bpy.types.Panel):
     def draw_header(self, context):
         layout = self.layout
         obj = context.scene
-        self.layout.prop(obj, 'vertexDisplayBool', icon="SETTINGS",text="")
+        Var_displayBool = bpy.context.scene.vertexDisplayBool
+        Var_viewportShading = bpy.context.space_data.shading.type
+        self.layout.operator('set.display', icon="SETTINGS",text="", depress= Var_displayBool)
+        if Var_viewportShading != 'SOLID':
+            self.layout.enabled = False
 
     def draw(self, context):
         layout = self.layout
         obj = context.object
         scn = context.scene
-    
+
         if obj is not None:  
             split=layout.box()
             row = split.row(align = True)
@@ -200,9 +201,33 @@ class DarrowSetColor(bpy.types.Operator):
         return {'FINISHED'} 
     
 #-----------------------------------------------------#  
+#     handles setting shading display   
+#-----------------------------------------------------#        
+class DarrowSetDisplay(bpy.types.Operator):
+    bl_idname = "set.display"
+    bl_label = "Set Display"
+    """
+    We have to have this class here to toggle the bool value,
+    so that a user can still manualy change the shading method
+    """
+    def execute(self, context):
+        Var_displayBool = bpy.context.scene.vertexDisplayBool
+        Var_viewportShading = bpy.context.space_data.shading.type
+    
+        Var_displayBool = not Var_displayBool #Toggle bool value everytime this operator is called
+
+        if Var_displayBool == True and Var_viewportShading == 'SOLID':
+            bpy.context.space_data.shading.color_type = 'VERTEX'
+        elif Var_viewportShading == 'SOLID':
+            bpy.context.space_data.shading.color_type = 'MATERIAL'
+
+        bpy.context.scene.vertexDisplayBool = Var_displayBool
+        return {'FINISHED'}
+    
+#-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#  
-classes = (DarrowSetBlack, DarrowSetWhite, DarrowSetRed, DarrowSetGreen, DarrowSetBlue, DarrowSetColor, DarrowNullPanel, DarrowVertexPanel)
+classes = (DarrowNullPanel, DarrowVertexPanel,DarrowSetBlack, DarrowSetWhite, DarrowSetRed, DarrowSetGreen, DarrowSetBlue, DarrowSetColor, DarrowSetDisplay,)
 
 def register():
     for cls in classes:

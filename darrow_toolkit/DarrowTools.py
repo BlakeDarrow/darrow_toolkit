@@ -1,3 +1,4 @@
+#-----------------------------------------------------#  
 #
 #    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
 #
@@ -6,6 +7,7 @@
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------#  
+
 import bpy
 from bpy.types import (Panel,
                        Menu,
@@ -58,13 +60,13 @@ class DarrowToolPanel(bpy.types.Panel):
     
         if obj is not None:  
             split=layout.box()
-            col=split.column(align = True) 
+            col=split.column(align = True)
             if Var_compactBool == False:
                 if context.mode == 'OBJECT':
+                    col.operator('move.origin')
                     col.operator('set.wireframe', text="Toggle Wireframe")
-                    col.operator('apply_all.darrow', text="Prepare for Export")
+                    #col.operator('apply_all.darrow', text="Prepare for Export")
                 if context.mode == 'EDIT_MESH':
-                    col.separator()
                     col.operator('set.origin')
                 
             if Var_compactBool == True:
@@ -80,6 +82,8 @@ class DarrowToolPanel(bpy.types.Panel):
                     col.operator('shade.smooth')
                     col.operator('apply.transforms')
                     col.operator('apply.normals')
+                    col.separator()
+                    col.operator('apply_all.darrow', text="Prepare for Export")
                                                 
 #-----------------------------------------------------#  
 #     handles wireframe display   
@@ -263,7 +267,7 @@ class DarrowSmooth(bpy.types.Operator):
 class DarrowApply(bpy.types.Operator):
     bl_idname = "apply_all.darrow"
     bl_label = "Apply All"
-    bl_description = "Apply all checklist functions, and prepare mesh for export(not be compatable with animations)"
+    bl_description = "Apply all checklist functions, and prepare mesh for export(not compatable with animations)"
 
     def execute(self, context):
         objs = context.selected_objects
