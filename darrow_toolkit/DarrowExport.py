@@ -40,9 +40,8 @@ class DarrowExportPanel(bpy.types.Panel):
     def poll(cls, context):
         settings = get_user_preferences(context)
         obj = context.active_object
-
+       
         for obj in bpy.context.selected_objects:
-
             if obj.type =='CURVE' : return False
             if obj.type =='CAMERA' : return False
             if obj.type =='LIGHT' : return False
@@ -61,14 +60,14 @@ class DarrowExportPanel(bpy.types.Panel):
         self.layout.prop(obj, 'advancedBool', icon="SETTINGS",text="")
 
     def draw(self, context):
-        
         Var_prefix_bool = bpy.context.scene.useprefixBool
         Var_suffix_bool = bpy.context.scene.usecounterBool
         Var_custom_prefix = bpy.context.scene.PrefixOption
         Var_advanced_bool = bpy.context.scene.advancedBool
-
+        Var_allowFBX = bpy.context.scene.fbxBool
         obj = context.object
-        
+        objs = context.selected_objects
+
         if context.mode == 'OBJECT':
             if obj is not None:  
                 layout = self.layout
@@ -85,17 +84,15 @@ class DarrowExportPanel(bpy.types.Panel):
                     split=box.split()
                     split.prop(obj, 'collectionBool')
         
-                #layout.label(text = "Export Selected Mesh")
                 box = layout.box()
                 box.label(text = "FBX Exporter")
-                objs = context.selected_objects
-
-                #if len(objs) is not 0: 
+               
+                if len(objs) is not 0: 
+                    Var_allowFBX = True
                 box.operator('export_selected.darrow', icon="EXPORT")
-                #else:
-                    #""" Temporary. Need to make a seperate class so that we can raise an excpetion instead of letting the user be prompted"""
-                    #box.label(text = "Please Select a Mesh", icon="EXPORT")
-                
+                if Var_allowFBX == False:
+                    box.enabled = False 
+
                 split=box.split()
                 split.prop(obj, 'useprefixBool')
                 split.prop(obj, 'usecounterBool')
@@ -135,13 +132,6 @@ def turn_collection_hierarchy_into_path(obj):
     parent_names.reverse()
     return '\\'.join(parent_names)
 
-def DarrowExportVarify(self, context):
-    objs = context.selected_objects
-    if len(objs) is not 0: 
-        DarrowExportFBX()
-    else:
-        self.report({'INFO'}, "None Selected")
-
 #-----------------------------------------------------#  
 #    Handles logic for exporting as FBX
 #-----------------------------------------------------#
@@ -153,7 +143,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     filename_ext    = ".fbx";
 
     """ 
-    This class needs massive amount of refactoring. Very slow.
+    This class needs massive amounts of refactoring. Very slow.
     """
 
     def execute(self, context):
@@ -403,6 +393,8 @@ def register():
     description = "Show advanced options",
     default = False
     )
+    
+    bpy.types.Scene.fbxBool = bpy.props.BoolProperty()
 
     bpy.types.Scene.collectionBool = bpy.props.BoolProperty(
     name = "Multi-object smart naming",
