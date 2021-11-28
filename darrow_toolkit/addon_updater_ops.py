@@ -57,7 +57,7 @@ except Exception as e:
 # Must declare this before classes are loaded
 # otherwise the bl_idname's will not match and have errors.
 # Must be all lowercase and no spaces
-updater.addon = "darrowtools_addon"
+updater.addon = "darrow_toolkit"
 
 # -----------------------------------------------------------------------------
 # Blender version utils
@@ -1455,7 +1455,7 @@ def register(bl_info):
 	# Set the min and max versions allowed to install.
 	# Optional, default None
 	# min install (>=) will install this and higher
-	updater.version_min_update = (0,14,1)
+	updater.version_min_update = (0,15,7)
 	# updater.version_min_update = None  # if not wanting to define a min
 
 	# max install (<) will install strictly anything lower
