@@ -306,7 +306,7 @@ class addon_updater_update_now(bpy.types.Operator):
 
 		return {'FINISHED'}
 
-
+ret = [] #declaring here fixed enum items not displaying
 class addon_updater_update_target(bpy.types.Operator):
 	bl_label = updater.addon+" version target"
 	bl_idname = updater.addon+".updater_update_target"
