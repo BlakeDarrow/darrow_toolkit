@@ -29,7 +29,7 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 15, 6),
+    "version": (0, 15, 8),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Custom toolkit for efficient FBX exporting, custom tools, and external mesh libraries",
