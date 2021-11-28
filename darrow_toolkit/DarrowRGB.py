@@ -205,7 +205,8 @@ class DarrowSetColor(bpy.types.Operator):
 #-----------------------------------------------------#        
 class DarrowSetDisplay(bpy.types.Operator):
     bl_idname = "set.display"
-    bl_label = "Set Display"
+    bl_name = "Show Color"
+    bl_label = "Toggle vertex color visability"
     """
     We have to have this class here to toggle the bool value,
     so that a user can still manualy change the shading method
