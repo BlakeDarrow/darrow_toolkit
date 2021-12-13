@@ -237,7 +237,7 @@ def register():
     bpy.types.Scene.vertexDisplayBool = bpy.props.BoolProperty(
     name = "",
     description = "Toggle visabilty of vertex color",
-    default = True
+    default = False
     )
 def unregister():
     

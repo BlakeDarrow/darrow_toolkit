@@ -211,7 +211,8 @@ class addon_updater_install_popup(bpy.types.Operator):
 
 # User preference check-now operator
 class addon_updater_check_now(bpy.types.Operator):
-	bl_label = "Check now for "+updater.addon+" update"
+	#bl_label = "Check now for "+updater.addon+" update"
+	bl_label = "Check now for update"
 	bl_idname = updater.addon+".updater_check_now"
 	bl_description = "Check now for an update to the {x} addon".format(
 														x=updater.addon)
@@ -1065,8 +1066,8 @@ def update_settings_ui(self, context, element=None):
 		#col.operator(addon_updater_update_target.bl_idname,
 		if updater.include_branches == True and len(updater.include_branch_list)>0:
 			branch = updater.include_branch_list[0]
-			col.operator(addon_updater_update_target.bl_idname,
-					text="Install latest {} / old version".format(branch))
+			#col.operator(addon_updater_update_target.bl_idname,
+					#text="Install latest {} / old version".format(branch))
 		else:
 			col.operator(addon_updater_update_target.bl_idname,
 					text="Reinstall / install old version")
@@ -1078,7 +1079,7 @@ def update_settings_ui(self, context, element=None):
 			else:
 				lastdate = updater.json["backup_date"]
 		backuptext = "Restore addon backup ({})".format(lastdate)
-		col.operator(addon_updater_restore_backup.bl_idname, text=backuptext)
+		#col.operator(addon_updater_restore_backup.bl_idname, text=backuptext)
 
 	row = box.row()
 	row.scale_y = 0.7
