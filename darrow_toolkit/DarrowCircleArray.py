@@ -7,8 +7,7 @@
 #-----------------------------------------------------#
 #   Imports
 #-----------------------------------------------------#
-from cgitb import enable
-from email.policy import default
+
 from mathutils import Euler
 import bpy
 import math
@@ -21,10 +20,6 @@ from bpy.types import (Panel,
 #-----------------------------------------------------#
 #     handles ui panel
 #-----------------------------------------------------#
-
-# Need to create a distance slider?
-# parent empty
-
 
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "DarrowCircleArray"
@@ -152,14 +147,24 @@ class DarrowCircleArray(bpy.types.Operator):
             
         else:
             empty = bpy.data.objects[context.object.linkedEmpty]
-
+         
         bpy.ops.object.select_all(action='DESELECT')
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
         context.object.linkedEmpty = empty.name
 
         obj = bpy.context.selected_objects[0]
-        if not obj.modifiers:
+        array = False
+
+        for mods in obj.modifiers:
+                for properties in dir(mods):
+                    if "__" not in properties:
+                        props=eval("type(mods."+str(properties)+")")
+                        if "Object" in str(props):
+                            print(mods.name)
+                            array = True
+
+        if not array:
             bpy.ops.object.modifier_add(type='ARRAY')
             bpy.context.object.modifiers["Array"].count = amt
             bpy.context.object.modifiers["Array"].use_relative_offset = False

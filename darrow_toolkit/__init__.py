@@ -44,7 +44,7 @@ bl_info = {
 if __package__ != "darrow_toolkit":
     sys.modules["darrow_toolkit"] = sys.modules[__package__]
 
-modulesNames = ['DarrowTools','DarrowRGB', 'DarrowSettings', 'DarrowExport','DarrowLibrary','DarrowCircleArray']
+modulesNames = ['DarrowTools', 'DarrowRGB', 'DarrowCircleArray','DarrowSettings', 'DarrowExport', 'DarrowLibrary']
 
 #-----------------------------------------------------#  
 #     imports    
