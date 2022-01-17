@@ -8,14 +8,12 @@
 #   Imports
 #-----------------------------------------------------#
 
-from mathutils import Euler
 import bpy
 import math
 from bpy.types import (Panel,
                        Menu,
                        Operator,
                        )
-
 
 #-----------------------------------------------------#
 #     handles ui panel
@@ -76,9 +74,9 @@ class DarrowToolPanel(bpy.types.Panel):
 
             col = layout.column(align=True)
             col.scale_y = 1.33
-            col.prop(obj, 'arrayAmount',slider=True)
-            #if len(objs) is not 0 and context.scene.compactBool == True:
-               #col.prop(obj, 'stepAmount', slider=True)
+            col.prop(obj, 'arrayAmount', slider=True)
+            # if len(objs) is not 0 and context.scene.compactBool == True:
+            #col.prop(obj, 'stepAmount', slider=True)
 
             row = layout.row(align=True)
             split = row.split(align=True)
@@ -102,7 +100,7 @@ class DarrowToolPanel(bpy.types.Panel):
                 split.enabled = False
             if yAxis == True:
                 split.enabled = False
-            
+
             col = layout.column(align=True)
             col.scale_y = 1.5
             col.operator('circle.array')
@@ -115,24 +113,15 @@ class DarrowToolPanel(bpy.types.Panel):
 #---------------------------------------------------#
 #     handles array
 #-----------------------------------------------------#
-def update_func(self, context):
-    obj = bpy.context.selected_objects[0]
-    if not obj.modifiers:
-        print("no modifiers")
-    else:
-        bpy.context.object.modifiers["Array"].count = context.object.stepAmount
-
-def update_func_create(self, context):
-    context.object.stepAmount = context.object.arrayAmount
 
 class DarrowCircleArray(bpy.types.Operator):
     bl_idname = "circle.array"
     bl_description = "Move selected to world origin"
     bl_label = "Array Selected"
     bl_options = {"UNDO"}
-    
+
     def execute(self, context):
-        bpy.context.scene.cursor.rotation_euler = (0,0,0)
+        bpy.context.scene.cursor.rotation_euler = (0, 0, 0)
 
         amt = context.object.arrayAmount
         settings = context.preferences.addons[__package__].preferences
@@ -144,10 +133,10 @@ class DarrowCircleArray(bpy.types.Operator):
             bpy.ops.object.select_all(action='DESELECT')
             bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD')
             empty = bpy.context.selected_objects[0]
-            
+
         else:
             empty = bpy.data.objects[context.object.linkedEmpty]
-         
+
         bpy.ops.object.select_all(action='DESELECT')
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
@@ -157,12 +146,12 @@ class DarrowCircleArray(bpy.types.Operator):
         array = False
 
         for mods in obj.modifiers:
-                for properties in dir(mods):
-                    if "__" not in properties:
-                        props=eval("type(mods."+str(properties)+")")
-                        if "Object" in str(props):
-                            print(mods.name)
-                            array = True
+            for properties in dir(mods):
+                if "__" not in properties:
+                    props = eval("type(mods."+str(properties)+")")
+                    if "Object" in str(props):
+                        #print(mods.name)
+                        array = True
 
         if not array:
             bpy.ops.object.modifier_add(type='ARRAY')
@@ -178,7 +167,7 @@ class DarrowCircleArray(bpy.types.Operator):
             bpy.context.object.modifiers["Array"].use_relative_offset = False
             bpy.context.object.modifiers["Array"].use_object_offset = True
             bpy.context.object.modifiers["Array"].offset_object = empty
-        
+
         bpy.ops.object.select_all(action='DESELECT')
         empty.select_set(state=True)
         selected.select_set(state=False)
@@ -193,19 +182,18 @@ class DarrowCircleArray(bpy.types.Operator):
         if settings.zBool == True:
             axis = 'Z'
         rotation = 360 / amt
-        print(rotation)
         value = math.radians(rotation)
         bpy.ops.transform.rotate(
             value=value, orient_axis=axis, orient_type='GLOBAL',)
         bpy.ops.object.select_all(action='DESELECT')
         empty.select_set(state=False)
-        selected.select_set(state=True) 
+        selected.select_set(state=True)
         context.view_layer.objects.active = selected
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
 
         empty.select_set(state=True)
-        selected.select_set(state=True) 
+        selected.select_set(state=True)
         context.view_layer.objects.active = selected
         bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
         bpy.ops.object.select_all(action='DESELECT')
@@ -236,17 +224,6 @@ def register():
         step=1,
         soft_max=30,
         soft_min=1,
-        #update=update_func_create
-    )
-
-    bpy.types.Object.stepAmount = bpy.props.IntProperty(
-        name="Step",
-        description="Step",
-        default=5,
-        step=100,
-        soft_max=30,
-        soft_min=1,
-        #update=update_func
     )
 
     bpy.types.Scene.compactBool = bpy.props.BoolProperty(
@@ -255,12 +232,10 @@ def register():
         default=False
     )
 
-
 def unregister():
 
     for cls in classes:
         bpy.utils.unregister_class(cls)
-
 
 if __name__ == "__main__":
     register()
