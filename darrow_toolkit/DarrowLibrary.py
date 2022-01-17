@@ -130,7 +130,7 @@ class DarrowDevPanel:
 
     @classmethod
     def poll(cls, context):
-        settings = context.preferences.addons['darrow_toolkit'].preferences
+        settings = context.preferences.addons[__package__].preferences
 
         return settings.library_moduleBool == True
 

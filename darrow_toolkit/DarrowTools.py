@@ -17,7 +17,6 @@ from bpy.types import (Panel,
 #-----------------------------------------------------#         
 #     handles ui panel 
 #-----------------------------------------------------#  
-
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "DarrowTools"
     bl_category = "Darrow Toolkit"
@@ -28,7 +27,7 @@ class DarrowToolPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         obj = context.active_object
-        settings = context.preferences.addons['darrow_toolkit'].preferences
+        settings = context.preferences.addons[__package__].preferences
 
         if obj is not None: 
             obj = context.active_object

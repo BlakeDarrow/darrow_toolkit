@@ -38,7 +38,7 @@ class DarrowExportPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        settings = context.preferences.addons['darrow_toolkit'].preferences
+        settings = context.preferences.addons[__package__].preferences
         obj = context.active_object
         preferences = context.preferences
         for obj in bpy.context.selected_objects:

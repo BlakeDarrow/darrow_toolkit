@@ -29,7 +29,7 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 15, 10),
+    "version": (0, 15, 11),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Custom toolkit for efficient FBX exporting, custom tools, and external mesh libraries",
@@ -44,7 +44,7 @@ bl_info = {
 if __package__ != "darrow_toolkit":
     sys.modules["darrow_toolkit"] = sys.modules[__package__]
 
-modulesNames = ['DarrowTools','DarrowRGB', 'DarrowSettings', 'DarrowExport','DarrowLibrary',]
+modulesNames = ['DarrowTools','DarrowRGB', 'DarrowSettings', 'DarrowExport','DarrowLibrary','DarrowCircleArray']
 
 #-----------------------------------------------------#  
 #     imports    

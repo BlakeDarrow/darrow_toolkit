@@ -7,10 +7,9 @@
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------#  
-
 import bpy
 import sys
-from bpy.props import StringProperty, IntProperty, BoolProperty
+from bpy.props import StringProperty, IntProperty, BoolProperty, FloatProperty
 from bpy.types import Operator, AddonPreferences
 from . import addon_updater_ops
 
@@ -66,10 +65,32 @@ class DarrowAddonPreferences(AddonPreferences):
         default = True
     )
     
+    array_moduleBool: BoolProperty(
+        name="Array Panel",
+        default=True
+    )
+
     rgb_moduleBool : BoolProperty(
         name = "Vertex Panel",
         default = True
     )
+
+    xBool : BoolProperty(
+        name="X",
+        description="Toggle X axis",
+        default=False
+    )
+    yBool : BoolProperty(
+        name="Y",
+        description="Toggle Y axis",
+        default=False
+    )
+    zBool : BoolProperty(
+        name="Z",
+        description="Toggle Z axis",
+        default=True
+    )
+
 
     def draw(self, context):
         layout = self.layout
@@ -81,6 +102,8 @@ class DarrowAddonPreferences(AddonPreferences):
         split=box.split()
         split.prop(self, "export_moduleBool")
         split.prop(self, "library_moduleBool")
+        split = box.split()
+        split.prop(self, "array_moduleBool")
 
         addon_updater_ops.update_settings_ui(self,context)
 
