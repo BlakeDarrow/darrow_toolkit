@@ -95,7 +95,7 @@ class DarrowAddonPreferences(AddonPreferences):
         description="Size of arrays' empty",
         default=0.25,
         soft_min=0,
-        soft_max=1
+        soft_max=.5
     )
     exportPresets = EnumProperty(
         name="Preset",
@@ -135,7 +135,7 @@ class DarrowAddonPreferences(AddonPreferences):
         description="Threshold to Remove Doubles",
         default=0.02,
         soft_min=0,
-        soft_max=2,
+        soft_max=.25,
         precision=4
     )
 
@@ -170,14 +170,18 @@ class DarrowAddonPreferences(AddonPreferences):
 
         icon.prop(self, "array_moduleBool", toggle=True)
         panel.label(text="")
-        
+
         box = layout.box()
         box.label(text="Default Module Properties")
-        box.alignment = 'EXPAND'
-        box.scale_y = 1.05
-        box.prop(self, "exportPresets", text="Engine Export Preset")
-        box.prop(self, "emptySize", text="Created Empty Size", slider=True)
-        box.prop(self, "removeDoublesAmount", text="Remove Doubles Distance", slider=True)
+        box.alignment = 'RIGHT'
+        split = box.split(factor=0.4)
+        box.scale_y = 1.1
+        col1 = split.column(align=True)
+        col2 = split.column(align=True)
+        col1.prop(self, "emptySize", text="Empty Display Size", slider=True)
+        col1.prop(self, "removeDoublesAmount", text="Remove Doubles Distance", slider=True)
+        col2.prop(self, "exportPresets", text="FBX Export Preset",
+                  icon="EXPORT", emboss = True)
         
         addon_updater_ops.update_settings_ui(self,context)
 

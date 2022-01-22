@@ -81,7 +81,13 @@ class DarrowVertexPanel(bpy.types.Panel):
         Var_displayBool = bpy.context.scene.vertexDisplayBool
         Var_viewportShading = bpy.context.space_data.shading.type
      
-        self.layout.operator('set.display', icon="SETTINGS",text="", depress= Var_displayBool)
+        
+        if Var_displayBool ==True:
+            self.layout.operator('set.display', icon="HIDE_OFF",
+                                 text="", depress=Var_displayBool)
+        else:
+            self.layout.operator('set.display', icon="HIDE_ON",
+                                text="", depress=Var_displayBool)
         if Var_viewportShading != 'SOLID':
             self.layout.enabled = False
 

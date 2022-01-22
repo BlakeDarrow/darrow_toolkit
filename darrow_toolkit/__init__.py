@@ -29,10 +29,10 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 15, 14),
+    "version": (0, 16, 1),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Custom toolkit for efficient FBX exporting, custom tools, and external mesh libraries",
+    "description": "Custom toolkit for efficient FBX exporting, circular array, Q.O.L improvements, and external mesh libraries",
     "category": "Tools",
     "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
     }
