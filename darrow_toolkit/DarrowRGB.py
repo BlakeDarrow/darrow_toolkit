@@ -60,8 +60,8 @@ class DarrowVertexPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        settings = context.preferences.addons[__package__].preferences
         obj = context.active_object
+        settings = context.preferences.addons[__package__].preferences
 
         if obj is not None: 
             obj = context.active_object
@@ -78,10 +78,9 @@ class DarrowVertexPanel(bpy.types.Panel):
         return settings.rgb_moduleBool == True
 
     def draw_header(self, context):
-        layout = self.layout
-        obj = context.scene
         Var_displayBool = bpy.context.scene.vertexDisplayBool
         Var_viewportShading = bpy.context.space_data.shading.type
+     
         self.layout.operator('set.display', icon="SETTINGS",text="", depress= Var_displayBool)
         if Var_viewportShading != 'SOLID':
             self.layout.enabled = False

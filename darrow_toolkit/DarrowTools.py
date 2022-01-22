@@ -47,15 +47,15 @@ class DarrowToolPanel(bpy.types.Panel):
             #print("poll")
 
     def draw_header(self, context):
-        layout = self.layout
-        obj = context.scene
-        self.layout.prop(obj, 'compactBool', icon="SETTINGS",text="")
+        settings = context.preferences.addons[__package__].preferences
+        self.layout.prop(settings, 'advancedToolBool', icon="SETTINGS",text="")
 
     def draw(self, context):
         layout = self.layout
         obj = context.active_object
         scn = context.scene
-        Var_compactBool = bpy.context.scene.compactBool
+        settings = context.preferences.addons[__package__].preferences
+        Var_compactBool = settings.advancedToolBool
     
         if obj is not None:  
             split=layout.box()
@@ -81,8 +81,8 @@ class DarrowToolPanel(bpy.types.Panel):
                     col.operator('shade.smooth')
                     col.operator('apply.transforms')
                     col.operator('apply.normals')
-                    col.separator()
-                    col.operator('apply_all.darrow', text="Prepare for Export")
+                    #col.separator()
+                    #col.operator('apply_all.darrow', text="Prepare for Export")
                                                 
 #-----------------------------------------------------#  
 #     handles wireframe display   
@@ -127,6 +127,7 @@ class DarrowCleanMesh(bpy.types.Operator):
     bl_label = "Clean Mesh"
 
     def execute(self, context):
+        settings = context.preferences.addons[__package__].preferences
         objs = context.selected_objects
         if len(objs) is not 0: 
             if context.mode == 'OBJECT':
@@ -135,7 +136,7 @@ class DarrowCleanMesh(bpy.types.Operator):
             bpy.ops.mesh.select_mode(use_extend=False, use_expand=False, type='VERT')
             bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.mesh.delete_loose()
-            bpy.ops.mesh.remove_doubles()
+            bpy.ops.mesh.remove_doubles(threshold=settings.removeDoublesAmount)
             bpy.ops.mesh.dissolve_degenerate()
             bpy.ops.object.editmode_toggle()   
             self.report({'INFO'}, "Mesh cleaned")

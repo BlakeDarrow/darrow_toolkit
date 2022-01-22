@@ -156,15 +156,15 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
             #print("poll")
 
     def draw_header(self, context):
-        layout = self.layout
-        obj = context.scene
-        self.layout.prop(obj, 'folderBool', icon="SETTINGS",text="")
+        settings = context.preferences.addons[__package__].preferences
+        self.layout.prop(settings, 'advancedLibraryBool', icon="SETTINGS",text="")
 
     def draw(self, context):
+        settings = context.preferences.addons[__package__].preferences
         getBool = bpy.context.scene.getBool
         addBool = bpy.context.scene.addBool
         nullBool = bpy.context.scene.nullBool
-        folderBool = bpy.context.scene.folderBool
+        folderBool = settings.advancedLibraryBool
     
         layout = self.layout
         wm = context.window_manager
@@ -473,20 +473,11 @@ def register():
         default = True,
         name = "Hide Overlays in Thumbnail"
     )
-        
-    bpy.types.Scene.folderBool = bpy.props.BoolProperty(
-        default = False,
-        name = "Show Advanced"
-    )
-
+    
     bpy.types.Scene.library_list = bpy.props.StringProperty(
     
     )
 
-    bpy.types.Scene.meshAdvancedBool = bpy.props.BoolProperty(
-    name = "Advanced",
-    default = False
-    )
 
     bpy.types.Scene.autoCamGenBool = bpy.props.BoolProperty(
     name = "Generate Thumbnail Camera",

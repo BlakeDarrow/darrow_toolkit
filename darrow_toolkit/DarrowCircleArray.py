@@ -71,12 +71,9 @@ class DarrowToolPanel(bpy.types.Panel):
 
         if obj is not None:
             objs = context.selected_objects
-
             col = layout.column(align=True)
             col.scale_y = 1.33
             col.prop(obj, 'arrayAmount', slider=True)
-            # if len(objs) is not 0 and context.scene.compactBool == True:
-            #col.prop(obj, 'stepAmount', slider=True)
 
             row = layout.row(align=True)
             split = row.split(align=True)
@@ -142,7 +139,7 @@ class DarrowCircleArray(bpy.types.Operator):
         if context.object.linkedEmpty == "tmp":
             bpy.ops.object.select_all(action='DESELECT')
             bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD')
-            bpy.context.object.empty_display_size = 0.25
+            bpy.context.object.empty_display_size = settings.emptySize
             empty = bpy.context.selected_objects[0]
 
         else:
