@@ -132,6 +132,8 @@ class DarrowCircleArray(bpy.types.Operator):
         if context.object.linkedEmpty == "tmp":
             bpy.ops.object.select_all(action='DESELECT')
             bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD')
+            bpy.context.object.empty_display_size = 0.25
+
             empty = bpy.context.selected_objects[0]
 
         else:
