@@ -97,7 +97,7 @@ class DarrowAddonPreferences(AddonPreferences):
         soft_min=0,
         soft_max=.5
     )
-    exportPresets = EnumProperty(
+    exportPresets : EnumProperty(
         name="Preset",
         description="Animation Export Presets",
         items=[('OP1', "Unity", ""),
