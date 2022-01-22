@@ -110,7 +110,7 @@ class DarrowToolPanel(bpy.types.Panel):
             else:
                 col.enabled = False
 
-#---------------------------------------------------#
+#-----------------------------------------------------#
 #     handles array
 #-----------------------------------------------------#
 
@@ -121,19 +121,25 @@ class DarrowCircleArray(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
-        bpy.context.scene.cursor.rotation_euler = (0, 0, 0)
-
+        obj = bpy.context.selected_objects[0]
         amt = context.object.arrayAmount
         settings = context.preferences.addons[__package__].preferences
         selected = bpy.context.selected_objects[0]
+        bpy.context.scene.cursor.rotation_euler = (0, 0, 0)
         bpy.ops.object.transform_apply(
             location=True, rotation=True, scale=True)
+        try:
+            if bpy.context.object.modifiers["DarrowToolkitArray"].offset_object == None:
+                modifier_to_remove = obj.modifiers.get("DarrowToolkitArray")
+                obj.modifiers.remove(modifier_to_remove)
+                context.object.linkedEmpty = "tmp"
+        except:
+            print("Not empty")
 
         if context.object.linkedEmpty == "tmp":
             bpy.ops.object.select_all(action='DESELECT')
             bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD')
             bpy.context.object.empty_display_size = 0.25
-
             empty = bpy.context.selected_objects[0]
 
         else:
@@ -143,33 +149,42 @@ class DarrowCircleArray(bpy.types.Operator):
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
         context.object.linkedEmpty = empty.name
-
-        obj = bpy.context.selected_objects[0]
         array = False
+        mod = bpy.context.object
 
-        for mods in obj.modifiers:
-            for properties in dir(mods):
-                if "__" not in properties:
-                    props = eval("type(mods."+str(properties)+")")
-                    if "Object" in str(props):
-                        #print(mods.name)
-                        array = True
-
+        for modifier in mod.modifiers:
+            if modifier.name == "DarrowToolkitArray":
+                array = True
+                print("DarrowToolkitArray exists")
+        
         if not array:
-            bpy.ops.object.modifier_add(type='ARRAY')
-            bpy.context.object.modifiers["Array"].count = amt
-            bpy.context.object.modifiers["Array"].use_relative_offset = False
-            bpy.context.object.modifiers["Array"].use_object_offset = True
-            bpy.context.object.modifiers["Array"].offset_object = empty
-        else:
-            modifier_to_remove = obj.modifiers.get("Array")
-            obj.modifiers.remove(modifier_to_remove)
-            bpy.ops.object.modifier_add(type='ARRAY')
-            bpy.context.object.modifiers["Array"].count = amt
-            bpy.context.object.modifiers["Array"].use_relative_offset = False
-            bpy.context.object.modifiers["Array"].use_object_offset = True
-            bpy.context.object.modifiers["Array"].offset_object = empty
+            modifier = obj.modifiers.new(
+                name='DarrowToolkitArray', type='ARRAY')
 
+            modifier.name = "DarrowToolkitArray"
+            modifier.count = amt
+            modifier.use_relative_offset = False
+            modifier.use_object_offset = True
+            modifier.offset_object = empty
+        else:
+            modifier_to_remove = obj.modifiers.get("DarrowToolkitArray")
+            obj.modifiers.remove(modifier_to_remove)
+
+            modifier = obj.modifiers.new(
+                name='DarrowToolkitArray', type='ARRAY')
+
+            modifier.name = "DarrowToolkitArray"
+            modifier.count = amt
+            modifier.use_relative_offset = False
+            modifier.use_object_offset = True
+            modifier.offset_object = empty
+        
+        modAmt = -1
+        for mod in (obj.modifiers):
+           modAmt = modAmt + 1
+
+        bpy.ops.object.modifier_move_to_index(
+            modifier="DarrowToolkitArray", index=modAmt)
         bpy.ops.object.select_all(action='DESELECT')
         empty.select_set(state=True)
         selected.select_set(state=False)
@@ -193,7 +208,6 @@ class DarrowCircleArray(bpy.types.Operator):
         context.view_layer.objects.active = selected
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
-
         empty.select_set(state=True)
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
