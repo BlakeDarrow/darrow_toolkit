@@ -105,7 +105,10 @@ class DarrowToolPanel(bpy.types.Panel):
             col.scale_y = 1.5
             col.operator('circle.array')
 
-            if len(objs) is not 0:
+            if xAxis == False and yAxis == False and zAxis == False:
+                print("all false")
+                col.enabled = False
+            elif len(objs) is not 0:
                 col.enabled = True
             else:
                 col.enabled = False
