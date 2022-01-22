@@ -38,7 +38,7 @@ class DarrowExportPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        settings = context.preferences.addons['darrow_toolkit'].preferences
+        settings = context.preferences.addons[__package__].preferences
         obj = context.active_object
         preferences = context.preferences
         for obj in bpy.context.selected_objects:
@@ -55,15 +55,17 @@ class DarrowExportPanel(bpy.types.Panel):
             #print("poll")
 
     def draw_header(self, context):
+        settings = context.preferences.addons[__package__].preferences
         layout = self.layout
         obj = context.scene
-        self.layout.prop(obj, 'advancedBool', icon="SETTINGS",text="")
+        self.layout.prop(settings, 'advancedExportBool', icon="SETTINGS",text="")
 
     def draw(self, context):
+        settings = context.preferences.addons[__package__].preferences
         Var_prefix_bool = bpy.context.scene.useprefixBool
         Var_suffix_bool = bpy.context.scene.usecounterBool
         Var_custom_prefix = bpy.context.scene.PrefixOption
-        Var_advanced_bool = bpy.context.scene.advancedBool
+        Var_advanced_bool = settings.advancedExportBool
         Var_allowFBX = bpy.context.scene.fbxBool
         obj = context.object
         objs = context.selected_objects
@@ -72,7 +74,7 @@ class DarrowExportPanel(bpy.types.Panel):
             if obj is not None:  
                 layout = self.layout
                 obj = context.scene
-                layout.prop(obj, 'exportPresets')
+                layout.prop(settings, 'exportPresets')
 
                 if Var_advanced_bool ==True:
                     box = layout.box()
@@ -147,6 +149,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     """
 
     def execute(self, context):
+        settings = context.preferences.addons[__package__].preferences
         objs = context.selected_objects
         if len(objs) is not 0: 
             C = bpy.context
@@ -184,7 +187,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             Var_leafBool = bpy.context.scene.isleafBool
             Var_PrefixBool = bpy.context.scene.useprefixBool
             Var_custom_prefix = bpy.context.scene.PrefixOption
-            Var_presets = bpy.context.scene.exportPresets
+            Var_presets =settings.exportPresets
             Var_counterBool = bpy.context.scene.usecounterBool
             
             if Var_presets == 'OP1':
@@ -388,12 +391,7 @@ def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
-    bpy.types.Scene.advancedBool = bpy.props.BoolProperty(
-    name = "Advanced",
-    description = "Show advanced options",
-    default = False
-    )
-    
+   
     bpy.types.Scene.fbxBool = bpy.props.BoolProperty()
 
     bpy.types.Scene.collectionBool = bpy.props.BoolProperty(
@@ -442,15 +440,6 @@ def register():
     items=[('OP1', ".blend", ""),
            ('OP2', "custom", ""),
         ]
-    )
-
-    bpy.types.Scene.exportPresets = bpy.props.EnumProperty(
-    name="Preset",
-    description="Animation Export Presets",
-    items=[('OP1', "Unity", ""),
-           ('OP2', "Unreal", ""),
-        ],
-    default = 'OP2'
     )
 
 def unregister():
