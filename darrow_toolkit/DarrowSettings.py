@@ -93,7 +93,7 @@ class DarrowAddonPreferences(AddonPreferences):
     emptySize : FloatProperty(
         name="Array Empty Display Size",
         description="Size of arrays' empty",
-        default=0.25,
+        default=0.1,
         soft_min=0,
         soft_max=.5
     )
@@ -138,6 +138,11 @@ class DarrowAddonPreferences(AddonPreferences):
         soft_max=.25,
         precision=4
     )
+    moveEmptyBool: BoolProperty(
+        name="Hide Empty Under Array Object",
+        description="Hide empty under object",
+        default=True
+    )
 
     def draw(self, context):
         layout = self.layout
@@ -169,6 +174,7 @@ class DarrowAddonPreferences(AddonPreferences):
         panel_2.prop(self, "advancedLibraryBool",icon="SETTINGS", icon_only=True)
 
         icon.prop(self, "array_moduleBool", toggle=True)
+        panel.prop(self, "advancedVertexBool", icon="SETTINGS", icon_only=True)
         panel.label(text="")
 
         box = layout.box()
@@ -180,6 +186,7 @@ class DarrowAddonPreferences(AddonPreferences):
         col2 = split.column(align=True)
         col1.prop(self, "emptySize", text="Empty Display Size", slider=True)
         col1.prop(self, "removeDoublesAmount", text="Remove Doubles Distance", slider=True)
+        col2.prop(self, "moveEmptyBool")
         col2.prop(self, "exportPresets", text="FBX Export Preset",
                   icon="EXPORT", emboss = True)
         

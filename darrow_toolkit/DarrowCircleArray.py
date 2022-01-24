@@ -55,61 +55,69 @@ class DarrowToolPanel(bpy.types.Panel):
         return settings.array_moduleBool == True
 
     def draw_header(self, context):
-        layout = self.layout
-        obj = context.scene
-        #self.layout.prop(obj, 'compactBool', icon="SETTINGS", text="")
+        settings = context.preferences.addons[__package__].preferences
+        self.layout.prop(settings, 'advancedVertexBool', icon="SETTINGS", text="")
 
     def draw(self, context):
         settings = context.preferences.addons[__package__].preferences
         layout = self.layout
         obj = context.active_object
-        scn = context.scene
-        Var_compactBool = bpy.context.scene.compactBool
+        objs = context.selected_objects
+        Var_advancedBool = settings.advancedVertexBool
         xAxis = settings.xBool
         yAxis = settings.yBool
         zAxis = settings.zBool
 
         if obj is not None:
-            objs = context.selected_objects
-            col = layout.column(align=True)
-            col.scale_y = 1.33
-            col.prop(obj, 'arrayAmount', slider=True)
+            if context.mode == 'OBJECT':
+                
+                col = layout.column(align=True)
+                col.scale_y = 1.33
+                col.prop(obj, 'arrayAmount', slider=True)
 
-            row = layout.row(align=True)
-            split = row.split(align=True)
-            split.prop(settings, 'xBool', toggle=True)
+                row = layout.row(align=True)
+                split = row.split(align=True)
+                split.prop(settings, 'xBool', toggle=True)
 
-            if yAxis == True:
-                split.enabled = False
-            if zAxis == True:
-                split.enabled = False
+                if yAxis == True:
+                    split.enabled = False
+                if zAxis == True:
+                    split.enabled = False
 
-            split = row.split(align=True)
-            split.prop(settings, 'yBool', toggle=True)
-            if xAxis == True:
-                split.enabled = False
-            if zAxis == True:
-                split.enabled = False
+                split = row.split(align=True)
+                split.prop(settings, 'yBool', toggle=True)
+                if xAxis == True:
+                    split.enabled = False
+                if zAxis == True:
+                    split.enabled = False
 
-            split = row.split(align=True)
-            split.prop(settings, 'zBool', toggle=True)
-            if xAxis == True:
-                split.enabled = False
-            if yAxis == True:
-                split.enabled = False
+                split = row.split(align=True)
+                split.prop(settings, 'zBool', toggle=True)
+                if xAxis == True:
+                    split.enabled = False
+                if yAxis == True:
+                    split.enabled = False
 
-            col = layout.column(align=True)
-            col.scale_y = 1.5
-            col.operator('circle.array')
+                col = layout.column(align=True)
+                col.scale_y = 1.5
+                col.operator('circle.array')
 
-            if xAxis == False and yAxis == False and zAxis == False:
-                print("all false")
-                col.enabled = False
-            elif len(objs) is not 0:
-                col.enabled = True
-            else:
-                col.enabled = False
+                if xAxis == False and yAxis == False and zAxis == False:
+                    col.enabled = False
+                elif len(objs) is not 0:
+                    col.enabled = True
+                else:
+                    col.enabled = False
 
+                if  Var_advancedBool == True:
+                    box = layout.box()
+                    box.label(text="Advanced")
+
+                    box.operator('clear.array', text="Delete Linked Empty and Array")
+                    if len(objs) is 0:
+                        box.enabled = False
+                    box.prop(settings, 'moveEmptyBool', toggle=False, text="Hide empty under object")
+                    
 #-----------------------------------------------------#
 #     handles array
 #-----------------------------------------------------#
@@ -125,6 +133,7 @@ class DarrowCircleArray(bpy.types.Operator):
         amt = context.object.arrayAmount
         settings = context.preferences.addons[__package__].preferences
         selected = bpy.context.selected_objects[0]
+        col = obj.users_collection[0].name
         bpy.context.scene.cursor.rotation_euler = (0, 0, 0)
         bpy.ops.object.transform_apply(
             location=True, rotation=True, scale=True)
@@ -155,7 +164,6 @@ class DarrowCircleArray(bpy.types.Operator):
         for modifier in mod.modifiers:
             if modifier.name == "DarrowToolkitArray":
                 array = True
-                print("DarrowToolkitArray exists")
         
         if not array:
             modifier = obj.modifiers.new(
@@ -208,11 +216,30 @@ class DarrowCircleArray(bpy.types.Operator):
         context.view_layer.objects.active = selected
         bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+
         empty.select_set(state=True)
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
+        
         bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
         bpy.ops.object.select_all(action='DESELECT')
+
+        if settings.moveEmptyBool == True:
+            empty.select_set(state=True)
+            context.view_layer.objects.active = empty
+
+            coll_target = bpy.context.scene.collection.children.get(col)
+
+            for coll in empty.users_collection:
+                coll.objects.unlink(empty)
+
+            coll_target.objects.link(empty)
+        else:
+
+            for coll in empty.users_collection:
+                coll.objects.unlink(empty)
+            context.scene.collection.objects.link(empty)
+
         empty.select_set(state=False)
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
@@ -220,10 +247,54 @@ class DarrowCircleArray(bpy.types.Operator):
         return {'FINISHED'}
 
 #-----------------------------------------------------#
+#     handles array
+#-----------------------------------------------------#
+
+class DarrowClearSelected(bpy.types.Operator):
+    bl_idname = "clear.array"
+    bl_description = "Move selected to world origin"
+    bl_label = "Clear Selected"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        obj = bpy.context.selected_objects[0]
+        settings = context.preferences.addons[__package__].preferences
+        selected = bpy.context.selected_objects[0]
+
+        if not context.object.linkedEmpty == "tmp":
+            empty = bpy.data.objects[context.object.linkedEmpty]
+            context.object.linkedEmpty = empty.name
+        else: 
+            context.object.linkedEmpty == "tmp"
+
+        bpy.ops.object.select_all(action='DESELECT')
+        selected.select_set(state=True)
+        context.view_layer.objects.active = selected
+
+        mod = bpy.context.object
+
+        for modifier in mod.modifiers:
+            if modifier.name == "DarrowToolkitArray":
+                modifier_to_remove = obj.modifiers.get("DarrowToolkitArray")
+                obj.modifiers.remove(modifier_to_remove)
+
+        if not context.object.linkedEmpty == "tmp":
+            empty.select_set(state=True)
+            selected.select_set(state=False)
+            context.view_layer.objects.active = empty
+            bpy.ops.object.delete()
+
+        selected.select_set(state=True)
+        context.view_layer.objects.active = selected
+        context.object.linkedEmpty = "tmp"
+
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
 #   Registration classes
 #-----------------------------------------------------#
 
-classes = (DarrowCircleArray, DarrowToolPanel,)
+classes = (DarrowCircleArray, DarrowToolPanel, DarrowClearSelected)
 
 def register():
     for cls in classes:
