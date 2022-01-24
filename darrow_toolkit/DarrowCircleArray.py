@@ -133,7 +133,7 @@ class DarrowCircleArray(bpy.types.Operator):
         amt = context.object.arrayAmount
         settings = context.preferences.addons[__package__].preferences
         selected = bpy.context.selected_objects[0]
-        col = obj.users_collection[0].name
+        col = obj.users_collection[0]
         bpy.context.scene.cursor.rotation_euler = (0, 0, 0)
         bpy.ops.object.transform_apply(
             location=True, rotation=True, scale=True)
@@ -227,13 +227,10 @@ class DarrowCircleArray(bpy.types.Operator):
         if settings.moveEmptyBool == True:
             empty.select_set(state=True)
             context.view_layer.objects.active = empty
-
-            coll_target = bpy.context.scene.collection.children.get(col)
-
             for coll in empty.users_collection:
                 coll.objects.unlink(empty)
 
-            coll_target.objects.link(empty)
+            col.objects.link(empty)
         else:
 
             for coll in empty.users_collection:
