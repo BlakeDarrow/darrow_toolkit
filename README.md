@@ -1,4 +1,4 @@
-
+[![Documentation Status](https://readthedocs.org/projects/darrow-toolkit/badge/?version=latest)](https://docs.darrow.tools/en/latest/?badge=latest)
 # Darrow Toolkit: Blender Addon
 Also available on [Gumroad!](https://blakedarrow.gumroad.com/l/DarrowTools)
 
