@@ -1,28 +1,44 @@
+name: Changelog
+
 on:
+  pull_request:
+    types: [closed]
+
+  release:
+    types: [published]
+
+  issues:
+    types: [closed, edited]
+    
   push:
     tags:
       - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-  build:
-    name: "🚀 Release"
-    runs-on: ubuntu-18.04
+  generate_changelog:
+    runs-on: ubuntu-latest
+    name: Generate changelog for master branch
     steps:
-      - name: "📥 Check-out"
-        uses: actions/checkout@v1
-      - name: "✏️ Generate release changelog"
-        id: generate-release-changelog
-        uses: heinrichreimer/github-changelog-generator-action@v2.3
+      - uses: actions/checkout@v1
+
+      - name: Generate changelog
+        uses: charmixer/auto-changelog-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          onlyLastTag: "true"
-          stripHeaders: "true"
-          stripGeneratorNotice: "true"
-      - name: "🚀 Create GitHub release"
-        uses: actions/create-release@v1
+          token: ${{ secrets.YOUR_GITHUB_TOKEN or GITHUB_TOKEN }}
+
+      - name: Commit files
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: ${{ steps.generate-release-changelog.outputs.changelog }}
+          CI_USER: ${{ secrets.YOUR_GITHUB_USER }}
+          CI_EMAIL: ${{ secrets.YOUR_GITHUB_EMAIL }}
+        run: |
+          git config --local user.email "$CI_EMAIL"
+          git config --local user.name "$CI_USER"
+          git add CHANGELOG.md && git commit -m 'Updated CHANGELOG.md' && echo "push=true" >> $GITHUB_ENV || echo "No changes to CHANGELOG.md"
+
+      - name: Push changes
+        if: env.push == 'true'
+        env:
+          CI_USER: ${{ secrets.YOUR_GITHUB_USER }}
+          CI_TOKEN: ${{ secrets.YOUR_GITHUB_TOKEN or GITHUB_TOKEN }}
+        run: |
+          git push "https://$CI_USER:$CI_TOKEN@github.com/$GITHUB_REPOSITORY.git" HEAD:master
