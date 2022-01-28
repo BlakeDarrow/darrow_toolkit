@@ -1,13 +1,28 @@
-name: Changelog
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+
 jobs:
-  changelog:
-    runs-on: ubuntu-20.04
+  build:
+    name: "🚀 Release"
+    runs-on: ubuntu-18.04
     steps:
+      - name: "📥 Check-out"
+        uses: actions/checkout@v1
       - name: "✏️ Generate release changelog"
+        id: generate-release-changelog
         uses: heinrichreimer/github-changelog-generator-action@v2.3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          token: ${{ secrets.GITHUB_TOKEN }}
+          onlyLastTag: "true"
+          stripHeaders: "true"
+          stripGeneratorNotice: "true"
+      - name: "🚀 Create GitHub release"
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ steps.generate-release-changelog.outputs.changelog }}
