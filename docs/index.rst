@@ -1,23 +1,27 @@
 ###################
 DarrowToolkit
 ###################
+
 DarrowToolkit is a free and open source addon developed for Blender 2.9+, written and maintained by Blake Darrow.
-`Source available on Github`_.
+`Available on Github`_.
 
-.. _Source available on Github: https://github.com/BlakeDarrow/darrow_toolkit/releases
+.. _Available on Github: https://github.com/BlakeDarrow/darrow_toolkit/releases
 
-.. toctree::
-   :maxdepth: 5
-   :caption: Features
-
-   DarrowQOL
-   DarrowVertex
-   DarrowCircleArray
-   DarrowFBX
-   DarrowLibrary
+.. raw:: html
+   
+   <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
+      <iframe src="https://www.youtube-nocookie.com/embed/dxIoOsZpZs8" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
+   </div>
+   <hr>  
 
 .. toctree::
    :maxdepth: 1
-   :caption: ChangeLog
+   :caption: Start Here
 
-   ChangeLog
+   Introduction
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Development
+
+   Changelog
