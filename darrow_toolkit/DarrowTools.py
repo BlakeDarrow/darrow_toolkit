@@ -57,27 +57,29 @@ class DarrowToolPanel(bpy.types.Panel):
         Var_compactBool = settings.advancedToolBool
         split=layout.box()
         col=split.column(align = True)
+        col.scale_y = 1.2
         if Var_compactBool == False:
-            col.operator('set.wireframe', text="Toggle Wireframe")
+            col.operator('set.wireframe',
+                         text="Display Wireframe", icon="CUBE")
             if context.mode == 'OBJECT':
-                col.operator('move.origin')
+                col.operator('move.origin', icon="OBJECT_ORIGIN")
                 #col.operator('apply_all.darrow', text="Prepare for Export")
             if context.mode == 'EDIT_MESH':
-                col.operator('set.origin')
+                col.operator('set.origin', icon="PIVOT_CURSOR")
         
         if Var_compactBool == True:
-            #col.label(text = "Q.O.L Operators")
-            col.operator('set.wireframe')
+            col.operator('set.wireframe', text="Display Wireframe", icon="CUBE")
 
             if context.mode == 'EDIT_MESH':
-                col.operator('set.origin')
+                col.operator('set.origin', icon="PIVOT_CURSOR")
             if context.mode == 'OBJECT':
-                col.operator('move.origin')
+                col.operator('move.origin', icon="OBJECT_ORIGIN")
                 col = split.column(align=True)
-                col.operator('clean.mesh')
-                col.operator('shade.smooth')
-                col.operator('apply.transforms')
-                col.operator('apply.normals')
+                col.scale_y = 1.2
+                col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
+                col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
+                col.operator('apply.transforms', icon="CHECKMARK")
+                col.operator('apply.normals', icon="NORMALS_FACE")
                 if len(objs) is 0:
                     col.enabled = False
                 else:
@@ -297,6 +299,8 @@ class DarrowSmooth(bpy.types.Operator):
         if len(objs) is not 0: 
             bpy.ops.object.shade_smooth()
             bpy.context.object.data.use_auto_smooth = True
+            bpy.context.object.data.auto_smooth_angle = 1.15192
+
             self.report({'INFO'}, "Object smoothed")
         else:
             self.report({'INFO'}, "None Selected")

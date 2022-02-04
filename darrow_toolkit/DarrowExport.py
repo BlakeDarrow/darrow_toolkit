@@ -87,6 +87,7 @@ class DarrowExportPanel(bpy.types.Panel):
                     split.prop(obj, 'collectionBool')
         
                 box = layout.box()
+                box.scale_y = 1.2
                 box.label(text = "FBX Exporter")
                
                 if len(objs) is not 0: 

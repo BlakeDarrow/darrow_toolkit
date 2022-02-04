@@ -108,7 +108,7 @@ class DarrowAddonPreferences(AddonPreferences):
     advancedToolBool : BoolProperty(
         name="Advanced",
         description="Show advanced options",
-        default=False
+        default=True
     )
     advancedVertexBool : BoolProperty(
         name="Advanced",

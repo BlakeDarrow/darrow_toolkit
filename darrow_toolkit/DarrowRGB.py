@@ -94,15 +94,16 @@ class DarrowVertexPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = context.object
-        scn = context.scene
 
         if obj is not None:  
             split=layout.box()
             row = split.row(align = True)
+            row.scale_y = 1.1
             row.operator('set.black')
             row.operator('set.white')
             
             row = split.row(align = True)
+            row.scale_y = 1.1
             row.operator('set.red')
             row.operator('set.green')
             row.operator('set.blue')

@@ -100,7 +100,7 @@ class DarrowToolPanel(bpy.types.Panel):
 
                 col = layout.column(align=True)
                 col.scale_y = 1.5
-                col.operator('circle.array')
+                col.operator('circle.array', icon="ONIONSKIN_ON",)
 
                 if xAxis == False and yAxis == False and zAxis == False:
                     col.enabled = False
