@@ -53,37 +53,40 @@ class DarrowToolPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         objs = context.selected_objects
+        obj = context.active_object
         settings = context.preferences.addons[__package__].preferences
         Var_compactBool = settings.advancedToolBool
-        split=layout.box()
-        col=split.column(align = True)
-        col.scale_y = 1.2
-        if Var_compactBool == False:
-            col.operator('set.wireframe',
-                         text="Display Wireframe", icon="CUBE")
-            if context.mode == 'OBJECT':
-                col.operator('move.origin', icon="OBJECT_ORIGIN")
-                #col.operator('apply_all.darrow', text="Prepare for Export")
-            if context.mode == 'EDIT_MESH':
-                col.operator('set.origin', icon="PIVOT_CURSOR")
+        if obj is not None:
+            split=layout.box()
+            col=split.column(align = True)
+            col.scale_y = 1.2
+            obj = context.active_object
         
-        if Var_compactBool == True:
-            col.operator('set.wireframe', text="Display Wireframe", icon="CUBE")
+            if Var_compactBool == False:
+                col.operator('set.wireframe',
+                            text="Display Wireframe", icon="CUBE")
+                if context.mode == 'OBJECT':
+                    col.operator('move.origin', icon="OBJECT_ORIGIN")
+                if context.mode == 'EDIT_MESH':
+                    col.operator('set.origin', icon="PIVOT_CURSOR")
+            
+            if Var_compactBool == True:
+                col.operator('set.wireframe', text="Display Wireframe", icon="CUBE")
 
-            if context.mode == 'EDIT_MESH':
-                col.operator('set.origin', icon="PIVOT_CURSOR")
-            if context.mode == 'OBJECT':
-                col.operator('move.origin', icon="OBJECT_ORIGIN")
-                col = split.column(align=True)
-                col.scale_y = 1.2
-                col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
-                col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
-                col.operator('apply.transforms', icon="CHECKMARK")
-                col.operator('apply.normals', icon="NORMALS_FACE")
-                if len(objs) is 0:
-                    col.enabled = False
-                else:
-                    col.enabled = True
+                if context.mode == 'EDIT_MESH':
+                    col.operator('set.origin', icon="PIVOT_CURSOR")
+                if context.mode == 'OBJECT':
+                    col.operator('move.origin', icon="OBJECT_ORIGIN")
+                    col = split.column(align=True)
+                    col.scale_y = 1.2
+                    col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
+                    col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
+                    col.operator('apply.transforms', icon="CHECKMARK")
+                    col.operator('apply.normals', icon="NORMALS_FACE")
+                    if len(objs) is 0:
+                        col.enabled = False
+                    else:
+                        col.enabled = True
 
 class CTO_OT_Dummy(bpy.types.Operator):
     bl_idname = "object.cto_dummy"
