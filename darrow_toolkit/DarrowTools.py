@@ -1,6 +1,6 @@
 #-----------------------------------------------------#  
 #
-#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
 #
 #    See the LICENSE file for your full rights.
 #
@@ -18,7 +18,7 @@ from bpy.types import (Panel,
 #     handles ui panel 
 #-----------------------------------------------------#  
 class DarrowToolPanel(bpy.types.Panel):
-    bl_label = "DarrowTools"
+    bl_label = "DarrowQ.O.L"
     bl_category = "Darrow Toolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -52,38 +52,84 @@ class DarrowToolPanel(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        objs = context.selected_objects
         obj = context.active_object
-        scn = context.scene
         settings = context.preferences.addons[__package__].preferences
         Var_compactBool = settings.advancedToolBool
-    
-        if obj is not None:  
+        if obj is not None:
             split=layout.box()
             col=split.column(align = True)
+            col.scale_y = 1.2
+            obj = context.active_object
+        
             if Var_compactBool == False:
+                col.operator('set.wireframe',
+                            text="Display Wireframe", icon="CUBE")
                 if context.mode == 'OBJECT':
-                    col.operator('move.origin')
-                    col.operator('set.wireframe', text="Toggle Wireframe")
-                    #col.operator('apply_all.darrow', text="Prepare for Export")
+                    col.operator('move.origin', icon="OBJECT_ORIGIN")
                 if context.mode == 'EDIT_MESH':
-                    col.operator('set.origin')
-                
+                    col.operator('set.origin', icon="PIVOT_CURSOR")
+            
             if Var_compactBool == True:
-                col.label(text = "Q.O.L Operators")
-                col.operator('set.wireframe')
+                col.operator('set.wireframe', text="Display Wireframe", icon="CUBE")
 
                 if context.mode == 'EDIT_MESH':
-                    col.operator('set.origin')
+                    col.operator('set.origin', icon="PIVOT_CURSOR")
                 if context.mode == 'OBJECT':
-                    col.operator('move.origin')
-                    col.separator()
-                    col.operator('clean.mesh')
-                    col.operator('shade.smooth')
-                    col.operator('apply.transforms')
-                    col.operator('apply.normals')
-                    #col.separator()
-                    #col.operator('apply_all.darrow', text="Prepare for Export")
-                                                
+                    col.operator('move.origin', icon="OBJECT_ORIGIN")
+                    col = split.column(align=True)
+                    col.scale_y = 1.2
+                    col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
+                    col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
+                    col.operator('apply.transforms', icon="CHECKMARK")
+                    col.operator('apply.normals', icon="NORMALS_FACE")
+                    if len(objs) is 0:
+                        col.enabled = False
+                    else:
+                        col.enabled = True
+
+class CTO_OT_Dummy(bpy.types.Operator):
+    bl_idname = "object.cto_dummy"
+    bl_label = ""
+    bl_description = "There is nothing here"
+    bl_options = {"REGISTER"}
+
+    @classmethod
+    def poll(cls, context):
+        return False
+
+    def execute(self, context):
+        return {'FINISHED'}
+
+def extend_transfo_pop_up(self, context):
+    layout = self.layout
+    row = layout.row(align=False)
+    row.operator(DarrowClearOrientation.bl_idname, icon='TRASH')
+    row.operator(CTO_OT_Dummy.bl_idname, icon='BLANK1', emboss=False)
+
+#-----------------------------------------------------#
+#     handles Orientation 
+#-----------------------------------------------------#
+
+class DarrowClearOrientation(bpy.types.Operator):
+    bl_idname = "clear.orientation"
+    bl_description = "clear.orientation"
+    bl_label = "Cleanup"
+
+    def execute(self, context):
+        try:
+            bpy.context.scene.transform_orientation_slots[0].type = ""
+        except Exception as inst:
+            transforms = str(inst).split(
+                "in")[1][3:-2].replace("', '", " ").split()
+            for type in transforms[6:]:
+                try:
+                    bpy.context.scene.transform_orientation_slots[0].type = type
+                    bpy.ops.transform.delete_orientation()
+                except Exception as e:
+                    pass
+        return {'FINISHED'}
+
 #-----------------------------------------------------#  
 #     handles wireframe display   
 #-----------------------------------------------------#                 
@@ -256,50 +302,24 @@ class DarrowSmooth(bpy.types.Operator):
         if len(objs) is not 0: 
             bpy.ops.object.shade_smooth()
             bpy.context.object.data.use_auto_smooth = True
+            bpy.context.object.data.auto_smooth_angle = 1.15192
+
             self.report({'INFO'}, "Object smoothed")
         else:
             self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
-#     handles 'apply all' checklisted items
-#-----------------------------------------------------#         
-class DarrowApply(bpy.types.Operator):
-    bl_idname = "apply_all.darrow"
-    bl_label = "Apply All"
-    bl_description = "Apply all checklist functions, and prepare mesh for export(not compatable with animations)"
-
-    def execute(self, context):
-        objs = context.selected_objects
-        if len(objs) is not 0: 
-            context = bpy.context
-            if (len(context.selected_objects)> 1):
-                print ("more than 1 selected")
-                bpy.ops.shade.smooth()
-                bpy.ops.clean.mesh()
-                bpy.ops.apply.normals()
-            else:
-                print("only 1")  
-                bpy.ops.shade.smooth()
-                bpy.ops.move.origin()
-                bpy.ops.apply.transforms()
-                bpy.ops.apply.normals()
-                bpy.ops.clean.mesh()
-                bpy.ops.move.origin()
-            self.report({'INFO'}, "Applied all checklist items")
-        else:
-            self.report({'INFO'}, "None Selected")
-        return {'FINISHED'}
- 
-#-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#  
 
-classes = (DarrowApply, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
+classes = (CTO_OT_Dummy, DarrowClearOrientation ,DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+
+    bpy.types.VIEW3D_PT_transform_orientations.append(extend_transfo_pop_up)
 
     bpy.types.Scene.compactBool = bpy.props.BoolProperty(
     name = "Advanced",
@@ -314,7 +334,7 @@ def register():
     )
 
 def unregister():
-    
+    bpy.types.VIEW3D_PT_transform_orientations.remove(extend_transfo_pop_up)
     for cls in classes:
         bpy.utils.unregister_class(cls)
 

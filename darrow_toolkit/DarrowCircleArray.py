@@ -1,6 +1,6 @@
 #-----------------------------------------------------#
 #
-#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
 #
 #    See the LICENSE file for your full rights.
 #
@@ -100,7 +100,7 @@ class DarrowToolPanel(bpy.types.Panel):
 
                 col = layout.column(align=True)
                 col.scale_y = 1.5
-                col.operator('circle.array')
+                col.operator('circle.array', icon="ONIONSKIN_ON",)
 
                 if xAxis == False and yAxis == False and zAxis == False:
                     col.enabled = False
@@ -113,7 +113,7 @@ class DarrowToolPanel(bpy.types.Panel):
                     box = layout.box()
                     box.label(text="Advanced")
 
-                    box.operator('clear.array', text="Delete Linked Empty and Array")
+                    box.operator('clear.array', text="Delete Modifer and Empty")
                     if len(objs) is 0:
                         box.enabled = False
                     box.prop(settings, 'moveEmptyBool', toggle=False, text="Hide empty under object")

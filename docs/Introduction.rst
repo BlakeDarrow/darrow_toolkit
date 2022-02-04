@@ -132,7 +132,6 @@ Models imported into Unity/Unreal will have correct orientations!  Animations "s
 *For advanced options, toggle the cogwheel in the panel menu.*
 
 .. note:: Please do not attempt to change the export name in the file browser. Whatever name you type in will be added to the output name on export, leaving you with an incorrect .fbx file name.
-.. note:: Currently, selecting multiple objects will export them as one mesh, using the name of the *active* collection. This is not necassarily the parent collection of the objects. Make sure to select your parent collection when using this method.
 
 .. raw:: html
     

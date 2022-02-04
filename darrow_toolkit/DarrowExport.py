@@ -1,6 +1,6 @@
 #-----------------------------------------------------#  
 #
-#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
 #
 #    See the LICENSE file for your full rights.
 #
@@ -40,7 +40,6 @@ class DarrowExportPanel(bpy.types.Panel):
     def poll(cls, context):
         settings = context.preferences.addons[__package__].preferences
         obj = context.active_object
-        preferences = context.preferences
         for obj in bpy.context.selected_objects:
             if obj.type =='CURVE' : return False
             if obj.type =='CAMERA' : return False
@@ -52,12 +51,9 @@ class DarrowExportPanel(bpy.types.Panel):
             if obj.type =='SPEAKER' : return False
 
         return settings.export_moduleBool == True
-            #print("poll")
 
     def draw_header(self, context):
         settings = context.preferences.addons[__package__].preferences
-        layout = self.layout
-        obj = context.scene
         self.layout.prop(settings, 'advancedExportBool', icon="SETTINGS",text="")
 
     def draw(self, context):
@@ -87,6 +83,7 @@ class DarrowExportPanel(bpy.types.Panel):
                     split.prop(obj, 'collectionBool')
         
                 box = layout.box()
+                box.scale_y = 1.2
                 box.label(text = "FBX Exporter")
                
                 if len(objs) is not 0: 
@@ -117,20 +114,13 @@ class DarrowExportPanel(bpy.types.Panel):
             layout = self.layout
         
 #-----------------------------------------------------#  
-#    Find selected parent collection
+#    Turn selected into path
 #-----------------------------------------------------#  
-def get_parent_collection_names(collection, parent_names):
-  for parent_collection in bpy.data.collections:
-    if collection.name in parent_collection.children.keys():
-      parent_names.append(parent_collection.name)
-      get_parent_collection_names(parent_collection, parent_names)
-      return
 
 def turn_collection_hierarchy_into_path(obj):
     parent_collection = obj.users_collection[0]
     parent_names      = []
     parent_names.append(parent_collection.name)
-    get_parent_collection_names(parent_collection, parent_names)
     parent_names.reverse()
     return '\\'.join(parent_names)
 

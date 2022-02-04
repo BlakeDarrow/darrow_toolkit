@@ -1,6 +1,6 @@
 #-----------------------------------------------------#  
 #
-#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
 #
 #    See the LICENSE file for your full rights.
 #
@@ -94,15 +94,16 @@ class DarrowVertexPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         obj = context.object
-        scn = context.scene
 
         if obj is not None:  
             split=layout.box()
             row = split.row(align = True)
+            row.scale_y = 1.1
             row.operator('set.black')
             row.operator('set.white')
             
             row = split.row(align = True)
+            row.scale_y = 1.1
             row.operator('set.red')
             row.operator('set.green')
             row.operator('set.blue')
