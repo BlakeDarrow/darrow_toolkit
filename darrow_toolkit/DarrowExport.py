@@ -1,6 +1,6 @@
 #-----------------------------------------------------#  
 #
-#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
 #
 #    See the LICENSE file for your full rights.
 #
@@ -40,7 +40,6 @@ class DarrowExportPanel(bpy.types.Panel):
     def poll(cls, context):
         settings = context.preferences.addons[__package__].preferences
         obj = context.active_object
-        preferences = context.preferences
         for obj in bpy.context.selected_objects:
             if obj.type =='CURVE' : return False
             if obj.type =='CAMERA' : return False
@@ -52,12 +51,9 @@ class DarrowExportPanel(bpy.types.Panel):
             if obj.type =='SPEAKER' : return False
 
         return settings.export_moduleBool == True
-            #print("poll")
 
     def draw_header(self, context):
         settings = context.preferences.addons[__package__].preferences
-        layout = self.layout
-        obj = context.scene
         self.layout.prop(settings, 'advancedExportBool', icon="SETTINGS",text="")
 
     def draw(self, context):

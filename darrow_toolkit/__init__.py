@@ -3,7 +3,7 @@
 #-----------------------------------------------------#  
 #    MIT License
 #
-#    Copyright (c) 2020-2021 Blake Darrow <contact@blakedarrow.com>
+#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,12 @@
 bl_info = {
     "name": "Darrow Toolkit",
     "author": "Blake Darrow",
-    "version": (0, 16, 4),
+    "version": (0, 16, 5),
     "blender": (2, 90, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
     "description": "Custom toolkit for efficient FBX exporting, circular array, Q.O.L improvements, and external mesh libraries",
     "category": "Tools",
-    "wiki_url": "https://github.com/BlakeDarrow/darrow_toolkit",
+    "wiki_url": "https://docs.darrow.tools/en/latest/index.html",
     }
     
 #-----------------------------------------------------#  
