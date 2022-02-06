@@ -72,16 +72,6 @@ class DarrowExportPanel(bpy.types.Panel):
                 obj = context.scene
                 layout.prop(settings, 'exportPresets')
 
-                if Var_advanced_bool ==True:
-                    box = layout.box()
-                    box.label(text = "Animation Options")
-                    split=box.split()
-                    split.prop(obj, 'isleafBool')
-                    split.prop(obj, 'allactionsBool')
-                    box = layout.box()
-                    split=box.split()
-                    split.prop(obj, 'collectionBool')
-        
                 box = layout.box()
                 box.scale_y = 1.2
                 box.label(text = "FBX Exporter")
@@ -110,6 +100,16 @@ class DarrowExportPanel(bpy.types.Panel):
                     box.label(text = "Increase the suffix by (+1)")
                     box.operator('reset.counter')
 
+        if Var_advanced_bool ==True:
+                layout.separator()
+                box = layout.box()
+                box.label(text = "Animation Options")
+                split=box.split()
+                split.prop(obj, 'isleafBool')
+                split.prop(obj, 'allactionsBool')
+                box.label(text="Multi-Object Options")
+                split = box.split()
+                split.prop(obj, 'collectionBool')
         if context.mode == 'EDIT_MESH':
             layout = self.layout
         
@@ -382,8 +382,8 @@ def register():
     bpy.types.Scene.fbxBool = bpy.props.BoolProperty()
 
     bpy.types.Scene.collectionBool = bpy.props.BoolProperty(
-    name = "Multi-object smart naming",
-    description = "Use the parent collection name when exporting more than 1 object",
+    name = "Use active collection name",
+    description = "Use active collection name when exporting more than 1 object",
     default = True
     )
 
