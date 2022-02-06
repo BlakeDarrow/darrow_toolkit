@@ -201,8 +201,10 @@ class DarrowTransforms(bpy.types.Operator):
     def execute(self, context):
         objs = context.selected_objects
         if len(objs) is not 0: 
+            bpy.ops.view3d.snap_cursor_to_selected()
             bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
             bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+            bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
             self.report({'INFO'}, "Transforms applied")
         else:
             self.report({'INFO'}, "None Selected")
