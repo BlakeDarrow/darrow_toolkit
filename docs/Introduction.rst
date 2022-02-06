@@ -121,6 +121,8 @@ Easy FBX Exporting for Blender with just a click. This tool allows you to not wo
 
 4. Hit enter, or "export selected" in the pop-up.
 
+.. note:: When exporting multiple objects, the output name will be the currently *active* collection name.
+
 Don't worry about filling anything out in the pop-up menu, my tool will automatically use the name of your selected mesh.
 
 
