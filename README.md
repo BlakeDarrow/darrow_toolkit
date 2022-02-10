@@ -1,28 +1,12 @@
 [![Documentation Status](https://readthedocs.org/projects/darrow-toolkit/badge/?version=latest)](https://docs.darrow.tools/en/latest/?badge=latest)
 # Darrow Toolkit: Blender Addon
-Also available on [Gumroad!](https://blakedarrow.gumroad.com/l/DarrowTools)
+Read the documentation [here](https://docs.darrow.tools)
 
-
-## Features
-
-- FBX exports with a single click
-- Custom naming conventions on export i.e. prefix, sufifx, and mesh name
-- Export presets for Unity and Unreal
-- Custom local asset library
-- Vertex painting panel for easy RGB masks
-- Auto updates
-
-  
 ## Installation
 
-Download the latest zip file from the [github release section](https://github.com/BlakeDarrow/darrow_toolkit/releases). Under addon prefrences in Blender, select the recently downloaded zip file.
+Download the latest zip file from the [github release section](https://github.com/BlakeDarrow/darrow_toolkit/releases). Under addon preferences in Blender, select the recently downloaded zip file.
 
     
-## Screenshots
-
-![App Screenshot](https://i.imgur.com/EsSPgvw.png)
-
-  
 ## FAQ
 
 #### No module named "darrow_toolkit"

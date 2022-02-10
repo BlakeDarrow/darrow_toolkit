@@ -72,16 +72,6 @@ class DarrowExportPanel(bpy.types.Panel):
                 obj = context.scene
                 layout.prop(settings, 'exportPresets')
 
-                if Var_advanced_bool ==True:
-                    box = layout.box()
-                    box.label(text = "Animation Options")
-                    split=box.split()
-                    split.prop(obj, 'isleafBool')
-                    split.prop(obj, 'allactionsBool')
-                    box = layout.box()
-                    split=box.split()
-                    split.prop(obj, 'collectionBool')
-        
                 box = layout.box()
                 box.scale_y = 1.2
                 box.label(text = "FBX Exporter")
@@ -110,18 +100,25 @@ class DarrowExportPanel(bpy.types.Panel):
                     box.label(text = "Increase the suffix by (+1)")
                     box.operator('reset.counter')
 
+        if Var_advanced_bool ==True:
+                layout.separator()
+                box = layout.box()
+                box.label(text = "Animation Options")
+                split=box.split()
+                split.prop(obj, 'isleafBool')
+                split.prop(obj, 'allactionsBool')
+                box.label(text="Multi-Object Options")
+                split = box.split()
+                split.prop(obj, 'collectionBool')
         if context.mode == 'EDIT_MESH':
             layout = self.layout
         
 #-----------------------------------------------------#  
-#    Turn selected into path
+#    Turn active collection into path
 #-----------------------------------------------------#  
-
 def turn_collection_hierarchy_into_path(obj):
-    parent_collection = obj.users_collection[0]
-    parent_names      = []
-    parent_names.append(parent_collection.name)
-    parent_names.reverse()
+    parent_names = []
+    parent_names.append(bpy.context.view_layer.active_layer_collection.name)
     return '\\'.join(parent_names)
 
 #-----------------------------------------------------#  
@@ -385,8 +382,8 @@ def register():
     bpy.types.Scene.fbxBool = bpy.props.BoolProperty()
 
     bpy.types.Scene.collectionBool = bpy.props.BoolProperty(
-    name = "Multi-object smart naming",
-    description = "Use the parent collection name when exporting more than 1 object",
+    name = "Use active collection name",
+    description = "Use active collection name when exporting more than 1 object",
     default = True
     )
 

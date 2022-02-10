@@ -111,12 +111,13 @@ class DarrowToolPanel(bpy.types.Panel):
 
                 if  Var_advancedBool == True:
                     box = layout.box()
-                    box.label(text="Advanced")
-
-                    box.operator('clear.array', text="Delete Modifer and Empty")
+                    col2 = box.column(align=False)
+                    col2.label(text="Advanced")
+                    col2.scale_y=1.2
+                    col2.operator('clear.array', text="Delete Array", icon="TRASH")
                     if len(objs) is 0:
                         box.enabled = False
-                    box.prop(settings, 'moveEmptyBool', toggle=False, text="Hide empty under object")
+                    box.prop(settings, 'moveEmptyBool', toggle=False, text="Move empty to 'Empties'")
                     
 #-----------------------------------------------------#
 #     handles array
@@ -129,11 +130,27 @@ class DarrowCircleArray(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
+        collectionFound = False
         obj = bpy.context.selected_objects[0]
         amt = context.object.arrayAmount
         settings = context.preferences.addons[__package__].preferences
         selected = bpy.context.selected_objects[0]
-        col = obj.users_collection[0]
+        empty_collection_name = "Darrow_Empties"
+       
+        for myCol in bpy.data.collections:
+            if myCol.name == empty_collection_name:
+                collectionFound = True
+                break
+
+        if collectionFound == False:
+            col = bpy.data.collections.new(empty_collection_name)
+            bpy.context.scene.collection.children.link(col)
+            vlayer = bpy.context.scene.view_layers["View Layer"]
+            vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
+
+        else:
+            col = bpy.data.collections[empty_collection_name]
+
         bpy.context.scene.cursor.rotation_euler = (0, 0, 0)
         bpy.ops.object.transform_apply(
             location=True, rotation=True, scale=True)
@@ -142,16 +159,19 @@ class DarrowCircleArray(bpy.types.Operator):
                 modifier_to_remove = obj.modifiers.get("DarrowToolkitArray")
                 obj.modifiers.remove(modifier_to_remove)
                 context.object.linkedEmpty = "tmp"
+                print("Resetting modifier")
         except:
-            print("Not empty")
+            print("No modifier present")
 
         if context.object.linkedEmpty == "tmp":
+            print("Creating array")
             bpy.ops.object.select_all(action='DESELECT')
             bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD')
             bpy.context.object.empty_display_size = settings.emptySize
             empty = bpy.context.selected_objects[0]
 
         else:
+            print("Array exists")
             empty = bpy.data.objects[context.object.linkedEmpty]
 
         bpy.ops.object.select_all(action='DESELECT')
@@ -232,7 +252,6 @@ class DarrowCircleArray(bpy.types.Operator):
 
             col.objects.link(empty)
         else:
-
             for coll in empty.users_collection:
                 coll.objects.unlink(empty)
             context.scene.collection.objects.link(empty)

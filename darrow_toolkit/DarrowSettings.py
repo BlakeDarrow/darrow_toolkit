@@ -139,7 +139,7 @@ class DarrowAddonPreferences(AddonPreferences):
         precision=4
     )
     moveEmptyBool: BoolProperty(
-        name="Hide Empty Under Array Object",
+        name="Create CircleArray empties under 'Darrow_Empties'.",
         description="Hide empty under object",
         default=True
     )

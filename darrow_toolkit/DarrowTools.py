@@ -58,7 +58,7 @@ class DarrowToolPanel(bpy.types.Panel):
         Var_compactBool = settings.advancedToolBool
         if obj is not None:
             split=layout.box()
-            col=split.column(align = True)
+            col = split.column(align=True)
             col.scale_y = 1.2
             obj = context.active_object
         
@@ -72,19 +72,26 @@ class DarrowToolPanel(bpy.types.Panel):
             
             if Var_compactBool == True:
                 col.operator('set.wireframe', text="Display Wireframe", icon="CUBE")
-
+                
                 if context.mode == 'EDIT_MESH':
                     col.operator('set.origin', icon="PIVOT_CURSOR")
                 if context.mode == 'OBJECT':
                     col.operator('move.origin', icon="OBJECT_ORIGIN")
                     col = split.column(align=True)
+                    
                     col.scale_y = 1.2
                     col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
                     col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
                     col.operator('apply.transforms', icon="CHECKMARK")
                     col.operator('apply.normals', icon="NORMALS_FACE")
+
+                    col2 = split.column(align=True)
+                    col2.scale_y = 1.2
+                    col2.operator('set.empty_coll', icon="OUTLINER_COLLECTION")
+                    
                     if len(objs) is 0:
                         col.enabled = False
+
                     else:
                         col.enabled = True
 
@@ -201,8 +208,10 @@ class DarrowTransforms(bpy.types.Operator):
     def execute(self, context):
         objs = context.selected_objects
         if len(objs) is not 0: 
+            bpy.ops.view3d.snap_cursor_to_selected()
             bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
-            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+            bpy.ops.object.transform_apply(location=True,rotation=True, scale=True)
+            bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
             self.report({'INFO'}, "Transforms applied")
         else:
             self.report({'INFO'}, "None Selected")
@@ -247,26 +256,49 @@ class DarrowMoveOrigin(bpy.types.Operator):
             self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
-#-----------------------------------------------------#  
-#    handles setting Objects origin and move to world origin
-#-----------------------------------------------------#   
-class DarrowSetSnapOrigin(bpy.types.Operator):
-    bl_idname = "setsnap.origin"
-    bl_description = "Set selected as object origin and move to world origin"
-    bl_label = "Move to origin"
+#-----------------------------------------------------#
+#    handles moving all empty's
+#-----------------------------------------------------#
+
+class DarrowSetCollection(bpy.types.Operator):
+    bl_idname = "set.empty_coll"
+    bl_description = "Move all empties to 'Darrow_Empties' collection"
+    bl_label = "Group All Empties"
 
     def execute(self, context):
-        objs = context.selected_objects
-        if len(objs) is not 0: 
-            if context.mode == 'OBJECT':
-                bpy.ops.object.editmode_toggle()
-            bpy.ops.view3d.snap_cursor_to_selected()
-            bpy.ops.object.editmode_toggle()
-            bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
-            bpy.ops.view3d.snap_cursor_to_center()
-            bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
-        else:
-            self.report({'INFO'}, "None Selected")
+        collectionFound = False
+        empty_collection_name = "Darrow_Empties"
+        old_obj = bpy.context.selected_objects
+        scene = bpy.context.scene.objects
+
+        bpy.ops.object.select_all(action='DESELECT')
+
+        for myCol in bpy.data.collections:
+            if myCol.name == empty_collection_name:
+                collectionFound = True
+                break
+
+        if collectionFound == False:
+            empty_collection = bpy.data.collections.new(empty_collection_name)
+            bpy.context.scene.collection.children.link(empty_collection)
+        
+        for obj in scene:
+            if obj.type == "EMPTY":
+                for coll in obj.users_collection:
+                    coll.objects.unlink(obj)
+                bpy.data.collections[empty_collection_name].objects.link(obj)
+                obj.hide_set(True)
+        """Here we are hiding the new collection in the hierarchy,
+            and then we are collapsing it"""
+        vlayer = bpy.context.scene.view_layers["View Layer"]
+        vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
+        
+        bpy.ops.object.select_all(action='DESELECT')
+
+        for x in old_obj:     
+            x.select_set(state=True)
+
+        self.report({'INFO'}, "Moved all empties")
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
@@ -302,9 +334,9 @@ class DarrowSmooth(bpy.types.Operator):
         if len(objs) is not 0: 
             bpy.ops.object.shade_smooth()
             bpy.context.object.data.use_auto_smooth = True
-            bpy.context.object.data.auto_smooth_angle = 1.15192
+            bpy.context.object.data.auto_smooth_angle = 3.14159
 
-            self.report({'INFO'}, "Object smoothed")
+            self.report({'INFO'}, "Object smoothed to 180")
         else:
             self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
@@ -313,7 +345,7 @@ class DarrowSmooth(bpy.types.Operator):
 #   Registration classes
 #-----------------------------------------------------#  
 
-classes = (CTO_OT_Dummy, DarrowClearOrientation ,DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowSetSnapOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
+classes = (DarrowSetCollection, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
 
 def register():
     for cls in classes:
