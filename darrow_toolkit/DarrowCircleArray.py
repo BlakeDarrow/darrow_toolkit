@@ -172,6 +172,8 @@ class DarrowCircleArray(bpy.types.Operator):
 
         else:
             print("Array exists")
+            vlayer = bpy.context.scene.view_layers["View Layer"]
+            vlayer.layer_collection.children[empty_collection_name].hide_viewport = False
             empty = bpy.data.objects[context.object.linkedEmpty]
 
         bpy.ops.object.select_all(action='DESELECT')
@@ -256,6 +258,8 @@ class DarrowCircleArray(bpy.types.Operator):
                 coll.objects.unlink(empty)
             context.scene.collection.objects.link(empty)
 
+        vlayer = bpy.context.scene.view_layers["View Layer"]
+        vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
         empty.select_set(state=False)
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
