@@ -290,7 +290,7 @@ class DarrowSetCollection(bpy.types.Operator):
                 obj.hide_set(True)
         """Here we are hiding the new collection in the hierarchy,
             and then we are collapsing it"""
-        vlayer = bpy.context.scene.view_layers["View Layer"]
+        vlayer = bpy.context.scene.view_layers["ViewLayer"]
         vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
         
         bpy.ops.object.select_all(action='DESELECT')
