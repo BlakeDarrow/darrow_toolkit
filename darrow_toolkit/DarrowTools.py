@@ -292,6 +292,8 @@ class DarrowSetCollection(bpy.types.Operator):
             and then we are collapsing it"""
         vlayer = bpy.context.scene.view_layers["View Layer"]
         vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
+        bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
+
         
         bpy.ops.object.select_all(action='DESELECT')
 
