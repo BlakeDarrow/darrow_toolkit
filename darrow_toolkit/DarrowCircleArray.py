@@ -104,7 +104,7 @@ class DarrowToolPanel(bpy.types.Panel):
 
                 if xAxis == False and yAxis == False and zAxis == False:
                     col.enabled = False
-                elif len(objs) is not 0:
+                elif len(objs) != 0:
                     col.enabled = True
                 else:
                     col.enabled = False
@@ -115,7 +115,7 @@ class DarrowToolPanel(bpy.types.Panel):
                     col2.label(text="Advanced")
                     col2.scale_y=1.2
                     col2.operator('clear.array', text="Delete Array", icon="TRASH")
-                    if len(objs) is 0:
+                    if len(objs) == 0:
                         box.enabled = False
                     box.prop(settings, 'moveEmptyBool', toggle=False, text="Move empty to 'Empties'")
                     
@@ -301,11 +301,13 @@ class DarrowClearSelected(bpy.types.Operator):
                 obj.modifiers.remove(modifier_to_remove)
 
         if not context.object.linkedEmpty == "tmp":
+            bpy.ops.object.select_all(action='DESELECT')
             empty.select_set(state=True)
             selected.select_set(state=False)
             context.view_layer.objects.active = empty
-            bpy.ops.object.delete()
-
+            objs = bpy.data.objects
+            objs.remove(objs[empty.name], do_unlink=True)
+            
         selected.select_set(state=True)
         context.view_layer.objects.active = selected
         context.object.linkedEmpty = "tmp"

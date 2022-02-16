@@ -89,7 +89,7 @@ class DarrowToolPanel(bpy.types.Panel):
                     col2.scale_y = 1.2
                     col2.operator('set.empty_coll', icon="OUTLINER_COLLECTION")
                     
-                    if len(objs) is 0:
+                    if len(objs) == 0:
                         col.enabled = False
 
                     else:
@@ -182,7 +182,7 @@ class DarrowCleanMesh(bpy.types.Operator):
     def execute(self, context):
         settings = context.preferences.addons[__package__].preferences
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             if context.mode == 'OBJECT':
                 bpy.ops.object.editmode_toggle()
 
@@ -207,7 +207,7 @@ class DarrowTransforms(bpy.types.Operator):
 
     def execute(self, context):
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             bpy.ops.view3d.snap_cursor_to_selected()
             bpy.ops.object.make_single_user(object=True, obdata=True, material=False, animation=True)
             bpy.ops.object.transform_apply(location=True,rotation=True, scale=True)
@@ -227,7 +227,7 @@ class DarrowSetOrigin(bpy.types.Operator):
 
     def execute(self, context):
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             if context.mode == 'OBJECT':
                 bpy.ops.object.editmode_toggle()
             bpy.ops.view3d.snap_cursor_to_selected()
@@ -248,7 +248,7 @@ class DarrowMoveOrigin(bpy.types.Operator):
 
     def execute(self, context):
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             bpy.ops.view3d.snap_cursor_to_center()
             bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
             self.report({'INFO'}, "Moved selected to object origin")
@@ -288,13 +288,10 @@ class DarrowSetCollection(bpy.types.Operator):
                     coll.objects.unlink(obj)
                 bpy.data.collections[empty_collection_name].objects.link(obj)
                 obj.hide_set(True)
-        """Here we are hiding the new collection in the hierarchy,
-            and then we are collapsing it"""
+
         vlayer = bpy.context.scene.view_layers["View Layer"]
         vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
         bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
-
-        
         bpy.ops.object.select_all(action='DESELECT')
 
         for x in old_obj:     
@@ -313,7 +310,7 @@ class DarrowNormals(bpy.types.Operator):
 
     def execute(self, context):
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             bpy.ops.object.editmode_toggle()
             bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.mesh.normals_make_consistent(inside=False)
@@ -333,7 +330,7 @@ class DarrowSmooth(bpy.types.Operator):
 
     def execute(self, context):
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             bpy.ops.object.shade_smooth()
             bpy.context.object.data.use_auto_smooth = True
             bpy.context.object.data.auto_smooth_angle = 3.14159
