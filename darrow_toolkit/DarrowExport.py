@@ -75,7 +75,7 @@ class DarrowExportPanel(bpy.types.Panel):
                 box.scale_y = 1.2
                 box.label(text = "FBX Exporter")
                
-                if len(objs) is not 0: 
+                if len(objs) != 0: 
                     Var_allowFBX = True
                 box.operator('export_selected.darrow', icon="EXPORT")
                 if Var_allowFBX == False:
@@ -95,10 +95,10 @@ class DarrowExportPanel(bpy.types.Panel):
                     box = layout.box()
                     box.label(text = "Suffix Options")
                     box.label(text = "Increase the suffix by (+1)")
-                    box.operator('reset.counter')
+                    currentSuffixAmt = str(context.scene.counter)
+                    box.operator('reset.counter', text="Reset suffix count ("+currentSuffixAmt+")")
 
         if Var_advanced_bool ==True:
-                layout.separator()
                 box = layout.box()
                 box.label(text = "Animation Options")
                 split=box.split()
@@ -123,15 +123,15 @@ def turn_collection_hierarchy_into_path(obj):
 #-----------------------------------------------------#
 class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     bl_idname = "export_selected.darrow"
-    bl_label = 'Export Selected'
-    bl_description = "Export selected as FBX using mesh name"
+    bl_label = 'Export Selection'
+    bl_description = "Export selection as an FBX using smart naming"
     bl_options = {'PRESET'}
     filename_ext    = ".fbx";
 
     def execute(self, context):
         settings = context.preferences.addons[__package__].preferences
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             C = bpy.context
             fbxname = bpy.context.view_layer.objects.active
             name = bpy.path.clean_name(fbxname.name)
