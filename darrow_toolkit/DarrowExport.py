@@ -346,13 +346,13 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 #print(Var_leafBool)
                 self.report({'INFO'}, "Exported with mesh name")
 
-            if Var_presets == 'OP1':
-                if (amt > one):
-                    print("more than one, not rotating")
-                else:
-                    bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-                    print("applied rotations")
-                    print("OBJ should be nack to normal")
+            #if Var_presets == 'OP1':
+                #if (amt > one):
+                    #print("more than one, not rotating")
+                #else:
+                    #bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
+                    #print("applied rotations")
+                    #print("OBJ should be nack to normal")
         else:
             self.report({'INFO'}, "None Selected")
 
