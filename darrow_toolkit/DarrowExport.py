@@ -146,8 +146,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             if (Var_collectionBool == True) and (amt > one):
                 fbxname = parent_coll
                 name = bpy.path.clean_name(fbxname)
-                print(name)
-                print("MORE THAN 1 MESH, SELECTED. USING COLLECTION NAME TO EXPORT")
 
             customprefix = bpy.context.scene.custom_name_string
             blendName = bpy.path.basename(bpy.context.blend_data.filepath).replace(".blend", "")
@@ -169,7 +167,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     Var_axisUp = 'Y'
                     Var_axisForward = 'X'
                     Var_scale = 1
-                    print("more than one, not rotating")
                 else:
                     bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
                     bpy.context.active_object.rotation_euler[0] = math.radians(-90)
@@ -181,8 +178,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                     Var_axisUp = 'Y'
                     Var_axisForward = 'X'
                     Var_scale = 1
-                    print("rotating")
-                print("Unity Exporter")
             elif Var_presets == 'OP2': #Unreal preset
                 Var_axisUp = 'Z'
                 Var_axisForward = '-Y'
@@ -191,7 +186,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 Var_leafBool = False
                 Var_actionsBool = False
                 Var_forcestartkey = True
-                print("Unreal Vars")
 
             if Var_counterBool == True:
                 context.scene.counter += 1
@@ -203,7 +197,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
                 if Var_custom_prefix == 'OP1': #Unity preset
                     if not bpy.data.is_saved:
                             raise Exception("Blend file is not saved")
-                            print("SAVE YOUR FILE")
                         
                     if Var_counterBool == True:
                         saveLoc = self.filepath + "_" + name + Var_exportnumber
@@ -298,7 +291,7 @@ def register():
 
     bpy.types.Scene.usecounterBool = bpy.props.BoolProperty(
     name = "Use Suffix",
-    description = "Count exports and use as suffex",
+    description = "Count exports and use as suffix",
     default = False
     )
     
