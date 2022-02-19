@@ -8,6 +8,7 @@
 #   Imports
 #-----------------------------------------------------#  
 
+from select import select
 import bpy
 from bpy.types import (Panel,
                        Menu,
@@ -84,11 +85,14 @@ class DarrowToolPanel(bpy.types.Panel):
                     col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
                     col.operator('apply.transforms', icon="CHECKMARK")
                     col.operator('apply.normals', icon="NORMALS_FACE")
+                    col.operator('call.organize_menu',
+                                  icon="OUTLINER_OB_GROUP_INSTANCE")
 
                     col2 = split.column(align=True)
                     col2.scale_y = 1.2
-                    col2.operator('set.empty_coll', icon="OUTLINER_COLLECTION")
-                    
+                    col2.operator('set.empty_coll',icon="COLLECTION_NEW")
+                    col2.operator('collapse.scene', icon="SORT_ASC")
+                      
                     if len(objs) == 0:
                         col.enabled = False
 
@@ -113,6 +117,138 @@ def extend_transfo_pop_up(self, context):
     row = layout.row(align=False)
     row.operator(DarrowClearOrientation.bl_idname, icon='TRASH')
     row.operator(CTO_OT_Dummy.bl_idname, icon='BLANK1', emboss=False)
+
+#-----------------------------------------------------#
+#     handles apply outside calculated normals
+#-----------------------------------------------------#
+class DarrowOrganizeMenu(bpy.types.Menu):
+    bl_label = "New Parent Name"
+    bl_idname = "DARROW_MT_organize_menu"
+
+    def draw(self, context):
+        layout = self.layout
+        subrow = layout.row(align=True)
+        subrow.prop(context.scene, "parentcoll_string")
+        layout.separator()
+
+#-----------------------------------------------------#
+#     handles apply outside calculated normals
+#-----------------------------------------------------#
+class DarrowCollapse(bpy.types.Operator):
+    bl_label = "Collapse Outliner"
+    bl_idname = "collapse.scene"
+
+    def execute(self, context):
+        toggle_expand(context, 2)
+        return {'FINISHED'}
+     
+def draw_item(self, context):
+    layout = self.layout
+    layout.menu(DarrowOrganizeMenu.bl_idname)
+    return {'FINISHED'}
+
+def toggle_expand(context, state):
+    area = next(a for a in context.screen.areas if a.type == 'OUTLINER')
+    bpy.ops.outliner.show_hierarchy({'area': area}, 'INVOKE_DEFAULT')
+    for i in range(state):
+        bpy.ops.outliner.expanded_toggle({'area': area})
+    area.tag_redraw()
+
+def update_func(self, context):
+    DarrowOrganizeSelected.execute(self,context)
+
+def traverse_tree(t):
+    yield t
+    for child in t.children:
+        yield from traverse_tree(child)
+
+def parent_lookup(coll):
+    parent_lookup = {}
+    for coll in traverse_tree(coll):
+        for c in coll.children.keys():
+            parent_lookup.setdefault(c, coll)
+    return parent_lookup
+
+class DarrowCallOrganizeMenu(bpy.types.Operator):
+    bl_label = "Organize Selected"
+    bl_idname = "call.organize_menu"
+
+    def execute(self, context):
+        bpy.ops.wm.call_menu(name=DarrowOrganizeMenu.bl_idname)
+        return {'FINISHED'}
+
+class DarrowOrganizeSelected(bpy.types.Operator):
+    bl_idname = "organize.selected"
+    bl_description = "organize"
+    bl_label = "organize"
+
+    def execute(self,context):
+        selected = context.selected_objects[0]
+        old_objs = bpy.context.selected_objects
+        objs = bpy.context.selected_objects
+        master_name = context.scene.parentcoll_string
+        master_collection = bpy.data.collections.new(master_name)
+        bpy.context.scene.collection.children.link(master_collection)
+
+        cutters = []
+        cutters_parent = []
+        for obj in objs:
+           for mods in obj.modifiers:
+               if mods.type == 'BOOLEAN':
+                    cutters.append(mods.object)
+                    cutters_parent.append(obj)
+                    objs.remove(mods.object)
+
+        for obj in objs:
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
+            bpy.data.collections[master_name].objects.link(obj)
+
+        print(objs)
+        for obj in objs:
+            parent_name = obj.name
+            parent_collection = bpy.data.collections.new(parent_name)
+            bpy.context.scene.collection.children.link(parent_collection)
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
+            bpy.data.collections[parent_name].objects.link(obj)
+
+            """https://blender.stackexchange.com/a/172579"""
+            C = bpy.context
+            coll_scene = C.scene.collection
+            coll_parents = parent_lookup(coll_scene)
+            coll_target = coll_scene.children.get(master_collection.name)
+            active_coll = parent_collection
+            active_coll_parent = coll_parents.get(active_coll.name)
+
+            if active_coll_parent:
+                active_coll_parent.children.unlink(active_coll)
+                coll_target.children.link(active_coll)
+
+        for obj in cutters:
+            C = bpy.context
+            obj_i = cutters.index(obj)
+            cutters_name = cutters_parent[obj_i].name + "_Cutters"
+            cutters_collection = bpy.data.collections.new(cutters_name)
+            bpy.context.scene.collection.children.link(cutters_collection)
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
+            bpy.data.collections[cutters_name].objects.link(obj)
+            coll_scene = C.scene.collection
+            coll_parents = parent_lookup(coll_scene)
+            coll_target = cutters_parent[obj_i].users_collection[0]
+            active_coll = obj.users_collection[0]
+            active_coll_parent = coll_parents.get(active_coll.name)
+
+            if active_coll_parent:
+                active_coll_parent.children.unlink(active_coll)
+                coll_target.children.link(active_coll)
+        
+        context.view_layer.objects.active = selected
+        
+        for x in old_objs:
+            x.select_set(state=True)
+        return {'FINISHED'}
 
 #-----------------------------------------------------#
 #     handles Orientation 
@@ -344,11 +480,22 @@ class DarrowSmooth(bpy.types.Operator):
 #   Registration classes
 #-----------------------------------------------------#  
 
-classes = (DarrowSetCollection, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh, DarrowWireframe, DarrowSetOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
+
+classes = (DarrowCollapse,DarrowOrganizeMenu, DarrowCallOrganizeMenu, DarrowSetCollection, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh,
+           DarrowWireframe, DarrowSetOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+
+    bpy.types.Scene.parentcoll_string = bpy.props.StringProperty(
+            name="Name",
+            description="Collection Name",
+            default="Collection",
+            update = update_func
+        )
+
+    bpy.types.INFO_HT_header.append(draw_item)
 
     bpy.types.VIEW3D_PT_transform_orientations.append(extend_transfo_pop_up)
 
@@ -366,8 +513,11 @@ def register():
 
 def unregister():
     bpy.types.VIEW3D_PT_transform_orientations.remove(extend_transfo_pop_up)
+    bpy.types.INFO_HT_header.remove(draw_item)
+    
     for cls in classes:
         bpy.utils.unregister_class(cls)
+
 
 if __name__ == "__main__":
     register()
