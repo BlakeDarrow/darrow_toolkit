@@ -7,11 +7,13 @@
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------# 
+from os import link
 import bpy
 from bpy.types import (Panel,
                        Menu,
                        Operator,
                        )
+from collections import Counter
  
 #-----------------------------------------------------#         
 #     handles ui panel 
@@ -126,8 +128,7 @@ class DarrowOrganizeMenu(bpy.types.Operator):
     @classmethod
     def poll(cls, context):
         return (context.object is not None and
-                context.object.type == 'MESH' and
-                len(context.object.data.uv_layers) > 0)
+                context.object.type == 'MESH')
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -136,36 +137,38 @@ class DarrowOrganizeMenu(bpy.types.Operator):
         layout = self.layout
         col = layout.column()
         col.prop(context.scene, "parentcoll_string")
-        #col.prop(context.scene, 'keepParentBool')
-        #col.prop(context.scene, 'collapseBool')
-        #these are not working properly
 
-    def execute(self, context): #NEED TO CHECK IF COLLECTION HAS ALREADY BEEN CREATED
-        selected = context.selected_objects[0]
-        old_coll = selected.users_collection[0]
-        old_objs = bpy.context.selected_objects
-        objs = bpy.context.selected_objects
-        master_name = context.scene.parentcoll_string
-        master_collection = bpy.data.collections.new(master_name)
-        bpy.context.scene.collection.children.link(master_collection)
+    def execute(self, context):
         cutters = []
         cutters_parent = []
         linked = []
+        selected = context.selected_objects[0]
+        old_objs = bpy.context.selected_objects
+        objs = bpy.context.selected_objects
+        master_name = context.scene.parentcoll_string
+        masterCollectionFound = False
+        for myCol in bpy.data.collections:
+            if myCol.name == master_name:
+                masterCollectionFound = True
+                break
 
+        if masterCollectionFound == False:
+            master_collection = bpy.data.collections.new(master_name)
+            bpy.context.scene.collection.children.link(master_collection)
+        else:
+            master_collection = bpy.data.collections[master_name]
+            
         for obj in objs:
             for mods in obj.modifiers:
                 if mods.type == 'BOOLEAN':
-                    if not cutters.__contains__(mods.object):
-                        cutters.append(mods.object)
-                    if not cutters_parent.__contains__(obj):
-                        cutters_parent.append(obj)
-                    if not linked.__contains__(obj):
-                        linked.append(obj)
+                    cutters.append(mods.object)
+                    cutters_parent.append(obj)
+                    linked.append(obj)
 
                     for x in objs:
                         if x == mods.object:
                             objs.remove(mods.object)
-                        
+        
         for obj in objs:
             for coll in obj.users_collection:
                 coll.objects.unlink(obj)
@@ -175,13 +178,23 @@ class DarrowOrganizeMenu(bpy.types.Operator):
             for coll in obj.users_collection:
                 coll.objects.unlink(obj)
             bpy.data.collections[master_name].objects.link(obj)
-
+        used_cutters = []
         for obj in objs:
             for x in linked:
                 if x == obj:
-                    parent_name = obj.name
-                    parent_collection = bpy.data.collections.new(parent_name)
-                    bpy.context.scene.collection.children.link(parent_collection)
+                    parent_name = obj.name + "_Parent"
+                
+                    parentCollectionFound = False
+                    for myCol in bpy.data.collections:
+                        if myCol.name == parent_name:
+                            parentCollectionFound = True
+                            break
+                    if parentCollectionFound == False:
+                        parent_collection = bpy.data.collections.new(parent_name)
+                        bpy.context.scene.collection.children.link(parent_collection)
+                    else:
+                        parent_collection = bpy.data.collections[parent_name]
+                    
                     for coll in obj.users_collection:
                         coll.objects.unlink(obj)
                     bpy.data.collections[parent_name].objects.link(obj)
@@ -202,8 +215,17 @@ class DarrowOrganizeMenu(bpy.types.Operator):
             C = bpy.context
             obj_i = cutters.index(obj)
             cutters_name = cutters_parent[obj_i].name + "_Cutters"
-            cutters_collection = bpy.data.collections.new(cutters_name)
-            bpy.context.scene.collection.children.link(cutters_collection)
+           
+            cuttersCollectionFound = False
+            for myCol in bpy.data.collections:
+                if myCol.name == cutters_name:
+                    cuttersCollectionFound = True
+                    break
+            if cuttersCollectionFound == False:
+                cutters_collection = bpy.data.collections.new(cutters_name)
+                bpy.context.scene.collection.children.link(cutters_collection)
+            else:
+                cutters_collection = bpy.data.collections[cutters_name]
             for coll in obj.users_collection:
                 coll.objects.unlink(obj)
             bpy.data.collections[cutters_name].objects.link(obj)
@@ -217,32 +239,15 @@ class DarrowOrganizeMenu(bpy.types.Operator):
             if active_coll_parent:
                 active_coll_parent.children.unlink(active_coll)
                 coll_target.children.link(active_coll)
-        
-        Var_keepParent_bool = bpy.context.scene.keepParentBool
-        if Var_keepParent_bool == True: # NOT WORKING REALLY
-            for obj in old_objs:
-                C = bpy.context
-                coll_scene = C.scene.collection
-                coll_parents = parent_lookup(coll_scene)
-                coll_target = coll_scene.children.get(master_collection.name)
-                active_coll = obj.users_collection[0]
-                active_coll_parent = coll_parents.get(active_coll.name)
-
-                if active_coll_parent:
-                    active_coll_parent.children.unlink(active_coll)
-                    coll_target.children.link(active_coll)
 
         for x in old_objs:
             x.select_set(state=True)
 
         context.view_layer.objects.active = selected
-
-        if bpy.context.scene.collapseBool == True:
-            area = next(a for a in context.screen.areas if a.type == 'OUTLINER')
-            bpy.ops.outliner.show_hierarchy({'area': area}, 'INVOKE_DEFAULT')
-            for i in range(2):
-                bpy.ops.outliner.expanded_toggle({'area': area})
-            area.tag_redraw()
+        used_cutters.clear()
+        cutters.clear()
+        cutters_parent.clear()
+        linked.clear()
         return {'FINISHED'}
 
 def toggle_expand(context, state):
@@ -523,17 +528,6 @@ def register():
     name = "Advanced",
     description = "Toggle Advanced Mode",
     default = False
-    )
-
-    bpy.types.Scene.keepParentBool = bpy.props.BoolProperty(
-        name="Remember parent collection",
-        description="Toggle",
-        default=False
-    )
-    bpy.types.Scene.collapseBool = bpy.props.BoolProperty(
-        name="Collapse outliner",
-        description="Toggle",
-        default=False
     )
 
     bpy.types.Scene.showWireframeBool = bpy.props.BoolProperty(
