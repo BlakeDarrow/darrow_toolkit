@@ -533,7 +533,7 @@ def register():
     bpy.types.Scene.collapseBool = bpy.props.BoolProperty(
         name="Collapse outliner",
         description="Toggle",
-        default=True
+        default=False
     )
 
     bpy.types.Scene.showWireframeBool = bpy.props.BoolProperty(
