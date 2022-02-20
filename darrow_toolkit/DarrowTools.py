@@ -7,14 +7,11 @@
 #-----------------------------------------------------#  
 #   Imports
 #-----------------------------------------------------# 
-from os import link
 import bpy
 from bpy.types import (Panel,
                        Menu,
                        Operator,
                        )
-from collections import Counter
- 
 #-----------------------------------------------------#         
 #     handles ui panel 
 #-----------------------------------------------------#  
