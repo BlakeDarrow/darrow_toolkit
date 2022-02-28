@@ -17,7 +17,7 @@ from bpy.types import (Panel,
 #-----------------------------------------------------#  
 class DarrowOrganizePanel(bpy.types.Panel):
     bl_label = "DarrowOrganizer"
-    bl_category = "Darrow Organizer"
+    bl_category = "DarrowToolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_organizePanel"

@@ -18,7 +18,7 @@ from bpy.types import (Panel,
 #-----------------------------------------------------#  
 class DarrowToolPanel(bpy.types.Panel):
     bl_label = "DarrowModeling"
-    bl_category = "Darrow Modeling"
+    bl_category = "DarrowToolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_toolPanel"
