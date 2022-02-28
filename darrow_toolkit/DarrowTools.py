@@ -8,6 +8,7 @@
 #   Imports
 #-----------------------------------------------------# 
 import bpy
+import math
 from bpy.types import (Panel,
                        Menu,
                        Operator,
@@ -16,8 +17,8 @@ from bpy.types import (Panel,
 #     handles ui panel 
 #-----------------------------------------------------#  
 class DarrowToolPanel(bpy.types.Panel):
-    bl_label = "DarrowQ.O.L"
-    bl_category = "Darrow Toolkit"
+    bl_label = "DarrowModeling"
+    bl_category = "Darrow Modeling"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_toolPanel"
@@ -45,56 +46,139 @@ class DarrowToolPanel(bpy.types.Panel):
 
     def draw_header(self, context):
         settings = context.preferences.addons[__package__].preferences
-        self.layout.prop(settings, 'advancedToolBool', icon="SETTINGS",text="")
+        self.layout.prop(settings, 'advancedCircleBool',
+                         icon="SETTINGS", text="")
+        Var_displayBool = bpy.context.scene.vertexDisplayBool
+        Var_viewportShading = bpy.context.space_data.shading.type
+     
+        if Var_displayBool ==True:
+            self.layout.operator('set.display', icon="HIDE_OFF",
+                                 text="", depress=Var_displayBool)
+        else:
+            self.layout.operator('set.display', icon="HIDE_ON",
+                                text="", depress=Var_displayBool)
+        if Var_viewportShading != 'SOLID':
+            self.layout.enabled = False
+        
 
     def draw(self, context):
+        settings = context.preferences.addons[__package__].preferences
+        Var_advancedBool = settings.advancedCircleBool
         layout = self.layout
         objs = context.selected_objects
         obj = context.active_object
-        settings = context.preferences.addons[__package__].preferences
-        Var_compactBool = settings.advancedToolBool
-        if obj is not None:
-            split=layout.box()
-            col = split.column(align=True)
-            col.scale_y = 1.2
-            obj = context.active_object
         
-            if Var_compactBool == False:
-                col.operator('set.wireframe',
-                            text="Display Wireframe", icon="CUBE")
-                if context.mode == 'OBJECT':
-                    col.operator('move.origin', icon="OBJECT_ORIGIN")
-                if context.mode == 'EDIT_MESH':
-                    col.operator('set.origin', icon="PIVOT_CURSOR")
-            
-            if Var_compactBool == True:
-                col.operator('set.wireframe', text="Display Wireframe", icon="CUBE")
-                
-                if context.mode == 'EDIT_MESH':
-                    col.operator('set.origin', icon="PIVOT_CURSOR")
-                if context.mode == 'OBJECT':
-                    col.operator('move.origin', icon="OBJECT_ORIGIN")
-                    col = split.column(align=True)
-                    
-                    col.scale_y = 1.2
-                    col.operator('darrow.organize_menu',
-                                 icon="OUTLINER_OB_GROUP_INSTANCE")
-                    col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
-                    col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
-                    col.operator('apply.transforms', icon="CHECKMARK")
-                    col.operator('apply.normals', icon="NORMALS_FACE")
-                
-                    col2 = split.column(align=True)
-                    col2.scale_y = 1.2
-                    col2.operator('set.empty_coll',icon="COLLECTION_NEW")
-                    col2.operator('collapse.scene', icon="SORT_ASC")
-                    col2.operator('darrow.toggle_cutters', icon="MATCUBE")
-                      
-                    if len(objs) == 0:
-                        col.enabled = False
+        xAxis = settings.xBool
+        yAxis = settings.yBool
+        zAxis = settings.zBool
+        if obj is not None:
+            obj = context.active_object
+    
+            if context.mode == 'EDIT_MESH':
+                split = layout.box()
+                col = split.column(align=True)
+                col.scale_y = 1.2
+                col.operator('set.origin', icon="PIVOT_CURSOR")
 
-                    else:
-                        col.enabled = True
+                split = layout.column()
+                split.label(text="RGB Mask")
+                row = split.row(align=True)
+                
+                row.scale_y = 1.1
+                row.operator('set.black')
+                row.operator('set.white')
+
+                row = split.row(align=True)
+                row.scale_y = 1.1
+                row.operator('set.red')
+                row.operator('set.green')
+                row.operator('set.blue')
+
+            if context.mode == 'OBJECT':
+                label = layout.column(align=True)
+                label.label(text="Q.O.L Tools")
+                split = layout.box()
+                col = split.column(align=True)
+                col.scale_y = 1.2
+                col.operator('move.origin', icon="OBJECT_ORIGIN")
+                col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
+                col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
+                col.operator('apply.transforms', icon="CHECKMARK")
+                col.operator('apply.normals', icon="NORMALS_FACE")
+
+
+                split = layout.column()
+                split.label(text="RGB Mask")
+                row = split.row(align=True)
+                
+                row.scale_y = 1.1
+                row.operator('set.black')
+                row.operator('set.white')
+
+                row = split.row(align=True)
+                row.scale_y = 1.1
+                row.operator('set.red')
+                row.operator('set.green')
+                row.operator('set.blue')
+
+                
+                col = layout.column(align=True)
+                col.label(text="Circle Array")
+
+                col.scale_y = 1.33
+                col.prop(obj, 'arrayAmount', slider=True)
+
+                row = layout.row(align=True)
+                split = row.split(align=True)
+                split.prop(settings, 'xBool', toggle=True)
+
+                if yAxis == True:
+                    split.enabled = False
+                if zAxis == True:
+                    split.enabled = False
+
+                split = row.split(align=True)
+                split.prop(settings, 'yBool', toggle=True)
+                if xAxis == True:
+                    split.enabled = False
+                if zAxis == True:
+                    split.enabled = False
+
+                split = row.split(align=True)
+                split.prop(settings, 'zBool', toggle=True)
+                if xAxis == True:
+                    split.enabled = False
+                if yAxis == True:
+                    split.enabled = False
+
+                col = layout.column(align=True)
+                col.scale_y = 1.5
+                col.operator('circle.array', icon="ONIONSKIN_ON",)
+
+                if xAxis == False and yAxis == False and zAxis == False:
+                    col.enabled = False
+                elif len(objs) != 0:
+                    col.enabled = True
+                else:
+                    col.enabled = False
+
+                if Var_advancedBool == True:
+                    box = layout.box()
+                    col2 = box.column(align=False)
+                    col2.label(text="Advanced")
+                    col2.scale_y = 1.2
+                    col2.operator(
+                        'clear.array', text="Delete Array", icon="TRASH")
+                    if len(objs) == 0:
+                        box.enabled = False
+                    box.prop(settings, 'moveEmptyBool', toggle=False,
+                             text="Move empty to 'Empties'")
+
+                if len(objs) == 0:
+                    col.enabled = False
+
+                else:
+                    col.enabled = True
 
 class CTO_OT_Dummy(bpy.types.Operator):
     bl_idname = "object.cto_dummy"
@@ -115,178 +199,322 @@ def extend_transfo_pop_up(self, context):
     row.operator(DarrowClearOrientation.bl_idname, icon='TRASH')
     row.operator(CTO_OT_Dummy.bl_idname, icon='BLANK1', emboss=False)
 
-class DarrowToggleCutters(bpy.types.Operator):
-    bl_label = "Cutter Visibility"
-    bl_idname = "darrow.toggle_cutters"
-    bl_options = {'REGISTER', 'UNDO'}
+#-----------------------------------------------------#
+#     set Black color
+#-----------------------------------------------------#
+class DarrowSetBlack(bpy.types.Operator):
+    bl_idname = "set.black"
+    bl_label = "Black"
 
     def execute(self, context):
-        for ob in bpy.data.objects:
-            if ob.display_type == 'BOUNDS':
-                ob.hide_viewport = not ob.hide_viewport
+        bpy.data.brushes["Draw"].color = (0, 0, 0)
+        DarrowSetColor.execute(self, context)
         return {'FINISHED'}
 
 #-----------------------------------------------------#
-#    Organize selected
+#     set White color
 #-----------------------------------------------------#
-class DarrowOrganizeMenu(bpy.types.Operator):
-    bl_label = "Organize Selected"
-    bl_idname = "darrow.organize_menu"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object is not None and
-                context.object.type == 'MESH')
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
-
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column()
-        col.prop(context.scene, "parentcoll_string")
+class DarrowSetWhite(bpy.types.Operator):
+    bl_idname = "set.white"
+    bl_label = "White"
 
     def execute(self, context):
-        cutters = []
-        cutters_parent = []
-        linked = []
-        selected = context.selected_objects[0]
-        old_objs = bpy.context.selected_objects
-        objs = bpy.context.selected_objects
-        master_name = context.scene.parentcoll_string
-        masterCollectionFound = False
+        bpy.data.brushes["Draw"].color = (1, 1, 1)
+        DarrowSetColor.execute(self, context)
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
+#     set Red color
+#-----------------------------------------------------#
+class DarrowSetRed(bpy.types.Operator):
+    bl_idname = "set.red"
+    bl_label = "Red"
+
+    def execute(self, context):
+        bpy.data.brushes["Draw"].color = (1, 0, 0)
+        DarrowSetColor.execute(self, context)
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
+#     set Green color
+#-----------------------------------------------------#
+class DarrowSetGreen(bpy.types.Operator):
+    bl_idname = "set.green"
+    bl_label = "Green"
+
+    def execute(self, context):
+        bpy.data.brushes["Draw"].color = (0, 1, 0)
+        DarrowSetColor.execute(self, context)
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
+#     set Blue color
+#-----------------------------------------------------#
+class DarrowSetBlue(bpy.types.Operator):
+    bl_idname = "set.blue"
+    bl_label = "Blue"
+
+    def execute(self, context):
+        bpy.data.brushes["Draw"].color = (0, 0, 1)
+        DarrowSetColor.execute(self, context)
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
+#     handles setting vertex color
+#-----------------------------------------------------#
+class DarrowSetColor(bpy.types.Operator):
+    bl_idname = "set.color"
+    bl_label = "Set Color"
+
+    def execute(self, context):
+        current_mode = bpy.context.object.mode
+        if current_mode == 'OBJECT':
+            view_layer = bpy.context.view_layer
+            obj_active = view_layer.objects.active
+            selection = bpy.context.selected_objects
+            bpy.ops.object.select_all(action='DESELECT')
+
+            for obj in selection:
+                view_layer.objects.active = obj
+                bpy.ops.object.editmode_toggle()
+                bpy.ops.mesh.select_all(action='SELECT')
+                bpy.ops.paint.vertex_paint_toggle()
+                bpy.ops.paint.vertex_color_set()
+                bpy.ops.object.mode_set(mode='OBJECT')
+                obj.select_set(True)
+
+        if current_mode == 'EDIT':
+            view_layer = bpy.context.view_layer
+            obj_active = view_layer.objects.active
+            selection = bpy.context.selected_objects
+
+            for obj in selection:
+                view_layer.objects.active = obj
+                bpy.ops.paint.vertex_paint_toggle()
+                bpy.context.object.data.use_paint_mask = True
+                bpy.ops.paint.vertex_color_set()
+                bpy.ops.object.mode_set(mode='EDIT')
+
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
+#     handles setting shading display
+#-----------------------------------------------------#
+class DarrowSetDisplay(bpy.types.Operator):
+    bl_idname = "set.display"
+    bl_name = "Show Color"
+    bl_label = "Toggle vertex color visability"
+    """
+    We have to have this class here to toggle the bool value,
+    so that a user can still manualy change the shading method
+    """
+
+    def execute(self, context):
+        Var_displayBool = bpy.context.scene.vertexDisplayBool
+        Var_viewportShading = bpy.context.space_data.shading.type
+
+        # Toggle bool value everytime this operator is called
+        Var_displayBool = not Var_displayBool
+
+        if Var_displayBool == True and Var_viewportShading == 'SOLID':
+            bpy.context.space_data.shading.color_type = 'VERTEX'
+        elif Var_viewportShading == 'SOLID':
+            bpy.context.space_data.shading.color_type = 'MATERIAL'
+
+        bpy.context.scene.vertexDisplayBool = Var_displayBool
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
+#     handles array
+#-----------------------------------------------------#
+class DarrowCircleArray(bpy.types.Operator):
+    bl_idname = "circle.array"
+    bl_description = "Move selected to world origin"
+    bl_label = "Array Selected"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        collectionFound = False
+        obj = bpy.context.selected_objects[0]
+        amt = context.object.arrayAmount
+        settings = context.preferences.addons[__package__].preferences
+        selected = bpy.context.selected_objects[0]
+        empty_collection_name = "Darrow_Empties"
+
         for myCol in bpy.data.collections:
-            if myCol.name == master_name:
-                masterCollectionFound = True
+            if myCol.name == empty_collection_name:
+                collectionFound = True
                 break
 
-        if masterCollectionFound == False:
-            master_collection = bpy.data.collections.new(master_name)
-            bpy.context.scene.collection.children.link(master_collection)
+        if collectionFound == False:
+            col = bpy.data.collections.new(empty_collection_name)
+            bpy.context.scene.collection.children.link(col)
+            vlayer = bpy.context.scene.view_layers["View Layer"]
+            vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
+            bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
+
         else:
-            master_collection = bpy.data.collections[master_name]
-            
-        for obj in objs:
-            for mods in obj.modifiers:
-                if mods.type == 'BOOLEAN':
-                    cutters.append(mods.object)
-                    cutters_parent.append(obj)
-                    linked.append(obj)
+            col = bpy.data.collections[empty_collection_name]
 
-                    for x in objs:
-                        if x == mods.object:
-                            objs.remove(mods.object)
-        
-        for obj in objs:
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            bpy.data.collections[master_name].objects.link(obj)
-        
-        for obj in cutters:
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            bpy.data.collections[master_name].objects.link(obj)
-        used_cutters = []
-        for obj in objs:
-            for x in linked:
-                if x == obj:
-                    parent_name = obj.name + "_Parent"
-                
-                    parentCollectionFound = False
-                    for myCol in bpy.data.collections:
-                        if myCol.name == parent_name:
-                            parentCollectionFound = True
-                            break
-                    if parentCollectionFound == False:
-                        parent_collection = bpy.data.collections.new(parent_name)
-                        bpy.context.scene.collection.children.link(parent_collection)
-                    else:
-                        parent_collection = bpy.data.collections[parent_name]
-                    
-                    for coll in obj.users_collection:
-                        coll.objects.unlink(obj)
-                    bpy.data.collections[parent_name].objects.link(obj)
+        bpy.context.scene.cursor.rotation_euler = (0, 0, 0)
+        bpy.ops.object.transform_apply(
+            location=True, rotation=True, scale=True)
+        try:
+            if bpy.context.object.modifiers["DarrowToolkitArray"].offset_object == None:
+                modifier_to_remove = obj.modifiers.get("DarrowToolkitArray")
+                obj.modifiers.remove(modifier_to_remove)
+                context.object.linkedEmpty = "tmp"
+                print("Resetting modifier")
+        except:
+            print("No modifier present")
 
-                    """https://blender.stackexchange.com/a/172579"""
-                    C = bpy.context
-                    coll_scene = C.scene.collection
-                    coll_parents = parent_lookup(coll_scene)
-                    coll_target = coll_scene.children.get(master_collection.name)
-                    active_coll = obj.users_collection[0]
-                    active_coll_parent = coll_parents.get(active_coll.name)
+        if context.object.linkedEmpty == "tmp":
+            print("Creating array")
+            bpy.ops.object.select_all(action='DESELECT')
+            bpy.ops.object.empty_add(type='PLAIN_AXES', align='WORLD')
+            bpy.context.object.empty_display_size = settings.emptySize
+            empty = bpy.context.selected_objects[0]
 
-                    if active_coll_parent:
-                        active_coll_parent.children.unlink(active_coll)
-                        coll_target.children.link(active_coll)
+        else:
+            print("Array exists")
+            vlayer = bpy.context.scene.view_layers["View Layer"]
+            vlayer.layer_collection.children[empty_collection_name].hide_viewport = False
+            bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
+            empty = bpy.data.objects[context.object.linkedEmpty]
 
-        for obj in cutters:
-            C = bpy.context
-            obj_i = cutters.index(obj)
-            cutters_name = cutters_parent[obj_i].name + "_Cutters"
-           
-            cuttersCollectionFound = False
-            for myCol in bpy.data.collections:
-                if myCol.name == cutters_name:
-                    cuttersCollectionFound = True
-                    break
-            if cuttersCollectionFound == False:
-                cutters_collection = bpy.data.collections.new(cutters_name)
-                bpy.context.scene.collection.children.link(cutters_collection)
-            else:
-                cutters_collection = bpy.data.collections[cutters_name]
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            bpy.data.collections[cutters_name].objects.link(obj)
-
-            coll_scene = C.scene.collection
-            coll_parents = parent_lookup(coll_scene)
-            coll_target = cutters_parent[obj_i].users_collection[0]
-            active_coll = obj.users_collection[0]
-            active_coll_parent = coll_parents.get(active_coll.name)
-
-            if active_coll_parent:
-                active_coll_parent.children.unlink(active_coll)
-                coll_target.children.link(active_coll)
-
-        for x in old_objs:
-            x.select_set(state=True)
-
+        bpy.ops.object.select_all(action='DESELECT')
+        selected.select_set(state=True)
         context.view_layer.objects.active = selected
-        used_cutters.clear()
-        cutters.clear()
-        cutters_parent.clear()
-        linked.clear()
+        context.object.linkedEmpty = empty.name
+        array = False
+        mod = bpy.context.object
+
+        for modifier in mod.modifiers:
+            if modifier.name == "DarrowToolkitArray":
+                array = True
+
+        if not array:
+            modifier = obj.modifiers.new(
+                name='DarrowToolkitArray', type='ARRAY')
+
+            modifier.name = "DarrowToolkitArray"
+            modifier.count = amt
+            modifier.use_relative_offset = False
+            modifier.use_object_offset = True
+            modifier.offset_object = empty
+        else:
+            modifier_to_remove = obj.modifiers.get("DarrowToolkitArray")
+            obj.modifiers.remove(modifier_to_remove)
+
+            modifier = obj.modifiers.new(
+                name='DarrowToolkitArray', type='ARRAY')
+
+            modifier.name = "DarrowToolkitArray"
+            modifier.count = amt
+            modifier.use_relative_offset = False
+            modifier.use_object_offset = True
+            modifier.offset_object = empty
+
+        modAmt = -1
+        for mod in (obj.modifiers):
+           modAmt = modAmt + 1
+
+        bpy.ops.object.modifier_move_to_index(
+            modifier="DarrowToolkitArray", index=modAmt)
+        bpy.ops.object.select_all(action='DESELECT')
+        empty.select_set(state=True)
+        selected.select_set(state=False)
+        context.view_layer.objects.active = empty
+        bpy.ops.object.transform_apply(
+            location=True, rotation=True, scale=True)
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+        if settings.xBool == True:
+            axis = 'X'
+        if settings.yBool == True:
+            axis = 'Y'
+        if settings.zBool == True:
+            axis = 'Z'
+        rotation = 360 / amt
+        value = math.radians(rotation)
+        bpy.ops.transform.rotate(
+            value=value, orient_axis=axis, orient_type='GLOBAL',)
+        bpy.ops.object.select_all(action='DESELECT')
+        empty.select_set(state=False)
+        selected.select_set(state=True)
+        context.view_layer.objects.active = selected
+        bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+
+        empty.select_set(state=True)
+        selected.select_set(state=True)
+        context.view_layer.objects.active = selected
+
+        bpy.ops.object.parent_set(type='OBJECT', keep_transform=False)
+        bpy.ops.object.select_all(action='DESELECT')
+
+        if settings.moveEmptyBool == True:
+            empty.select_set(state=True)
+            context.view_layer.objects.active = empty
+            for coll in empty.users_collection:
+                coll.objects.unlink(empty)
+
+            col.objects.link(empty)
+        else:
+            for coll in empty.users_collection:
+                coll.objects.unlink(empty)
+            context.scene.collection.objects.link(empty)
+
+        vlayer = bpy.context.scene.view_layers["View Layer"]
+        vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
+        empty.select_set(state=False)
+        selected.select_set(state=True)
+        context.view_layer.objects.active = selected
+
         return {'FINISHED'}
 
-def toggle_expand(context, state):
-    area = next(a for a in context.screen.areas if a.type == 'OUTLINER')
-    bpy.ops.outliner.show_hierarchy({'area': area}, 'INVOKE_DEFAULT')
-    for i in range(state):
-        bpy.ops.outliner.expanded_toggle({'area': area})
-    area.tag_redraw()
-
-def traverse_tree(t):
-    yield t
-    for child in t.children:
-        yield from traverse_tree(child)
-
-def parent_lookup(coll):
-    parent_lookup = {}
-    for coll in traverse_tree(coll):
-        for c in coll.children.keys():
-            parent_lookup.setdefault(c, coll)
-    return parent_lookup
-
 #-----------------------------------------------------#
-#     Collapse outliner
+#     handles array
 #-----------------------------------------------------#
-class DarrowCollapseOutliner(bpy.types.Operator):
-    bl_label = "Collapse Outliner"
-    bl_idname = "collapse.scene"
+
+class DarrowClearSelected(bpy.types.Operator):
+    bl_idname = "clear.array"
+    bl_description = "Move selected to world origin"
+    bl_label = "Clear Selected"
+    bl_options = {"UNDO"}
 
     def execute(self, context):
-        toggle_expand(context, 2)
+        obj = bpy.context.selected_objects[0]
+        selected = bpy.context.selected_objects[0]
+
+        if not context.object.linkedEmpty == "tmp":
+            empty = bpy.data.objects[context.object.linkedEmpty]
+            context.object.linkedEmpty = empty.name
+        else:
+            context.object.linkedEmpty == "tmp"
+
+        bpy.ops.object.select_all(action='DESELECT')
+        selected.select_set(state=True)
+        context.view_layer.objects.active = selected
+
+        mod = bpy.context.object
+
+        for modifier in mod.modifiers:
+            if modifier.name == "DarrowToolkitArray":
+                modifier_to_remove = obj.modifiers.get("DarrowToolkitArray")
+                obj.modifiers.remove(modifier_to_remove)
+
+        if not context.object.linkedEmpty == "tmp":
+            bpy.ops.object.select_all(action='DESELECT')
+            empty.select_set(state=True)
+            selected.select_set(state=False)
+            context.view_layer.objects.active = empty
+            objs = bpy.data.objects
+            objs.remove(objs[empty.name], do_unlink=True)
+
+        selected.select_set(state=True)
+        context.view_layer.objects.active = selected
+        context.object.linkedEmpty = "tmp"
+
         return {'FINISHED'}
 
 #-----------------------------------------------------#
@@ -310,41 +538,7 @@ class DarrowClearOrientation(bpy.types.Operator):
                 except Exception as e:
                     pass
         return {'FINISHED'}
-
-#-----------------------------------------------------#  
-#     handles wireframe display   
-#-----------------------------------------------------#                 
-class DarrowWireframe(bpy.types.Operator):
-    bl_idname = "set.wireframe"
-    bl_description = "Display Wireframe Overlay Only"
-    bl_label = "Toggle Wireframe"
-
-    def execute(self, context):
-
-        if bpy.context.scene.showWireframeBool == False:
-            bpy.context.scene.showWireframeBool = True
-            bpy.context.active_object.select_set(False)
-            bpy.context.space_data.show_gizmo = False
-            bpy.context.space_data.overlay.show_floor = False
-            bpy.context.space_data.overlay.show_axis_y = False
-            bpy.context.space_data.overlay.show_axis_x = False
-            bpy.context.space_data.overlay.show_cursor = False
-            bpy.context.space_data.overlay.show_object_origins = False
-            bpy.context.space_data.overlay.show_wireframes = True
-        else:
-            bpy.context.scene.showWireframeBool = False
-            bpy.context.active_object.select_set(False)
-            bpy.context.space_data.show_gizmo = True
-            bpy.context.space_data.overlay.show_floor = True
-            bpy.context.space_data.overlay.show_axis_y = True
-            bpy.context.space_data.overlay.show_axis_x = True
-            bpy.context.space_data.overlay.show_cursor = True
-            bpy.context.space_data.overlay.show_object_origins = True
-            bpy.context.space_data.overlay.show_wireframes = False
-
-        self.report({'INFO'}, "Viewport Wireframe only")
-        return {'FINISHED'} 
-    
+  
 #-----------------------------------------------------#  
 #    handles mesh clean up
 #-----------------------------------------------------#  
@@ -431,50 +625,6 @@ class DarrowMoveOrigin(bpy.types.Operator):
             self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
-#-----------------------------------------------------#
-#    handles moving all empty's
-#-----------------------------------------------------#
-
-class DarrowSetCollection(bpy.types.Operator):
-    bl_idname = "set.empty_coll"
-    bl_description = "Move all empties to 'Darrow_Empties' collection"
-    bl_label = "Group All Empties"
-
-    def execute(self, context):
-        collectionFound = False
-        empty_collection_name = "Darrow_Empties"
-        old_obj = bpy.context.selected_objects
-        scene = bpy.context.scene.objects
-
-        bpy.ops.object.select_all(action='DESELECT')
-
-        for myCol in bpy.data.collections:
-            if myCol.name == empty_collection_name:
-                collectionFound = True
-                break
-
-        if collectionFound == False:
-            empty_collection = bpy.data.collections.new(empty_collection_name)
-            bpy.context.scene.collection.children.link(empty_collection)
-        
-        for obj in scene:
-            if obj.type == "EMPTY":
-                for coll in obj.users_collection:
-                    coll.objects.unlink(obj)
-                bpy.data.collections[empty_collection_name].objects.link(obj)
-                obj.hide_set(True)
-
-        vlayer = bpy.context.scene.view_layers["View Layer"]
-        vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
-        bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
-        bpy.ops.object.select_all(action='DESELECT')
-
-        for x in old_obj:     
-            x.select_set(state=True)
-
-        self.report({'INFO'}, "Moved all empties")
-        return {'FINISHED'}
-
 #-----------------------------------------------------#  
 #     handles apply outside calculated normals
 #-----------------------------------------------------#    
@@ -519,12 +669,18 @@ class DarrowSmooth(bpy.types.Operator):
 #-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#
-classes = (DarrowToggleCutters, DarrowOrganizeMenu, DarrowCollapseOutliner, DarrowSetCollection, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh,
-           DarrowWireframe, DarrowSetOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
+classes = (CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh, DarrowSetOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,
+           DarrowCircleArray, DarrowClearSelected, DarrowSetBlack, DarrowSetWhite, DarrowSetRed, DarrowSetGreen, DarrowSetBlue, DarrowSetColor, DarrowSetDisplay,)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+
+    bpy.types.Scene.vertexDisplayBool = bpy.props.BoolProperty(
+        name="",
+        description="Toggle visabilty of vertex color",
+        default=False
+    )
 
     bpy.types.Scene.parentcoll_string = bpy.props.StringProperty(
             name="Name",
@@ -544,6 +700,19 @@ def register():
     name = "Toggle Wireframe",
     description = "Toggle visabilty of wireframe mode",
     default = False
+    )
+
+    bpy.types.Object.linkedEmpty = bpy.props.StringProperty(
+        default="tmp"
+    )
+
+    bpy.types.Object.arrayAmount = bpy.props.IntProperty(
+        name="Amount",
+        description="Amount",
+        default=5,
+        step=1,
+        soft_max=30,
+        soft_min=1,
     )
 
 def unregister():

@@ -31,6 +31,21 @@ from bpy.props import (
         StringProperty,
         EnumProperty,
     )
+from pathlib import Path
+from bpy_extras.io_utils import (ImportHelper,
+                                 ExportHelper,
+                                 path_reference_mode,
+                                 )
+from bpy.props import (StringProperty,
+                       BoolProperty,
+                       IntProperty,
+                       EnumProperty,
+                       )
+from bpy.types import (Panel,
+                       Menu,
+                       Operator,
+                       )
+
 
 #-----------------------------------------------------#  
 #   handles OS file broswer if Windows
@@ -123,7 +138,7 @@ def enum_previews_from_directory_items(self, context):
 #     handles  ui     
 #-----------------------------------------------------#  
 class DarrowDevPanel:
-    bl_category = "Darrow Toolkit"
+    bl_category = "DarrowFBX"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_devPanel"
@@ -135,7 +150,7 @@ class DarrowDevPanel:
         return settings.library_moduleBool == True
 
 class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
-    bl_label = "DarrowLibrary"
+    bl_label = "DarrowFBX"
     bl_idname = "DARROW_PT_devPanel1"
 
     @classmethod
@@ -160,17 +175,68 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
         self.layout.prop(settings, 'advancedLibraryBool', icon="SETTINGS",text="")
 
     def draw(self, context):
-        settings = context.preferences.addons[__package__].preferences
-        getBool = bpy.context.scene.getBool
-        addBool = bpy.context.scene.addBool
-        nullBool = bpy.context.scene.nullBool
-        folderBool = settings.advancedLibraryBool
-    
         layout = self.layout
-        wm = context.window_manager
+        settings = context.preferences.addons[__package__].preferences
+        Var_prefix_bool = bpy.context.scene.useprefixBool
+        Var_suffix_bool = bpy.context.scene.usecounterBool
+        Var_custom_prefix = bpy.context.scene.PrefixOption
+        Var_allowFBX = bpy.context.scene.fbxBool
         obj = context.object
         scn = context.scene
+        wm = context.window_manager
+        objs = context.selected_objects
+        getBool = bpy.context.scene.getBool
+        addBool = bpy.context.scene.addBool
+        folderBool = settings.advancedLibraryBool
+        if context.mode == 'OBJECT':
+            if obj is not None:
+                obj = context.scene
+                layout.prop(settings, 'exportPresets')
+                box = layout.box()
+                box.scale_y = 1.2
+                box.label(text="FBX Exporter")
 
+                if len(objs) != 0:
+                    Var_allowFBX = True
+                box.operator('export_selected.darrow', icon="EXPORT")
+                if Var_allowFBX == False:
+                    box.enabled = False
+
+                split = box.split()
+                split.prop(obj, 'useprefixBool')
+                split.prop(obj, 'usecounterBool')
+
+                if Var_prefix_bool == True:
+                    box = layout.box()
+                    box.label(text="Prefix Options")
+                    box.prop(obj, 'PrefixOption')
+                    if Var_custom_prefix == 'OP2':
+                        box.prop(context.scene,
+                                 "custom_name_string", text="Prefix")
+                if Var_suffix_bool == True:
+                    box = layout.box()
+                    box.label(text="Suffix Options")
+                    box.label(text="Increase the suffix by (+1)")
+                    currentSuffixAmt = str(context.scene.counter)
+                    box.operator(
+                        'reset.counter', text="Reset suffix count ("+currentSuffixAmt+")")
+
+        if folderBool == True:
+            box = layout.box()
+            box.label(text="Animation Options")
+            split = box.split()
+            split.prop(obj, 'isleafBool')
+            split.prop(obj, 'allactionsBool')
+            box.label(text="Multi-Object Options")
+            split = box.split()
+            split.prop(obj, 'collectionBool')
+        if context.mode == 'EDIT_MESH':
+            layout = self.layout
+
+        layout.separator()
+        
+        box = layout.box()
+        box.label(text="External Mesh Library")
         if folderBool == True:
             box=layout.box()
             box.label(text = "Folder Locations", icon="FILE_FOLDER")
@@ -179,16 +245,12 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
             box.operator('file.mesh_folder',icon="FILE_PARENT")
             box.operator('file.thumbnail_folder')
             
-        box=layout.box()
-        box.label(text = "Select Operation", icon="MODIFIER")
         label_add = "Add" if getBool ^1 else "Add"
         label_get = "Get" if addBool ^1 else "Get"
 
         if getBool and addBool == True:
             getBool = False
             addBool = False
-            advancedBool = False
-
             label_get = "select one"
             label_add = "select one"
         
@@ -205,7 +267,6 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
             row.enabled = False 
         if addBool == True:
             if obj is not None:
-
                 box=layout.box()
                 box.label(text="Settings")
                 box.prop(scn, 'autoCamGenBool')
@@ -232,13 +293,15 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
             row.scale_y = 1
             row.prop(scn, 'tag_enum_prop', text="Filter")
 
-            #box=layout.box()
-            #box.prop(scn, 'cursorLocBool')
 
         if obj is None and addBool == True:
             box=layout.box()
             box=box.column(align = True)
             box.label(text = "Please select a mesh")
+
+        if len(objs) == 0:
+            layout.enabled = False
+            layout.enabled = False
 
 #-----------------------------------------------------#  
 #    Handles Thumbnail Creation
@@ -426,15 +489,221 @@ class DarrowAddMeshtoLibrary(Operator):
             self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
-#-----------------------------------------------------#  
+#-----------------------------------------------------#
+#    Turn active collection into path
+#-----------------------------------------------------#
+def turn_collection_hierarchy_into_path(obj):
+    parent_names = []
+    parent_names.append(bpy.context.view_layer.active_layer_collection.name)
+    return '\\'.join(parent_names)
+
+#-----------------------------------------------------#
+#    Handles logic for exporting as FBX
+#-----------------------------------------------------#
+class DarrowExportFBX(bpy.types.Operator, ExportHelper):
+    bl_idname = "export_selected.darrow"
+    bl_label = 'Export Selection'
+    bl_description = "Export selection as an FBX using smart naming"
+    bl_options = {'PRESET'}
+    filename_ext = ".fbx"
+
+    def execute(self, context):
+        settings = context.preferences.addons[__package__].preferences
+        objs = context.selected_objects
+        if len(objs) != 0:
+            C = bpy.context
+            fbxname = bpy.context.view_layer.objects.active
+            name = bpy.path.clean_name(fbxname.name)
+            Var_collectionBool = bpy.context.scene.collectionBool
+            amt = len(C.selected_objects)
+            one = 1
+            obj = bpy.context.view_layer.objects.active
+            parent_coll = turn_collection_hierarchy_into_path(obj)
+            bpy.ops.object.make_single_user(
+                object=True, obdata=True, material=False, animation=True)
+
+            if (Var_collectionBool == True) and (amt > one):
+                fbxname = parent_coll
+                name = bpy.path.clean_name(fbxname)
+
+            customprefix = bpy.context.scene.custom_name_string
+            blendName = bpy.path.basename(
+                bpy.context.blend_data.filepath).replace(".blend", "")
+            Var_actionsBool = bpy.context.scene.allactionsBool
+            Var_leafBool = bpy.context.scene.isleafBool
+            Var_PrefixBool = bpy.context.scene.useprefixBool
+            Var_custom_prefix = bpy.context.scene.PrefixOption
+            Var_presets = settings.exportPresets
+            Var_counterBool = bpy.context.scene.usecounterBool
+            Var_nlaBool = False
+            Var_forcestartkey = False
+
+            if Var_presets == 'OP1':  # Unity preset
+                Var_leafBool = False
+                Var_actionsBool = False
+                Var_nlaBool = False
+                Var_forcestartkey = False
+                if (amt > one):
+                    Var_axisUp = 'Y'
+                    Var_axisForward = 'X'
+                    Var_scale = 1
+                else:
+                    bpy.ops.object.transform_apply(
+                        location=False, rotation=True, scale=False)
+                    bpy.context.active_object.rotation_euler[0] = math.radians(
+                        -90)
+                    print("rotated -90")
+                    bpy.ops.object.transform_apply(
+                        location=False, rotation=True, scale=False)
+                    print("rotations applied")
+                    bpy.context.active_object.rotation_euler[0] = math.radians(
+                        90)
+                    print("rotated 90")
+                    Var_axisUp = 'Y'
+                    Var_axisForward = 'X'
+                    Var_scale = 1
+            elif Var_presets == 'OP2':  # Unreal preset
+                Var_axisUp = 'Z'
+                Var_axisForward = '-Y'
+                Var_scale = 1
+                Var_nlaBool = False
+                Var_leafBool = False
+                Var_actionsBool = False
+                Var_forcestartkey = True
+
+            if Var_counterBool == True:
+                context.scene.counter += 1
+                count = context.scene.counter
+                count = str(count)
+                Var_exportnumber = "_" + count
+
+            if Var_PrefixBool == True:
+                if Var_custom_prefix == 'OP1':  # Unity preset
+                    if not bpy.data.is_saved:
+                        raise Exception("Blend file is not saved")
+
+                    if Var_counterBool == True:
+                        saveLoc = self.filepath + "_" + name + Var_exportnumber
+                    else:
+                        saveLoc = self.filepath + "_" + name
+
+                if Var_custom_prefix == 'OP2':  # Unreal preset
+                    if Var_counterBool == True:
+                        customname = customprefix + "_" + name + Var_exportnumber
+                    else:
+                        customname = customprefix + "_" + name
+
+                    if not bpy.data.is_saved:
+                        saveLoc = self.filepath.replace(
+                            "untitled", "") + customname
+                    else:
+                        saveLoc = self.filepath.replace(
+                            blendName, '') + customname
+
+            elif Var_PrefixBool == False:
+                customname = name
+                if Var_counterBool == True:
+                    if not bpy.data.is_saved:
+                        saveLoc = self.filepath.replace(
+                            "untitled", "") + name + Var_exportnumber
+                    else:
+                        saveLoc = self.filepath.replace(
+                            blendName, "") + name + Var_exportnumber
+                else:
+                    saveLoc = self.filepath.replace(blendName, "") + name
+                    if not bpy.data.is_saved:
+                        saveLoc = self.filepath.replace("untitled", "") + name
+
+        bpy.ops.export_scene.fbx(
+            filepath=saveLoc.replace('.fbx', '') + ".fbx",
+            use_mesh_modifiers=True,
+            bake_anim_use_all_actions=Var_actionsBool,
+            add_leaf_bones=Var_leafBool,
+            bake_anim_use_nla_strips=Var_nlaBool,
+            bake_anim_force_startend_keying=Var_forcestartkey,
+            check_existing=True,
+            axis_forward=Var_axisForward,
+            axis_up=Var_axisUp,
+            use_selection=True,
+            global_scale=Var_scale,
+            path_mode='AUTO')
+
+        self.report({'INFO'}, "Exported object as '" + customname + "'")
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
+#     handles reseting the suffix counter
+#-----------------------------------------------------#
+class DarrowCounterReset(bpy.types.Operator):
+    bl_idname = "reset.counter"
+    bl_description = "Resets FBX suffix counter"
+    bl_label = "Reset Suffix Counter"
+
+    def execute(self, context):
+        context.scene.counter = 0
+
+        self.report({'INFO'}, "Set suffix count to 0")
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
 #   Registration classes
 #-----------------------------------------------------#  
 preview_collections = {}
-classes = (DarrowMainPanel,DarrowThumbnail, DarrowAddMeshtoLibrary,OBJECT_OT_mesh_library,meshFolder,renderFolder)
+classes = (DarrowMainPanel, DarrowThumbnail, DarrowAddMeshtoLibrary, OBJECT_OT_mesh_library,
+           meshFolder, renderFolder, DarrowExportFBX, DarrowCounterReset)
 
 def register():
-#-----------------------------------------------------#  
-#-----------------------------------------------------# 
+
+    bpy.types.Scene.fbxBool = bpy.props.BoolProperty()
+
+    bpy.types.Scene.collectionBool = bpy.props.BoolProperty(
+        name="Active collection name",
+        description="Use active collection name when exporting more than 1 object",
+        default=True
+    )
+
+    bpy.types.Scene.allactionsBool = bpy.props.BoolProperty(
+        name="All actions",
+        description="Export each action separated separately",
+        default=False
+    )
+
+    bpy.types.Scene.isleafBool = bpy.props.BoolProperty(
+        name="Leaf bones",
+        description="Exporting using leaf bones",
+        default=False
+    )
+
+    bpy.types.Scene.useprefixBool = bpy.props.BoolProperty(
+        name="Use Prefix",
+        description="Export selected object with custom text as a prefix",
+        default=False
+    )
+
+    bpy.types.Scene.usecounterBool = bpy.props.BoolProperty(
+        name="Use Suffix",
+        description="Count exports and use as suffix",
+        default=False
+    )
+
+    bpy.types.Scene.custom_name_string = bpy.props.StringProperty(
+        name="",
+        description="Custom Prefix",
+        default="Assets"
+    )
+
+    bpy.types.Scene.counter = bpy.props.IntProperty(
+        default=0
+    )
+
+    bpy.types.Scene.PrefixOption = bpy.props.EnumProperty(
+        name="",
+        description="Apply Data to attribute.",
+        items=[('OP1', ".blend", ""),
+               ('OP2', "custom", ""),
+               ]
+    )
+
     WindowManager.my_previews = EnumProperty(
         items=enum_previews_from_directory_items,
 
@@ -442,8 +711,6 @@ def register():
     pcoll = bpy.utils.previews.new()
     pcoll.my_previews = ()
     preview_collections["main"] = pcoll
-#-----------------------------------------------------#  
-#-----------------------------------------------------# 
 
     for cls in classes:
         bpy.utils.register_class(cls)

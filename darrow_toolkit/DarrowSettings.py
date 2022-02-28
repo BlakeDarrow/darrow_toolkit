@@ -51,8 +51,13 @@ class DarrowAddonPreferences(AddonPreferences):
     )
 
     checklist_moduleBool : BoolProperty(
-        name = "Q.O.L Tools",
+        name = "Modeling Tools",
         default = True
+    )
+
+    organizer_moduleBool: BoolProperty(
+        name="Organizer Tools",
+        default=True
     )
 
     export_moduleBool : BoolProperty(
@@ -105,11 +110,7 @@ class DarrowAddonPreferences(AddonPreferences):
                ],
         default='OP2'
     )
-    advancedToolBool : BoolProperty(
-        name="Advanced",
-        description="Show advanced options",
-        default=True
-    )
+
     advancedVertexBool : BoolProperty(
         name="Advanced",
         description="Show advanced options",
@@ -162,20 +163,13 @@ class DarrowAddonPreferences(AddonPreferences):
         panel.alignment = 'RIGHT'
 
         icon.prop(self, "checklist_moduleBool", toggle=True)
-        panel.prop(self, "advancedToolBool", icon="SETTINGS", icon_only=True)
-
-        icon_2.prop(self, "export_moduleBool", toggle=True)
-        panel_2.prop(self, "advancedExportBool",icon="SETTINGS", icon_only=True)
-
-        icon.prop(self, "rgb_moduleBool", toggle=True)
         panel.label(text="")
-        
-        icon_2.prop(self, "library_moduleBool", toggle=True)
-        panel_2.prop(self, "advancedLibraryBool",icon="SETTINGS", icon_only=True)
 
-        icon.prop(self, "array_moduleBool", toggle=True)
-        panel.prop(self, "advancedVertexBool", icon="SETTINGS", icon_only=True)
-        panel.label(text="")
+        icon_2.prop(self, "organizer_moduleBool", toggle=True)
+        panel_2.label(text="")
+
+        icon.prop(self, "library_moduleBool", toggle=True)
+        panel.prop(self, "advancedLibraryBool",icon="SETTINGS", icon_only=True)
 
         box = layout.box()
         box.label(text="Default Module Properties")
