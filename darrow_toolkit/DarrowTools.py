@@ -88,6 +88,7 @@ class DarrowToolPanel(bpy.types.Panel):
                     col2.scale_y = 1.2
                     col2.operator('set.empty_coll',icon="COLLECTION_NEW")
                     col2.operator('collapse.scene', icon="SORT_ASC")
+                    col2.operator('darrow.toggle_cutters', icon="MATCUBE")
                       
                     if len(objs) == 0:
                         col.enabled = False
@@ -113,6 +114,17 @@ def extend_transfo_pop_up(self, context):
     row = layout.row(align=False)
     row.operator(DarrowClearOrientation.bl_idname, icon='TRASH')
     row.operator(CTO_OT_Dummy.bl_idname, icon='BLANK1', emboss=False)
+
+class DarrowToggleCutters(bpy.types.Operator):
+    bl_label = "Cutter Visibility"
+    bl_idname = "darrow.toggle_cutters"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        for ob in bpy.data.objects:
+            if ob.display_type == 'BOUNDS':
+                ob.hide_viewport = not ob.hide_viewport
+        return {'FINISHED'}
 
 #-----------------------------------------------------#
 #    Organize selected
@@ -503,10 +515,11 @@ class DarrowSmooth(bpy.types.Operator):
             self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
+
 #-----------------------------------------------------#  
 #   Registration classes
-#-----------------------------------------------------#  
-classes = (DarrowOrganizeMenu, DarrowCollapseOutliner, DarrowSetCollection, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh,
+#-----------------------------------------------------#
+classes = (DarrowToggleCutters, DarrowOrganizeMenu, DarrowCollapseOutliner, DarrowSetCollection, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh,
            DarrowWireframe, DarrowSetOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,)
 
 def register():
