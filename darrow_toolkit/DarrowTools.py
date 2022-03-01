@@ -49,11 +49,10 @@ class DARROW_PT_toolPanel(DarrowToolPanel, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         objs = context.selected_objects
-        obj = context.active_object
-
-        if obj is not None:
+        all = bpy.data.objects
+        if len(all) != 0:
             obj = context.active_object
-    
+
             if context.mode == 'EDIT_MESH':
                 split = layout.box()
                 col = split.column(align=True)
@@ -82,20 +81,19 @@ class DARROW_PT_toolPanel_2(DarrowToolPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        obj = context.active_object
-        if obj is not None:
+        all = bpy.data.objects
+        if len(all) != 0:
             settings = context.preferences.addons[__package__].preferences
             Var_advancedBool = settings.advancedCircleBool
             layout = self.layout
             objs = context.selected_objects
-            obj = context.active_object
             xAxis = settings.xBool
             yAxis = settings.yBool
             zAxis = settings.zBool
             col = layout.column(align=True)
 
             col.scale_y = 1.33
-            col.prop(obj, 'arrayAmount', slider=True)
+            col.prop(context.scene, 'arrayAmount', slider=True)
 
             row = layout.row(align=True)
             split = row.split(align=True)
@@ -149,16 +147,17 @@ class DARROW_PT_toolPanel_3(DarrowToolPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        obj = context.active_object
-        if obj is not None:
+        all = bpy.data.objects
+        if len(all) != 0:
+            objs = context.selected_objects
             layout = self.layout
-
             split = layout.column()
             row = split.row(align=True)
-
             row.scale_y = 1.1
             row.operator('set.black')
             row.operator('set.white')
+            if len(objs) == 0:
+                row.enabled = False
 
             row = split.row(align=True)
             row.scale_y = 1.1
@@ -166,7 +165,9 @@ class DARROW_PT_toolPanel_3(DarrowToolPanel, bpy.types.Panel):
             row.operator('set.green')
             row.operator('set.blue')
             split = layout.column()
-
+            if len(objs) == 0:
+                row.enabled = False
+            
 class CTO_OT_Dummy(bpy.types.Operator):
     bl_idname = "object.cto_dummy"
     bl_label = ""
@@ -323,7 +324,7 @@ class DarrowCircleArray(bpy.types.Operator):
     def execute(self, context):
         collectionFound = False
         obj = bpy.context.selected_objects[0]
-        amt = context.object.arrayAmount
+        amt = context.scene.arrayAmount
         settings = context.preferences.addons[__package__].preferences
         selected = bpy.context.selected_objects[0]
         empty_collection_name = "Darrow_Empties"
@@ -691,7 +692,7 @@ def register():
         default="tmp"
     )
 
-    bpy.types.Object.arrayAmount = bpy.props.IntProperty(
+    bpy.types.Scene.arrayAmount = bpy.props.IntProperty(
         name="Amount",
         description="Amount",
         default=5,

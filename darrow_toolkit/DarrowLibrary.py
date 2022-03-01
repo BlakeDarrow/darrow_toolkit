@@ -150,16 +150,17 @@ class DARROW_PT_panel_1(DarrowDevPanel, bpy.types.Panel):
         self.layout.prop(context.scene, 'advancedLibraryBool', icon="SETTINGS",text="")
 
     def draw(self, context):
-        layout = self.layout
-        Var_prefix_bool = bpy.context.scene.useprefixBool
-        Var_suffix_bool = bpy.context.scene.usecounterBool
-        Var_custom_prefix = bpy.context.scene.PrefixOption
-        Var_allowFBX = bpy.context.scene.fbxBool
-        obj = context.object
-        objs = context.selected_objects
-        folderBool = bpy.context.scene.advancedLibraryBool
-        if context.mode == 'OBJECT':
-            if obj is not None:
+        all = bpy.data.objects
+        if len(all) != 0:
+            layout = self.layout
+            Var_prefix_bool = bpy.context.scene.useprefixBool
+            Var_suffix_bool = bpy.context.scene.usecounterBool
+            Var_custom_prefix = bpy.context.scene.PrefixOption
+            Var_allowFBX = bpy.context.scene.fbxBool
+            obj = context.object
+            objs = context.selected_objects
+            folderBool = bpy.context.scene.advancedLibraryBool
+            if context.mode == 'OBJECT':
                 obj = context.scene
                 layout.prop(context.scene, 'exportPresets')
                 box = layout.box()
@@ -182,7 +183,7 @@ class DARROW_PT_panel_1(DarrowDevPanel, bpy.types.Panel):
                     box.prop(obj, 'PrefixOption')
                     if Var_custom_prefix == 'OP2':
                         box.prop(context.scene,
-                                 "custom_name_string", text="Prefix")
+                                "custom_name_string", text="Prefix")
                 if Var_suffix_bool == True:
                     box = layout.box()
                     box.label(text="Suffix Options")
@@ -191,15 +192,15 @@ class DARROW_PT_panel_1(DarrowDevPanel, bpy.types.Panel):
                     box.operator(
                         'reset.counter', text="Reset suffix count ("+currentSuffixAmt+")")
 
-        if folderBool == True:
-            box = layout.box()
-            box.label(text="Animation Options")
-            split = box.split()
-            split.prop(obj, 'isleafBool')
-            split.prop(obj, 'allactionsBool')
-            box.label(text="Multi-Object Options")
-            split = box.split()
-            split.prop(obj, 'collectionBool')
+            if folderBool == True:
+                box = layout.box()
+                box.label(text="Animation Options")
+                split = box.split()
+                split.prop(obj, 'isleafBool')
+                split.prop(obj, 'allactionsBool')
+                box.label(text="Multi-Object Options")
+                split = box.split()
+                split.prop(obj, 'collectionBool')
 
 class DARROW_PT_panel_2(DarrowDevPanel, bpy.types.Panel):
     bl_parent_id = "DARROW_PT_panel_1"
@@ -207,8 +208,9 @@ class DARROW_PT_panel_2(DarrowDevPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        obj = context.active_object
-        if obj is not None:
+        all = bpy.data.objects
+        if len(all) != 0:
+            obj = context.active_object
             layout = self.layout
             obj = context.object
             scn = context.scene
