@@ -102,14 +102,6 @@ class DarrowAddonPreferences(AddonPreferences):
         soft_min=0,
         soft_max=.5
     )
-    exportPresets : EnumProperty(
-        name="Preset",
-        description="Animation Export Presets",
-        items=[('OP1', "Unity", ""),
-               ('OP2', "Unreal", ""),
-               ],
-        default='OP2'
-    )
 
     advancedVertexBool : BoolProperty(
         name="Advanced",
@@ -126,11 +118,7 @@ class DarrowAddonPreferences(AddonPreferences):
         description="Show advanced options",
         default=False
     )
-    advancedLibraryBool : BoolProperty(
-        name="Advanced",
-        description="Show advanced options",
-        default=False
-    )
+    
     removeDoublesAmount : FloatProperty(
         name="Remove Doubles Amount",
         description="Threshold to Remove Doubles",
@@ -168,9 +156,6 @@ class DarrowAddonPreferences(AddonPreferences):
         icon_2.prop(self, "organizer_moduleBool", toggle=True)
         panel_2.label(text="")
 
-        icon.prop(self, "library_moduleBool", toggle=True)
-        panel.prop(self, "advancedLibraryBool",icon="SETTINGS", icon_only=True)
-
         box = layout.box()
         box.label(text="Default Module Properties")
         box.alignment = 'RIGHT'
@@ -181,9 +166,7 @@ class DarrowAddonPreferences(AddonPreferences):
         col1.prop(self, "emptySize", text="Empty Display Size", slider=True)
         col1.prop(self, "removeDoublesAmount", text="Remove Doubles Distance", slider=True)
         col2.prop(self, "moveEmptyBool")
-        col2.prop(self, "exportPresets", text="FBX Export Preset",
-                  icon="EXPORT", emboss = True)
-        
+
         addon_updater_ops.update_settings_ui(self,context)
 
 #-----------------------------------------------------#  

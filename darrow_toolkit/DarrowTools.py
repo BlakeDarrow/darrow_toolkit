@@ -16,8 +16,21 @@ from bpy.types import (Panel,
 #-----------------------------------------------------#         
 #     handles ui panel 
 #-----------------------------------------------------#  
-class DarrowToolPanel(bpy.types.Panel):
-    bl_label = "DarrowModeling"
+
+
+class DarrowToolPanel:
+    bl_category = "DarrowToolkit"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+
+    @classmethod
+    def poll(cls, context):
+        settings = context.preferences.addons[__package__].preferences
+        return settings.library_moduleBool == True
+
+
+class DARROW_PT_toolPanel(DarrowToolPanel, bpy.types.Panel):
+    bl_label = "Mesh Tools"
     bl_category = "DarrowToolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -30,8 +43,6 @@ class DarrowToolPanel(bpy.types.Panel):
 
         if obj is not None: 
             obj = context.active_object
-            objs = bpy.context.object.data
-
             for obj in bpy.context.selected_objects:
                 if obj.type =='CURVE' : return False
                 if obj.type =='FONT' : return False
@@ -62,123 +73,121 @@ class DarrowToolPanel(bpy.types.Panel):
         
 
     def draw(self, context):
-        settings = context.preferences.addons[__package__].preferences
-        Var_advancedBool = settings.advancedCircleBool
         layout = self.layout
         objs = context.selected_objects
         obj = context.active_object
-        
-        xAxis = settings.xBool
-        yAxis = settings.yBool
-        zAxis = settings.zBool
+
         if obj is not None:
             obj = context.active_object
     
             if context.mode == 'EDIT_MESH':
                 split = layout.box()
                 col = split.column(align=True)
-                col.scale_y = 1.2
+                col.scale_y = 1.33
                 col.operator('set.origin', icon="PIVOT_CURSOR")
 
-                split = layout.column()
-                split.label(text="RGB Mask")
-                row = split.row(align=True)
-                
-                row.scale_y = 1.1
-                row.operator('set.black')
-                row.operator('set.white')
-
-                row = split.row(align=True)
-                row.scale_y = 1.1
-                row.operator('set.red')
-                row.operator('set.green')
-                row.operator('set.blue')
-
             if context.mode == 'OBJECT':
-                label = layout.column(align=True)
-                label.label(text="Q.O.L Tools")
                 split = layout.box()
                 col = split.column(align=True)
-                col.scale_y = 1.2
+                col.scale_y = 1.33
                 col.operator('move.origin', icon="OBJECT_ORIGIN")
                 col.operator('clean.mesh', text = "Cleanup Mesh", icon="VERTEXSEL")
                 col.operator('shade.smooth', text = "Shade Smooth",icon="MOD_SMOOTH")
                 col.operator('apply.transforms', icon="CHECKMARK")
                 col.operator('apply.normals', icon="NORMALS_FACE")
 
-
-                split = layout.column()
-                split.label(text="RGB Mask")
-                row = split.row(align=True)
-                
-                row.scale_y = 1.1
-                row.operator('set.black')
-                row.operator('set.white')
-
-                row = split.row(align=True)
-                row.scale_y = 1.1
-                row.operator('set.red')
-                row.operator('set.green')
-                row.operator('set.blue')
-
-                
-                col = layout.column(align=True)
-                col.label(text="Circle Array")
-
-                col.scale_y = 1.33
-                col.prop(obj, 'arrayAmount', slider=True)
-
-                row = layout.row(align=True)
-                split = row.split(align=True)
-                split.prop(settings, 'xBool', toggle=True)
-
-                if yAxis == True:
-                    split.enabled = False
-                if zAxis == True:
-                    split.enabled = False
-
-                split = row.split(align=True)
-                split.prop(settings, 'yBool', toggle=True)
-                if xAxis == True:
-                    split.enabled = False
-                if zAxis == True:
-                    split.enabled = False
-
-                split = row.split(align=True)
-                split.prop(settings, 'zBool', toggle=True)
-                if xAxis == True:
-                    split.enabled = False
-                if yAxis == True:
-                    split.enabled = False
-
-                col = layout.column(align=True)
-                col.scale_y = 1.5
-                col.operator('circle.array', icon="ONIONSKIN_ON",)
-
-                if xAxis == False and yAxis == False and zAxis == False:
-                    col.enabled = False
-                elif len(objs) != 0:
-                    col.enabled = True
-                else:
-                    col.enabled = False
-
-                if Var_advancedBool == True:
-                    box = layout.box()
-                    col2 = box.column(align=False)
-                    col2.label(text="Advanced")
-                    col2.scale_y = 1.2
-                    col2.operator(
-                        'clear.array', text="Delete Array", icon="TRASH")
-                    if len(objs) == 0:
-                        box.enabled = False
-                    box.prop(settings, 'moveEmptyBool', toggle=False,
-                             text="Move empty to 'Empties'")
-
                 if len(objs) == 0:
                     col.enabled = False
 
                 else:
                     col.enabled = True
+
+class DARROW_PT_toolPanel_2(DarrowToolPanel, bpy.types.Panel):
+    bl_parent_id = "DARROW_PT_toolPanel"
+    bl_label = "Circular Array"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        settings = context.preferences.addons[__package__].preferences
+        Var_advancedBool = settings.advancedCircleBool
+        layout = self.layout
+        objs = context.selected_objects
+        obj = context.active_object
+        xAxis = settings.xBool
+        yAxis = settings.yBool
+        zAxis = settings.zBool
+        col = layout.column(align=True)
+
+        col.scale_y = 1.33
+        col.prop(obj, 'arrayAmount', slider=True)
+
+        row = layout.row(align=True)
+        split = row.split(align=True)
+        split.prop(settings, 'xBool', toggle=True)
+
+        if yAxis == True:
+            split.enabled = False
+        if zAxis == True:
+            split.enabled = False
+
+        split = row.split(align=True)
+        split.prop(settings, 'yBool', toggle=True)
+        if xAxis == True:
+            split.enabled = False
+        if zAxis == True:
+            split.enabled = False
+
+        split = row.split(align=True)
+        split.prop(settings, 'zBool', toggle=True)
+        if xAxis == True:
+            split.enabled = False
+        if yAxis == True:
+            split.enabled = False
+
+        col = layout.column(align=True)
+        col.scale_y = 1.5
+        col.operator('circle.array', icon="ONIONSKIN_ON",)
+
+        if xAxis == False and yAxis == False and zAxis == False:
+            col.enabled = False
+        elif len(objs) != 0:
+            col.enabled = True
+        else:
+            col.enabled = False
+
+        if Var_advancedBool == True:
+            box = layout.box()
+            col2 = box.column(align=False)
+            col2.label(text="Advanced")
+            col2.scale_y = 1.2
+            col2.operator(
+                'clear.array', text="Delete Array", icon="TRASH")
+            if len(objs) == 0:
+                box.enabled = False
+            box.prop(settings, 'moveEmptyBool', toggle=False,
+                        text="Move empty to 'Empties'")
+
+class DARROW_PT_toolPanel_3(DarrowToolPanel, bpy.types.Panel):
+    bl_parent_id = "DARROW_PT_toolPanel"
+    bl_label = "RGB Masking"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+
+        split = layout.column()
+        row = split.row(align=True)
+
+        row.scale_y = 1.1
+        row.operator('set.black')
+        row.operator('set.white')
+
+        row = split.row(align=True)
+        row.scale_y = 1.1
+        row.operator('set.red')
+        row.operator('set.green')
+        row.operator('set.blue')
+        split = layout.column()
 
 class CTO_OT_Dummy(bpy.types.Operator):
     bl_idname = "object.cto_dummy"
@@ -475,7 +484,6 @@ class DarrowCircleArray(bpy.types.Operator):
 #-----------------------------------------------------#
 #     handles array
 #-----------------------------------------------------#
-
 class DarrowClearSelected(bpy.types.Operator):
     bl_idname = "clear.array"
     bl_description = "Move selected to world origin"
@@ -665,11 +673,10 @@ class DarrowSmooth(bpy.types.Operator):
             self.report({'INFO'}, "None Selected")
         return {'FINISHED'}
 
-
 #-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#
-classes = (CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh, DarrowSetOrigin, DarrowMoveOrigin, DarrowToolPanel, DarrowTransforms, DarrowNormals, DarrowSmooth,
+classes = (DARROW_PT_toolPanel,  DARROW_PT_toolPanel_2, DARROW_PT_toolPanel_3, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh, DarrowSetOrigin, DarrowMoveOrigin, DarrowTransforms, DarrowNormals, DarrowSmooth,
            DarrowCircleArray, DarrowClearSelected, DarrowSetBlack, DarrowSetWhite, DarrowSetRed, DarrowSetGreen, DarrowSetBlue, DarrowSetColor, DarrowSetDisplay,)
 
 def register():

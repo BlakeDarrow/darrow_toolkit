@@ -143,55 +143,26 @@ class DarrowDevPanel:
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_devPanel"
 
-    @classmethod
-    def poll(cls, context):
-        settings = context.preferences.addons[__package__].preferences
-
-        return settings.library_moduleBool == True
-
-class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
-    bl_label = "DarrowFBX"
-    bl_idname = "DARROW_PT_devPanel1"
-
-    @classmethod
-    def poll(cls, context):
-        settings = context.preferences.addons[__package__].preferences
-        obj = context.active_object
-        for obj in bpy.context.selected_objects:
-            if obj.type =='CURVE' : return False
-            if obj.type =='CAMERA' : return False
-            if obj.type =='LIGHT' : return False
-            if obj.type =='FONT' : return False
-            if obj.type =='LATTICE' : return False
-            if obj.type =='LIGHT_PROBE' : return False
-            if obj.type =='IMAGE' : return False
-            if obj.type =='SPEAKER' : return False
-
-        return settings.library_moduleBool == True
-            #print("poll")
+class DARROW_PT_panel_1(DarrowDevPanel, bpy.types.Panel):
+    bl_label = "FBX Exporter"
+    bl_idname = "DARROW_PT_panel_1"
 
     def draw_header(self, context):
-        settings = context.preferences.addons[__package__].preferences
-        self.layout.prop(settings, 'advancedLibraryBool', icon="SETTINGS",text="")
+        self.layout.prop(context.scene, 'advancedLibraryBool', icon="SETTINGS",text="")
 
     def draw(self, context):
         layout = self.layout
-        settings = context.preferences.addons[__package__].preferences
         Var_prefix_bool = bpy.context.scene.useprefixBool
         Var_suffix_bool = bpy.context.scene.usecounterBool
         Var_custom_prefix = bpy.context.scene.PrefixOption
         Var_allowFBX = bpy.context.scene.fbxBool
         obj = context.object
-        scn = context.scene
-        wm = context.window_manager
         objs = context.selected_objects
-        getBool = bpy.context.scene.getBool
-        addBool = bpy.context.scene.addBool
-        folderBool = settings.advancedLibraryBool
+        folderBool = bpy.context.scene.advancedLibraryBool
         if context.mode == 'OBJECT':
             if obj is not None:
                 obj = context.scene
-                layout.prop(settings, 'exportPresets')
+                layout.prop(context.scene, 'exportPresets')
                 box = layout.box()
                 box.scale_y = 1.2
                 box.label(text="FBX Exporter")
@@ -230,74 +201,87 @@ class DarrowMainPanel(DarrowDevPanel, bpy.types.Panel):
             box.label(text="Multi-Object Options")
             split = box.split()
             split.prop(obj, 'collectionBool')
-        if context.mode == 'EDIT_MESH':
-            layout = self.layout
 
-        layout.separator()
-        
+class DARROW_PT_panel_2(DarrowDevPanel, bpy.types.Panel):
+    bl_parent_id = "DARROW_PT_panel_1"
+    bl_label = "External Mesh Library"
+    bl_options = {'DEFAULT_CLOSED'}
+
+    def draw(self, context):
+        layout = self.layout
+        obj = context.object
+        scn = context.scene
+        wm = context.window_manager
+        objs = context.selected_objects
+        getBool = bpy.context.scene.getBool
+        addBool = bpy.context.scene.addBool
+        folderBool = bpy.context.scene.advancedLibraryBool
         box = layout.box()
-        box.label(text="External Mesh Library")
+        box.label(text="Library Operations", icon="DOCUMENTS")
         if folderBool == True:
-            box=layout.box()
-            box.label(text = "Folder Locations", icon="FILE_FOLDER")
+            box = layout.box()
+            box.label(text="Folder Locations", icon="FILE_FOLDER")
             box.scale_y = 1.2
-            box=box.row(align = True)
-            box.operator('file.mesh_folder',icon="FILE_PARENT")
+            box = box.row(align=True)
+            box.operator('file.mesh_folder', icon="FILE_PARENT")
             box.operator('file.thumbnail_folder')
-            
-        label_add = "Add" if getBool ^1 else "Add"
-        label_get = "Get" if addBool ^1 else "Get"
+
+        label_add = "Add" if getBool ^ 1 else "Add"
+        label_get = "Get" if addBool ^ 1 else "Get"
 
         if getBool and addBool == True:
             getBool = False
             addBool = False
             label_get = "select one"
             label_add = "select one"
-        
+
         row = layout.row(align=True)
         row.scale_y = 2
-        row.prop(scn, 'addBool',  toggle=True, text = label_add,icon="EXPORT")
-        if getBool == True: 
+        row.prop(scn, 'addBool',  toggle=True, text=label_add, icon="EXPORT")
+        if getBool == True:
             row.enabled = False
 
         row = layout.row(align=True)
         row.scale_y = 2
-        row.prop(scn, 'getBool',  toggle=True, text = label_get,icon="IMPORT")
+        row.prop(scn, 'getBool',  toggle=True, text=label_get, icon="IMPORT")
         if addBool == True:
-            row.enabled = False 
+            row.enabled = False
         if addBool == True:
             if obj is not None:
-                box=layout.box()
+                box = layout.box()
                 box.label(text="Settings")
                 box.prop(scn, 'autoCamGenBool')
                 box.prop(scn, 'showWireframeRenderBool')
 
-                box=layout.box()
-                box= box.column(align = True)
+                box = layout.box()
+                box = box.column(align=True)
                 box.scale_y = 3
-                box.operator('darrow.add_to_library', text = "Add to library", icon="EXPORT")
-                row=layout.column(align = False)
+                box.operator('darrow.add_to_library',
+                             text="Add to library", icon="EXPORT")
+                row = layout.column(align=False)
                 row.scale_y = 1
-                row.prop(context.scene, "tag_name", text="Tag",icon="WORDWRAP_ON") 
+                row.prop(context.scene, "tag_name",
+                         text="Tag", icon="WORDWRAP_ON")
 
         if getBool == True:
             layout = self.layout
             layout.label(text="Previews")
             row = layout.row()
             row.scale_y = .5
-            row.template_icon_view(wm, "my_previews", show_labels = 1, scale = 18.5,scale_popup=5)
-            row=layout.column(align = False)
+            row.template_icon_view(
+                wm, "my_previews", show_labels=1, scale=18.5, scale_popup=5)
+            row = layout.column(align=False)
             row.scale_y = 2.5
-            row.operator_menu_enum("object.asset_library", "mesh_enum_prop", text="Get from library", icon="IMPORT")
-            row=layout.column(align = False)
+            row.operator_menu_enum(
+                "object.asset_library", "mesh_enum_prop", text="Get from library", icon="IMPORT")
+            row = layout.column(align=False)
             row.scale_y = 1
             row.prop(scn, 'tag_enum_prop', text="Filter")
 
-
         if obj is None and addBool == True:
-            box=layout.box()
-            box=box.column(align = True)
-            box.label(text = "Please select a mesh")
+            box = layout.box()
+            box = box.column(align=True)
+            box.label(text="Please select a mesh")
 
         if len(objs) == 0:
             layout.enabled = False
@@ -463,7 +447,7 @@ class DarrowAddMeshtoLibrary(Operator):
     
     def execute(self, context):
         objs = context.selected_objects
-        if len(objs) is not 0: 
+        if len(objs) != 0: 
             tagString = bpy.context.scene.tag_name #if this is null, no folder is created
             fbxname = bpy.context.view_layer.objects.active
             exportmeshName = bpy.path.clean_name(fbxname.name)
@@ -508,7 +492,6 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     filename_ext = ".fbx"
 
     def execute(self, context):
-        settings = context.preferences.addons[__package__].preferences
         objs = context.selected_objects
         if len(objs) != 0:
             C = bpy.context
@@ -533,7 +516,7 @@ class DarrowExportFBX(bpy.types.Operator, ExportHelper):
             Var_leafBool = bpy.context.scene.isleafBool
             Var_PrefixBool = bpy.context.scene.useprefixBool
             Var_custom_prefix = bpy.context.scene.PrefixOption
-            Var_presets = settings.exportPresets
+            Var_presets = bpy.context.scene.exportPresets
             Var_counterBool = bpy.context.scene.usecounterBool
             Var_nlaBool = False
             Var_forcestartkey = False
@@ -649,10 +632,25 @@ class DarrowCounterReset(bpy.types.Operator):
 #   Registration classes
 #-----------------------------------------------------#  
 preview_collections = {}
-classes = (DarrowMainPanel, DarrowThumbnail, DarrowAddMeshtoLibrary, OBJECT_OT_mesh_library,
-           meshFolder, renderFolder, DarrowExportFBX, DarrowCounterReset)
+classes = ( DarrowThumbnail, DarrowAddMeshtoLibrary, OBJECT_OT_mesh_library,
+            meshFolder, renderFolder, DarrowExportFBX, DarrowCounterReset, DARROW_PT_panel_1, DARROW_PT_panel_2)
 
 def register():
+
+    bpy.types.Scene.advancedLibraryBool = bpy.props.BoolProperty(
+        name="Advanced",
+        description="Show advanced options",
+        default=False
+    )
+
+    bpy.types.Scene.exportPresets = bpy.props.EnumProperty(
+        name="Preset",
+        description="Animation Export Presets",
+        items=[('OP1', "Unity", ""),
+               ('OP2', "Unreal", ""),
+               ],
+        default='OP2'
+    )
 
     bpy.types.Scene.fbxBool = bpy.props.BoolProperty()
 

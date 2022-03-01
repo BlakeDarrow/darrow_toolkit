@@ -16,7 +16,7 @@ from bpy.types import (Panel,
 #     handles ui panel 
 #-----------------------------------------------------#  
 class DarrowOrganizePanel(bpy.types.Panel):
-    bl_label = "DarrowOrganizer"
+    bl_label = "Scene Organizer"
     bl_category = "DarrowToolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -48,17 +48,21 @@ class DarrowOrganizePanel(bpy.types.Panel):
         obj = context.active_object
 
         if obj is not None:
-            split=layout.box()
+            split=self.layout
             col = split.column(align=True)
-            col.scale_y = 1.2
+            col.scale_y = 1.33
             obj = context.active_object
-            col.operator('set.wireframe', text="Toggle Wireframe", icon="CUBE")
-            col.operator('darrow.toggle_cutters',text="Toggle Cutters", icon="MATCUBE")
-            col.separator()
-            col.operator('set.empty_coll', icon="COLLECTION_NEW")
-            col.operator('darrow.organize_menu',icon="OUTLINER_OB_GROUP_INSTANCE")
-            col.separator()
             col.operator('collapse.scene', icon="SORT_ASC")
+            col.label(text="Display Options")
+            row = col.row(align=True)
+            row.operator('set.wireframe', text="Wireframe", icon="FILE_3D")
+            row.operator('darrow.toggle_cutters',
+                         text="Booleans", icon="MOD_BOOLEAN")
+            col.separator()
+            #col.label(text="Organize")
+            col.operator('set.empty_coll',text="Group All Empties", icon="COLLECTION_NEW")
+            col.operator('darrow.organize_menu',text="Organize Selected",icon="OUTLINER_OB_GROUP_INSTANCE")
+            col.separator()
 
 def toggle_expand(context, state):
     area = next(a for a in context.screen.areas if a.type == 'OUTLINER')
