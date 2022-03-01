@@ -23,37 +23,12 @@ class DarrowToolPanel:
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
 
-    @classmethod
-    def poll(cls, context):
-        settings = context.preferences.addons[__package__].preferences
-        return settings.library_moduleBool == True
-
-
 class DARROW_PT_toolPanel(DarrowToolPanel, bpy.types.Panel):
     bl_label = "Mesh Tools"
     bl_category = "DarrowToolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_toolPanel"
-
-    @classmethod
-    def poll(cls, context):
-        obj = context.active_object
-        settings = context.preferences.addons[__package__].preferences
-
-        if obj is not None: 
-            obj = context.active_object
-            for obj in bpy.context.selected_objects:
-                if obj.type =='CURVE' : return False
-                if obj.type =='FONT' : return False
-                if obj.type =='CAMERA' : return False
-                if obj.type =='LIGHT' : return False
-                if obj.type =='LIGHT_PROBE' : return False
-                if obj.type =='IMAGE' : return False
-                if obj.type =='SPEAKER' : return False
-
-        return settings.checklist_moduleBool == True
-            #print("poll")
 
     def draw_header(self, context):
         settings = context.preferences.addons[__package__].preferences
@@ -70,8 +45,7 @@ class DARROW_PT_toolPanel(DarrowToolPanel, bpy.types.Panel):
                                 text="", depress=Var_displayBool)
         if Var_viewportShading != 'SOLID':
             self.layout.enabled = False
-        
-
+    
     def draw(self, context):
         layout = self.layout
         objs = context.selected_objects
@@ -108,64 +82,66 @@ class DARROW_PT_toolPanel_2(DarrowToolPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        settings = context.preferences.addons[__package__].preferences
-        Var_advancedBool = settings.advancedCircleBool
-        layout = self.layout
-        objs = context.selected_objects
         obj = context.active_object
-        xAxis = settings.xBool
-        yAxis = settings.yBool
-        zAxis = settings.zBool
-        col = layout.column(align=True)
+        if obj is not None:
+            settings = context.preferences.addons[__package__].preferences
+            Var_advancedBool = settings.advancedCircleBool
+            layout = self.layout
+            objs = context.selected_objects
+            obj = context.active_object
+            xAxis = settings.xBool
+            yAxis = settings.yBool
+            zAxis = settings.zBool
+            col = layout.column(align=True)
 
-        col.scale_y = 1.33
-        col.prop(obj, 'arrayAmount', slider=True)
+            col.scale_y = 1.33
+            col.prop(obj, 'arrayAmount', slider=True)
 
-        row = layout.row(align=True)
-        split = row.split(align=True)
-        split.prop(settings, 'xBool', toggle=True)
+            row = layout.row(align=True)
+            split = row.split(align=True)
+            split.prop(settings, 'xBool', toggle=True)
 
-        if yAxis == True:
-            split.enabled = False
-        if zAxis == True:
-            split.enabled = False
+            if yAxis == True:
+                split.enabled = False
+            if zAxis == True:
+                split.enabled = False
 
-        split = row.split(align=True)
-        split.prop(settings, 'yBool', toggle=True)
-        if xAxis == True:
-            split.enabled = False
-        if zAxis == True:
-            split.enabled = False
+            split = row.split(align=True)
+            split.prop(settings, 'yBool', toggle=True)
+            if xAxis == True:
+                split.enabled = False
+            if zAxis == True:
+                split.enabled = False
 
-        split = row.split(align=True)
-        split.prop(settings, 'zBool', toggle=True)
-        if xAxis == True:
-            split.enabled = False
-        if yAxis == True:
-            split.enabled = False
+            split = row.split(align=True)
+            split.prop(settings, 'zBool', toggle=True)
+            if xAxis == True:
+                split.enabled = False
+            if yAxis == True:
+                split.enabled = False
 
-        col = layout.column(align=True)
-        col.scale_y = 1.5
-        col.operator('circle.array', icon="ONIONSKIN_ON",)
+            col = layout.column(align=True)
+            col.scale_y = 1.5
+            col.operator('circle.array', icon="ONIONSKIN_ON",)
 
-        if xAxis == False and yAxis == False and zAxis == False:
-            col.enabled = False
-        elif len(objs) != 0:
-            col.enabled = True
-        else:
-            col.enabled = False
+            if xAxis == False and yAxis == False and zAxis == False:
+                col.enabled = False
+            elif len(objs) != 0:
+                col.enabled = True
+            else:
+                col.enabled = False
 
-        if Var_advancedBool == True:
-            box = layout.box()
-            col2 = box.column(align=False)
-            col2.label(text="Advanced")
-            col2.scale_y = 1.2
-            col2.operator(
-                'clear.array', text="Delete Array", icon="TRASH")
-            if len(objs) == 0:
-                box.enabled = False
-            box.prop(settings, 'moveEmptyBool', toggle=False,
-                        text="Move empty to 'Empties'")
+            if Var_advancedBool == True:
+                box = layout.box()
+                col2 = box.column(align=False)
+                col2.label(text="Advanced")
+                col2.scale_y = 1.2
+                col2.operator(
+                    'clear.array', text="Delete Array", icon="TRASH")
+                if len(objs) == 0:
+                    box.enabled = False
+                box.prop(settings, 'moveEmptyBool', toggle=False,
+                            text="Move empty to 'Empties'")
 
 class DARROW_PT_toolPanel_3(DarrowToolPanel, bpy.types.Panel):
     bl_parent_id = "DARROW_PT_toolPanel"
@@ -173,21 +149,23 @@ class DARROW_PT_toolPanel_3(DarrowToolPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        layout = self.layout
+        obj = context.active_object
+        if obj is not None:
+            layout = self.layout
 
-        split = layout.column()
-        row = split.row(align=True)
+            split = layout.column()
+            row = split.row(align=True)
 
-        row.scale_y = 1.1
-        row.operator('set.black')
-        row.operator('set.white')
+            row.scale_y = 1.1
+            row.operator('set.black')
+            row.operator('set.white')
 
-        row = split.row(align=True)
-        row.scale_y = 1.1
-        row.operator('set.red')
-        row.operator('set.green')
-        row.operator('set.blue')
-        split = layout.column()
+            row = split.row(align=True)
+            row.scale_y = 1.1
+            row.operator('set.red')
+            row.operator('set.green')
+            row.operator('set.blue')
+            split = layout.column()
 
 class CTO_OT_Dummy(bpy.types.Operator):
     bl_idname = "object.cto_dummy"

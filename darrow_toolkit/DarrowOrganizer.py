@@ -22,47 +22,20 @@ class DarrowOrganizePanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_organizePanel"
 
-    @classmethod
-    def poll(cls, context):
-        obj = context.active_object
-        settings = context.preferences.addons[__package__].preferences
-
-        if obj is not None: 
-            obj = context.active_object
-            objs = bpy.context.object.data
-
-            for obj in bpy.context.selected_objects:
-                if obj.type =='CURVE' : return False
-                if obj.type =='FONT' : return False
-                if obj.type =='CAMERA' : return False
-                if obj.type =='LIGHT' : return False
-                if obj.type =='LIGHT_PROBE' : return False
-                if obj.type =='IMAGE' : return False
-                if obj.type =='SPEAKER' : return False
-
-        return settings.organizer_moduleBool == True
-            #print("poll")
-
     def draw(self, context):
-        layout = self.layout
-        obj = context.active_object
-
-        if obj is not None:
-            split=self.layout
-            col = split.column(align=True)
-            col.scale_y = 1.33
-            obj = context.active_object
-            col.operator('collapse.scene', icon="SORT_ASC")
-            col.label(text="Display Options")
-            row = col.row(align=True)
-            row.operator('set.wireframe', text="Wireframe", icon="FILE_3D")
-            row.operator('darrow.toggle_cutters',
-                         text="Booleans", icon="MOD_BOOLEAN")
-            col.separator()
-            #col.label(text="Organize")
-            col.operator('set.empty_coll',text="Group All Empties", icon="COLLECTION_NEW")
-            col.operator('darrow.organize_menu',text="Organize Selected",icon="OUTLINER_OB_GROUP_INSTANCE")
-            col.separator()
+        split=self.layout
+        col = split.column(align=True)
+        col.scale_y = 1.33
+        col.operator('collapse.scene', icon="SORT_ASC")
+        col.label(text="Display Options")
+        row = col.row(align=True)
+        row.operator('set.wireframe', text="Wireframe", icon="FILE_3D")
+        row.operator('darrow.toggle_cutters',
+                        text="Booleans", icon="MOD_BOOLEAN")
+        col.separator()
+        col.operator('set.empty_coll',text="Group All Empties", icon="COLLECTION_NEW")
+        col.operator('darrow.organize_menu',text="Organize Selected",icon="OUTLINER_OB_GROUP_INSTANCE")
+        col.separator()
 
 def toggle_expand(context, state):
     area = next(a for a in context.screen.areas if a.type == 'OUTLINER')
@@ -102,118 +75,124 @@ class DarrowOrganizeMenu(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        col.prop(context.scene, "parentcoll_string")
+        objs = bpy.context.selected_objects
+        if len(objs) != 0:
+            col.prop(context.scene, "parentcoll_string")
+        else:
+            col.label(text="Please select at least one object")
 
     def execute(self, context):
-        cutters = []
-        cutters_parent = []
-        linked = []
-        selected = context.selected_objects[0]
-        old_objs = bpy.context.selected_objects
         objs = bpy.context.selected_objects
-        master_name = context.scene.parentcoll_string
-        masterCollectionFound = False
-        for myCol in bpy.data.collections:
-            if myCol.name == master_name:
-                masterCollectionFound = True
-                break
-
-        if masterCollectionFound == False:
-            master_collection = bpy.data.collections.new(master_name)
-            bpy.context.scene.collection.children.link(master_collection)
-        else:
-            master_collection = bpy.data.collections[master_name]
-            
-        for obj in objs:
-            for mods in obj.modifiers:
-                if mods.type == 'BOOLEAN':
-                    cutters.append(mods.object)
-                    cutters_parent.append(obj)
-                    linked.append(obj)
-
-                    for x in objs:
-                        if x == mods.object:
-                            objs.remove(mods.object)
-        
-        for obj in objs:
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            bpy.data.collections[master_name].objects.link(obj)
-        
-        for obj in cutters:
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            bpy.data.collections[master_name].objects.link(obj)
-        used_cutters = []
-        for obj in objs:
-            for x in linked:
-                if x == obj:
-                    parent_name = obj.name + "_Parent"
-                
-                    parentCollectionFound = False
-                    for myCol in bpy.data.collections:
-                        if myCol.name == parent_name:
-                            parentCollectionFound = True
-                            break
-                    if parentCollectionFound == False:
-                        parent_collection = bpy.data.collections.new(parent_name)
-                        bpy.context.scene.collection.children.link(parent_collection)
-                    else:
-                        parent_collection = bpy.data.collections[parent_name]
-                    
-                    for coll in obj.users_collection:
-                        coll.objects.unlink(obj)
-                    bpy.data.collections[parent_name].objects.link(obj)
-
-                    """https://blender.stackexchange.com/a/172579"""
-                    C = bpy.context
-                    coll_scene = C.scene.collection
-                    coll_parents = parent_lookup(coll_scene)
-                    coll_target = coll_scene.children.get(master_collection.name)
-                    active_coll = obj.users_collection[0]
-                    active_coll_parent = coll_parents.get(active_coll.name)
-
-                    if active_coll_parent:
-                        active_coll_parent.children.unlink(active_coll)
-                        coll_target.children.link(active_coll)
-
-        for obj in cutters:
-            C = bpy.context
-            obj_i = cutters.index(obj)
-            cutters_name = cutters_parent[obj_i].name + "_Cutters"
-           
-            cuttersCollectionFound = False
+        if len(objs) != 0:
+            cutters = []
+            cutters_parent = []
+            linked = []
+            selected = context.selected_objects[0]
+            old_objs = bpy.context.selected_objects
+            objs = bpy.context.selected_objects
+            master_name = context.scene.parentcoll_string
+            masterCollectionFound = False
             for myCol in bpy.data.collections:
-                if myCol.name == cutters_name:
-                    cuttersCollectionFound = True
+                if myCol.name == master_name:
+                    masterCollectionFound = True
                     break
-            if cuttersCollectionFound == False:
-                cutters_collection = bpy.data.collections.new(cutters_name)
-                bpy.context.scene.collection.children.link(cutters_collection)
+
+            if masterCollectionFound == False:
+                master_collection = bpy.data.collections.new(master_name)
+                bpy.context.scene.collection.children.link(master_collection)
             else:
-                cutters_collection = bpy.data.collections[cutters_name]
-            for coll in obj.users_collection:
-                coll.objects.unlink(obj)
-            bpy.data.collections[cutters_name].objects.link(obj)
+                master_collection = bpy.data.collections[master_name]
+                
+            for obj in objs:
+                for mods in obj.modifiers:
+                    if mods.type == 'BOOLEAN':
+                        cutters.append(mods.object)
+                        cutters_parent.append(obj)
+                        linked.append(obj)
 
-            coll_scene = C.scene.collection
-            coll_parents = parent_lookup(coll_scene)
-            coll_target = cutters_parent[obj_i].users_collection[0]
-            active_coll = obj.users_collection[0]
-            active_coll_parent = coll_parents.get(active_coll.name)
+                        for x in objs:
+                            if x == mods.object:
+                                objs.remove(mods.object)
+            
+            for obj in objs:
+                for coll in obj.users_collection:
+                    coll.objects.unlink(obj)
+                bpy.data.collections[master_name].objects.link(obj)
+            
+            for obj in cutters:
+                for coll in obj.users_collection:
+                    coll.objects.unlink(obj)
+                bpy.data.collections[master_name].objects.link(obj)
+            used_cutters = []
+            for obj in objs:
+                for x in linked:
+                    if x == obj:
+                        parent_name = obj.name + "_Parent"
+                    
+                        parentCollectionFound = False
+                        for myCol in bpy.data.collections:
+                            if myCol.name == parent_name:
+                                parentCollectionFound = True
+                                break
+                        if parentCollectionFound == False:
+                            parent_collection = bpy.data.collections.new(parent_name)
+                            bpy.context.scene.collection.children.link(parent_collection)
+                        else:
+                            parent_collection = bpy.data.collections[parent_name]
+                        
+                        for coll in obj.users_collection:
+                            coll.objects.unlink(obj)
+                        bpy.data.collections[parent_name].objects.link(obj)
 
-            if active_coll_parent:
-                active_coll_parent.children.unlink(active_coll)
-                coll_target.children.link(active_coll)
+                        """https://blender.stackexchange.com/a/172579"""
+                        C = bpy.context
+                        coll_scene = C.scene.collection
+                        coll_parents = parent_lookup(coll_scene)
+                        coll_target = coll_scene.children.get(master_collection.name)
+                        active_coll = obj.users_collection[0]
+                        active_coll_parent = coll_parents.get(active_coll.name)
 
-        for x in old_objs:
-            x.select_set(state=True)
+                        if active_coll_parent:
+                            active_coll_parent.children.unlink(active_coll)
+                            coll_target.children.link(active_coll)
 
-        context.view_layer.objects.active = selected
-        used_cutters.clear()
-        cutters.clear()
-        cutters_parent.clear()
-        linked.clear()
+            for obj in cutters:
+                C = bpy.context
+                obj_i = cutters.index(obj)
+                cutters_name = cutters_parent[obj_i].name + "_Cutters"
+            
+                cuttersCollectionFound = False
+                for myCol in bpy.data.collections:
+                    if myCol.name == cutters_name:
+                        cuttersCollectionFound = True
+                        break
+                if cuttersCollectionFound == False:
+                    cutters_collection = bpy.data.collections.new(cutters_name)
+                    bpy.context.scene.collection.children.link(cutters_collection)
+                else:
+                    cutters_collection = bpy.data.collections[cutters_name]
+                for coll in obj.users_collection:
+                    coll.objects.unlink(obj)
+                bpy.data.collections[cutters_name].objects.link(obj)
+
+                coll_scene = C.scene.collection
+                coll_parents = parent_lookup(coll_scene)
+                coll_target = cutters_parent[obj_i].users_collection[0]
+                active_coll = obj.users_collection[0]
+                active_coll_parent = coll_parents.get(active_coll.name)
+
+                if active_coll_parent:
+                    active_coll_parent.children.unlink(active_coll)
+                    coll_target.children.link(active_coll)
+
+            for x in old_objs:
+                x.select_set(state=True)
+
+            context.view_layer.objects.active = selected
+            used_cutters.clear()
+            cutters.clear()
+            cutters_parent.clear()
+            linked.clear()
         return {'FINISHED'}
 
 #-----------------------------------------------------#

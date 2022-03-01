@@ -46,7 +46,6 @@ from bpy.types import (Panel,
                        Operator,
                        )
 
-
 #-----------------------------------------------------#  
 #   handles OS file broswer if Windows
 #-----------------------------------------------------# 
@@ -208,84 +207,86 @@ class DARROW_PT_panel_2(DarrowDevPanel, bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
-        layout = self.layout
-        obj = context.object
-        scn = context.scene
-        wm = context.window_manager
-        objs = context.selected_objects
-        getBool = bpy.context.scene.getBool
-        addBool = bpy.context.scene.addBool
-        folderBool = bpy.context.scene.advancedLibraryBool
-        box = layout.box()
-        box.label(text="Library Operations", icon="DOCUMENTS")
-        if folderBool == True:
+        obj = context.active_object
+        if obj is not None:
+            layout = self.layout
+            obj = context.object
+            scn = context.scene
+            wm = context.window_manager
+            objs = context.selected_objects
+            getBool = bpy.context.scene.getBool
+            addBool = bpy.context.scene.addBool
+            folderBool = bpy.context.scene.advancedLibraryBool
             box = layout.box()
-            box.label(text="Folder Locations", icon="FILE_FOLDER")
-            box.scale_y = 1.2
-            box = box.row(align=True)
-            box.operator('file.mesh_folder', icon="FILE_PARENT")
-            box.operator('file.thumbnail_folder')
-
-        label_add = "Add" if getBool ^ 1 else "Add"
-        label_get = "Get" if addBool ^ 1 else "Get"
-
-        if getBool and addBool == True:
-            getBool = False
-            addBool = False
-            label_get = "select one"
-            label_add = "select one"
-
-        row = layout.row(align=True)
-        row.scale_y = 2
-        row.prop(scn, 'addBool',  toggle=True, text=label_add, icon="EXPORT")
-        if getBool == True:
-            row.enabled = False
-
-        row = layout.row(align=True)
-        row.scale_y = 2
-        row.prop(scn, 'getBool',  toggle=True, text=label_get, icon="IMPORT")
-        if addBool == True:
-            row.enabled = False
-        if addBool == True:
-            if obj is not None:
+            box.label(text="Library Operations", icon="DOCUMENTS")
+            if folderBool == True:
                 box = layout.box()
-                box.label(text="Settings")
-                box.prop(scn, 'autoCamGenBool')
-                box.prop(scn, 'showWireframeRenderBool')
+                box.label(text="Folder Locations", icon="FILE_FOLDER")
+                box.scale_y = 1.2
+                box = box.row(align=True)
+                box.operator('file.mesh_folder', icon="FILE_PARENT")
+                box.operator('file.thumbnail_folder')
 
-                box = layout.box()
-                box = box.column(align=True)
-                box.scale_y = 3
-                box.operator('darrow.add_to_library',
-                             text="Add to library", icon="EXPORT")
+            label_add = "Add" if getBool ^ 1 else "Add"
+            label_get = "Get" if addBool ^ 1 else "Get"
+
+            if getBool and addBool == True:
+                getBool = False
+                addBool = False
+                label_get = "select one"
+                label_add = "select one"
+
+            row = layout.row(align=True)
+            row.scale_y = 2
+            row.prop(scn, 'addBool',  toggle=True, text=label_add, icon="EXPORT")
+            if getBool == True:
+                row.enabled = False
+
+            row = layout.row(align=True)
+            row.scale_y = 2
+            row.prop(scn, 'getBool',  toggle=True, text=label_get, icon="IMPORT")
+            if addBool == True:
+                row.enabled = False
+            if addBool == True:
+                if obj is not None:
+                    box = layout.box()
+                    box.label(text="Settings")
+                    box.prop(scn, 'autoCamGenBool')
+                    box.prop(scn, 'showWireframeRenderBool')
+
+                    box = layout.box()
+                    box = box.column(align=True)
+                    box.scale_y = 3
+                    box.operator('darrow.add_to_library',
+                                text="Add to library", icon="EXPORT")
+                    row = layout.column(align=False)
+                    row.scale_y = 1
+                    row.prop(context.scene, "tag_name",
+                            text="Tag", icon="WORDWRAP_ON")
+
+            if getBool == True:
+                layout = self.layout
+                layout.label(text="Previews")
+                row = layout.row()
+                row.scale_y = .5
+                row.template_icon_view(
+                    wm, "my_previews", show_labels=1, scale=18.5, scale_popup=5)
+                row = layout.column(align=False)
+                row.scale_y = 2.5
+                row.operator_menu_enum(
+                    "object.asset_library", "mesh_enum_prop", text="Get from library", icon="IMPORT")
                 row = layout.column(align=False)
                 row.scale_y = 1
-                row.prop(context.scene, "tag_name",
-                         text="Tag", icon="WORDWRAP_ON")
+                row.prop(scn, 'tag_enum_prop', text="Filter")
 
-        if getBool == True:
-            layout = self.layout
-            layout.label(text="Previews")
-            row = layout.row()
-            row.scale_y = .5
-            row.template_icon_view(
-                wm, "my_previews", show_labels=1, scale=18.5, scale_popup=5)
-            row = layout.column(align=False)
-            row.scale_y = 2.5
-            row.operator_menu_enum(
-                "object.asset_library", "mesh_enum_prop", text="Get from library", icon="IMPORT")
-            row = layout.column(align=False)
-            row.scale_y = 1
-            row.prop(scn, 'tag_enum_prop', text="Filter")
+            if obj is None and addBool == True:
+                box = layout.box()
+                box = box.column(align=True)
+                box.label(text="Please select a mesh")
 
-        if obj is None and addBool == True:
-            box = layout.box()
-            box = box.column(align=True)
-            box.label(text="Please select a mesh")
-
-        if len(objs) == 0:
-            layout.enabled = False
-            layout.enabled = False
+            if len(objs) == 0:
+                layout.enabled = False
+                layout.enabled = False
 
 #-----------------------------------------------------#  
 #    Handles Thumbnail Creation
@@ -739,10 +740,7 @@ def register():
         name = "Hide Overlays in Thumbnail"
     )
     
-    bpy.types.Scene.library_list = bpy.props.StringProperty(
-    
-    )
-
+    bpy.types.Scene.library_list = bpy.props.StringProperty()
 
     bpy.types.Scene.autoCamGenBool = bpy.props.BoolProperty(
     name = "Generate Thumbnail Camera",
