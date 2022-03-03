@@ -229,10 +229,11 @@ class DarrowWireframe(bpy.types.Operator):
     bl_label = "Toggle Wireframe"
 
     def execute(self, context):
-
+        obj = context.active_object
         if bpy.context.scene.showWireframeBool == False:
             bpy.context.scene.showWireframeBool = True
-            bpy.context.active_object.select_set(False)
+            if obj is not None:
+                bpy.context.active_object.select_set(False)
             bpy.context.space_data.show_gizmo = False
             bpy.context.space_data.overlay.show_floor = False
             bpy.context.space_data.overlay.show_axis_y = False
@@ -242,7 +243,8 @@ class DarrowWireframe(bpy.types.Operator):
             bpy.context.space_data.overlay.show_wireframes = True
         else:
             bpy.context.scene.showWireframeBool = False
-            bpy.context.active_object.select_set(False)
+            if obj is not None:
+                bpy.context.active_object.select_set(False)
             bpy.context.space_data.show_gizmo = True
             bpy.context.space_data.overlay.show_floor = True
             bpy.context.space_data.overlay.show_axis_y = True
