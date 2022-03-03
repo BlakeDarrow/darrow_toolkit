@@ -95,6 +95,15 @@ class DARROW_PT_toolPanel_2(DarrowToolPanel, bpy.types.Panel):
             col.scale_y = 1.33
             col.prop(context.scene, 'arrayAmount', slider=True)
 
+
+            col = layout.column(align=True)
+            col.scale_y = 1.5
+            col.operator('circle.array', icon="ONIONSKIN_ON",)
+            col.separator()
+
+            col = layout.column(align=True)
+
+            col.label(text="Orientation")
             row = layout.row(align=True)
             split = row.split(align=True)
             split.prop(settings, 'xBool', toggle=True)
@@ -118,9 +127,11 @@ class DARROW_PT_toolPanel_2(DarrowToolPanel, bpy.types.Panel):
             if yAxis == True:
                 split.enabled = False
 
-            col = layout.column(align=True)
-            col.scale_y = 1.5
-            col.operator('circle.array', icon="ONIONSKIN_ON",)
+            col = layout.row(align=True)
+            col.scale_y = 1.2
+            
+            col.operator('view.create_orient', text="Set")
+            col.operator('clear.orientation', text="Clear")
 
             if xAxis == False and yAxis == False and zAxis == False:
                 col.enabled = False
@@ -167,7 +178,17 @@ class DARROW_PT_toolPanel_3(DarrowToolPanel, bpy.types.Panel):
             split = layout.column()
             if len(objs) == 0:
                 row.enabled = False
-            
+
+class createOrient(bpy.types.Operator):
+    bl_idname = "view.create_orient"
+    bl_label = "Set Orientation"
+    bl_description = "There is nothing here"
+    bl_options = {"UNDO"}
+
+    def execute(self, context):
+        bpy.ops.transform.create_orientation(use=True)
+        return {'FINISHED'}
+
 class CTO_OT_Dummy(bpy.types.Operator):
     bl_idname = "object.cto_dummy"
     bl_label = ""
@@ -322,6 +343,9 @@ class DarrowCircleArray(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
+        if context.mode == 'EDIT_MESH':
+            bpy.ops.object.editmode_toggle()
+
         collectionFound = False
         obj = bpy.context.selected_objects[0]
         amt = context.scene.arrayAmount
@@ -424,8 +448,9 @@ class DarrowCircleArray(bpy.types.Operator):
             axis = 'Z'
         rotation = 360 / amt
         value = math.radians(rotation)
+        orient = bpy.data.scenes['Scene'].transform_orientation_slots[0].type
         bpy.ops.transform.rotate(
-            value=value, orient_axis=axis, orient_type='GLOBAL',)
+            value=value, orient_axis=axis, orient_type=orient,)
         bpy.ops.object.select_all(action='DESELECT')
         empty.select_set(state=False)
         selected.select_set(state=True)
@@ -470,6 +495,8 @@ class DarrowClearSelected(bpy.types.Operator):
     bl_options = {"UNDO"}
 
     def execute(self, context):
+        if context.mode == 'EDIT_MESH':
+            bpy.ops.object.editmode_toggle()
         obj = bpy.context.selected_objects[0]
         selected = bpy.context.selected_objects[0]
 
@@ -655,7 +682,7 @@ class DarrowSmooth(bpy.types.Operator):
 #-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#
-classes = (DARROW_PT_toolPanel,  DARROW_PT_toolPanel_2, DARROW_PT_toolPanel_3, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh, DarrowSetOrigin, DarrowMoveOrigin, DarrowTransforms, DarrowNormals, DarrowSmooth,
+classes = (createOrient,DARROW_PT_toolPanel,  DARROW_PT_toolPanel_2, DARROW_PT_toolPanel_3, CTO_OT_Dummy, DarrowClearOrientation, DarrowCleanMesh, DarrowSetOrigin, DarrowMoveOrigin, DarrowTransforms, DarrowNormals, DarrowSmooth,
            DarrowCircleArray, DarrowClearSelected, DarrowSetBlack, DarrowSetWhite, DarrowSetRed, DarrowSetGreen, DarrowSetBlue, DarrowSetColor, DarrowSetDisplay,)
 
 def register():
