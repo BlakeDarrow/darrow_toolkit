@@ -204,8 +204,11 @@ class DarrowToggleCutters(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        bpy.context.scene.cutterVis_Bool = not bpy.context.scene.cutterVis_Bool
+        print(bpy.context.scene.cutterVis_Bool)
         for ob in bpy.data.objects:
             if ob.display_type == 'BOUNDS':
+                ob.hide_viewport = bpy.context.scene.cutterVis_Bool
                 ob.hide_viewport = not ob.hide_viewport
         return {'FINISHED'}
 
@@ -307,6 +310,12 @@ classes = (DarrowToggleCutters, DarrowOrganizeMenu, DarrowCollapseOutliner, Darr
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
+
+    bpy.types.Scene.cutterVis_Bool = bpy.props.BoolProperty(
+        name="Vis Bool",
+        description="Toggle visabilty of cutters",
+        default=False
+    )
 
     bpy.types.Scene.parentcoll_string = bpy.props.StringProperty(
             name="Name",
