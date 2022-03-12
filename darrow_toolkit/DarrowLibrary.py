@@ -172,7 +172,7 @@ class DARROW_PT_panel_1(DarrowDevPanel, bpy.types.Panel):
                 obj = context.scene
 
                 box = layout.box()
-                box.scale_y = 1.2
+                box.scale_y = 1.33
                 box.label(text="FBX Exporter")
                 if len(objs) != 0:
                     Var_allowFBX = True
