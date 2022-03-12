@@ -29,12 +29,12 @@
 from bpy.types import Operator, AddonPreferences
 from bpy.props import StringProperty, IntProperty, BoolProperty, FloatProperty, EnumProperty
 bl_info = {
-    "name": "Darrow Toolkit",
+    "name": "Easy Export",
     "author": "Blake Darrow",
     "version": (1, 0, 1),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Custom toolkit for efficient FBX exporting, circular array, Q.O.L improvements, and external mesh libraries",
+    "description": "Easy FBX exporting and external mesh libraries",
     "category": "Tools",
     "wiki_url": "https://docs.darrow.tools/en/latest/index.html",
     }
@@ -42,11 +42,7 @@ bl_info = {
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-
-if __package__ != "darrow_toolkit":
-    sys.modules["darrow_toolkit"] = sys.modules[__package__]
-
-modulesNames = ['DarrowTools', 'DarrowOrganizer', 'DarrowLibrary']
+modulesNames = ['EasyExport',]
 
 #-----------------------------------------------------#  
 #     imports    
@@ -93,16 +89,6 @@ class DarrowAddonPreferences(AddonPreferences):
         max=59
     )
 
-    checklist_moduleBool: BoolProperty(
-        name="Modeling Tools",
-        default=True
-    )
-
-    organizer_moduleBool: BoolProperty(
-        name="Organizer Tools",
-        default=True
-    )
-
     export_moduleBool: BoolProperty(
         name="FBX Exporter",
         default=True
@@ -113,15 +99,6 @@ class DarrowAddonPreferences(AddonPreferences):
         default=True
     )
 
-    array_moduleBool: BoolProperty(
-        name="Circular Array",
-        default=True
-    )
-
-    rgb_moduleBool: BoolProperty(
-        name="Vertex Painter",
-        default=True
-    )
 
     userDefinedExportPath : StringProperty(
           name="Path",
@@ -129,58 +106,12 @@ class DarrowAddonPreferences(AddonPreferences):
           subtype='DIR_PATH',
     )
 
-    xBool: BoolProperty(
-        name="X",
-        description="Toggle X axis",
-        default=False
-    )
-    yBool: BoolProperty(
-        name="Y",
-        description="Toggle Y axis",
-        default=False
-    )
-    zBool: BoolProperty(
-        name="Z",
-        description="Toggle Z axis",
-        default=True
-    )
-    emptySize: FloatProperty(
-        name="Array Empty Display Size",
-        description="Size of arrays' empty",
-        default=0.1,
-        soft_min=0,
-        soft_max=.5
-    )
-
-    advancedVertexBool: BoolProperty(
-        name="Advanced",
-        description="Show advanced options",
-        default=False
-    )
-    advancedCircleBool: BoolProperty(
-        name="Advanced",
-        description="Show advanced options",
-        default=False
-    )
     advancedExportBool: BoolProperty(
         name="Advanced",
         description="Show advanced options",
         default=False
     )
 
-    removeDoublesAmount: FloatProperty(
-        name="Remove Doubles Amount",
-        description="Threshold to Remove Doubles",
-        default=0.02,
-        soft_min=0,
-        soft_max=.25,
-        precision=4
-    )
-    moveEmptyBool: BoolProperty(
-        name="Create CircleArray empties under 'Darrow_Empties'.",
-        description="Hide empty under object",
-        default=True
-    )
 
     def draw(self, context):
         layout = self.layout
@@ -190,12 +121,7 @@ class DarrowAddonPreferences(AddonPreferences):
         split = box.split(factor=0.4)
         box.scale_y = 1.1
         col1 = split.column(align=True)
-        col2 = split.column(align=True)
-        col1.prop(self, "emptySize", text="Empty Display Size", slider=True)
-        col1.prop(self, "removeDoublesAmount",
-                  text="Remove Doubles Distance", slider=True)
-        col2.prop(self, "moveEmptyBool")
-        col2.prop(self,'userDefinedExportPath', text="Default Path")
+        col1.prop(self,'userDefinedExportPath', text="Default Path")
 
         addon_updater_ops.update_settings_ui(self, context)
 
