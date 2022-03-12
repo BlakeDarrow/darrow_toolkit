@@ -57,7 +57,7 @@ except Exception as e:
 # Must declare this before classes are loaded
 # otherwise the bl_idname's will not match and have errors.
 # Must be all lowercase and no spaces
-updater.addon = "darrow_toolkit"
+updater.addon = "easyexport"
 
 # -----------------------------------------------------------------------------
 # Blender version utils
@@ -1334,17 +1334,17 @@ def register(bl_info):
 	updater.user = "blakedarrow"
 
 	# choose your own repository, must match git name
-	updater.repo = "darrow_toolkit"
+	updater.repo = "EasyExport"
 
 	#updater.addon = # define at top of module, MUST be done first
 
 	# Website for manual addon download, optional but recommended to set
-	updater.website = "https://github.com/BlakeDarrow/darrow_toolkit/"
+	updater.website = "https://github.com/BlakeDarrow/EasyExport/"
 
 	# Addon subfolder path
 	# "sample/path/to/addon"
 	# default is "" or None, meaning root
-	updater.subfolder_path = "darrow_toolkit"
+	updater.subfolder_path = ""
 
 	# used to check/compare versions
 	updater.current_version = bl_info["version"]
