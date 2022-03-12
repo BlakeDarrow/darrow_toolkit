@@ -1,6 +1,6 @@
 #-----------------------------------------------------#  
 #
-#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
+#    Copyright (c) 2022 Blake Darrow <contact@blakedarrow.com>
 #
 #    See the LICENSE file for your full rights.
 #
@@ -17,14 +17,13 @@ from bpy.types import (Panel,
 #     handles ui panel 
 #-----------------------------------------------------#  
 
-
 class DarrowToolPanel:
     bl_category = "DarrowToolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
 
 class DARROW_PT_toolPanel(DarrowToolPanel, bpy.types.Panel):
-    bl_label = "Mesh Tools"
+    bl_label = "Modeling Tools"
     bl_category = "DarrowToolkit"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -95,10 +94,15 @@ class DARROW_PT_toolPanel_2(DarrowToolPanel, bpy.types.Panel):
             col.scale_y = 1.33
             col.prop(context.scene, 'arrayAmount', slider=True)
 
-
             col = layout.column(align=True)
             col.scale_y = 1.5
             col.operator('circle.array', icon="ONIONSKIN_ON",)
+            if xAxis == False and yAxis == False and zAxis == False:
+                col.enabled = False
+            elif len(objs) != 0:
+                col.enabled = True
+            else:
+                col.enabled = False
             col.separator()
 
             col = layout.column(align=True)
@@ -132,13 +136,6 @@ class DARROW_PT_toolPanel_2(DarrowToolPanel, bpy.types.Panel):
             
             col.operator('view.create_orient', text="Set")
             col.operator('clear.orientation', text="Clear")
-
-            if xAxis == False and yAxis == False and zAxis == False:
-                col.enabled = False
-            elif len(objs) != 0:
-                col.enabled = True
-            else:
-                col.enabled = False
 
             if Var_advancedBool == True:
                 box = layout.box()
@@ -361,7 +358,10 @@ class DarrowCircleArray(bpy.types.Operator):
         if collectionFound == False:
             col = bpy.data.collections.new(empty_collection_name)
             bpy.context.scene.collection.children.link(col)
-            vlayer = bpy.context.scene.view_layers["View Layer"]
+            try:
+                vlayer = bpy.context.scene.view_layers["View Layer"]
+            except:
+                vlayer = bpy.context.scene.view_layers["ViewLayer"]
             vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
             bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
 
@@ -389,7 +389,10 @@ class DarrowCircleArray(bpy.types.Operator):
 
         else:
             print("Array exists")
-            vlayer = bpy.context.scene.view_layers["View Layer"]
+            try:
+                vlayer = bpy.context.scene.view_layers["View Layer"]
+            except:
+                vlayer = bpy.context.scene.view_layers["ViewLayer"]
             vlayer.layer_collection.children[empty_collection_name].hide_viewport = False
             bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
             empty = bpy.data.objects[context.object.linkedEmpty]
@@ -477,7 +480,10 @@ class DarrowCircleArray(bpy.types.Operator):
                 coll.objects.unlink(empty)
             context.scene.collection.objects.link(empty)
 
-        vlayer = bpy.context.scene.view_layers["View Layer"]
+        try:
+            vlayer = bpy.context.scene.view_layers["View Layer"]
+        except:
+            vlayer = bpy.context.scene.view_layers["ViewLayer"]
         vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
         empty.select_set(state=False)
         selected.select_set(state=True)

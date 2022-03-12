@@ -1,52 +1,23 @@
 #-----------------------------------------------------#  
-#    License
-#-----------------------------------------------------#  
-#    MIT License
-#
-#    Copyright (c) 2020-2022 Blake Darrow <contact@blakedarrow.com>
-#
-#   Permission is hereby granted, free of charge, to any person obtaining a copy
-#   of this software and associated documentation files (the "Software"), to deal
-#   in the Software without restriction, including without limitation the rights
-#   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-#   copies of the Software, and to permit persons to whom the Software is
-#   furnished to do so, subject to the following conditions:
-#
-#   The above copyright notice and this permission notice shall be included in all
-#   copies or substantial portions of the Software.
-#
-#   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-#   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-#   SOFTWARE.
-#
-#-----------------------------------------------------#  
 #     Plugin information     
 #-----------------------------------------------------#  
 from bpy.types import Operator, AddonPreferences
 from bpy.props import StringProperty, IntProperty, BoolProperty, FloatProperty, EnumProperty
 bl_info = {
-    "name": "Darrow Toolkit",
+    "name": "Modeling Tools",
     "author": "Blake Darrow",
     "version": (1, 0, 1),
     "blender": (3, 0, 0),
     "location": "View3D > Sidebar > Darrow Toolkit",
-    "description": "Custom toolkit for efficient FBX exporting, circular array, Q.O.L improvements, and external mesh libraries",
+    "description": "Custom modeling tools",
     "category": "Tools",
     "wiki_url": "https://docs.darrow.tools/en/latest/index.html",
     }
     
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
-#-----------------------------------------------------#   
-
-if __package__ != "darrow_toolkit":
-    sys.modules["darrow_toolkit"] = sys.modules[__package__]
-
-modulesNames = ['DarrowTools', 'DarrowOrganizer', 'DarrowLibrary']
+#-----------------------------------------------------# 
+modulesNames = ['ModelingTools', ]
 
 #-----------------------------------------------------#  
 #     imports    
@@ -123,11 +94,6 @@ class DarrowAddonPreferences(AddonPreferences):
         default=True
     )
 
-    userDefinedExportPath : StringProperty(
-          name="Path",
-          default="",
-          subtype='DIR_PATH',
-    )
 
     xBool: BoolProperty(
         name="X",
@@ -162,11 +128,6 @@ class DarrowAddonPreferences(AddonPreferences):
         description="Show advanced options",
         default=False
     )
-    advancedExportBool: BoolProperty(
-        name="Advanced",
-        description="Show advanced options",
-        default=False
-    )
 
     removeDoublesAmount: FloatProperty(
         name="Remove Doubles Amount",
@@ -195,7 +156,6 @@ class DarrowAddonPreferences(AddonPreferences):
         col1.prop(self, "removeDoublesAmount",
                   text="Remove Doubles Distance", slider=True)
         col2.prop(self, "moveEmptyBool")
-        col2.prop(self,'userDefinedExportPath', text="Default Path")
 
         addon_updater_ops.update_settings_ui(self, context)
 
