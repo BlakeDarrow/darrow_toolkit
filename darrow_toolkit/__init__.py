@@ -123,6 +123,12 @@ class DarrowAddonPreferences(AddonPreferences):
         default=True
     )
 
+    userDefinedExportPath : StringProperty(
+          name="Path",
+          default="",
+          subtype='DIR_PATH',
+    )
+
     xBool: BoolProperty(
         name="X",
         description="Toggle X axis",
@@ -189,6 +195,7 @@ class DarrowAddonPreferences(AddonPreferences):
         col1.prop(self, "removeDoublesAmount",
                   text="Remove Doubles Distance", slider=True)
         col2.prop(self, "moveEmptyBool")
+        col2.prop(self,'userDefinedExportPath', text="Default Path")
 
         addon_updater_ops.update_settings_ui(self, context)
 

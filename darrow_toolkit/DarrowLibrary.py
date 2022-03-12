@@ -153,23 +153,35 @@ class DARROW_PT_panel_1(DarrowDevPanel, bpy.types.Panel):
         all = bpy.data.objects
         if len(all) != 0:
             layout = self.layout
+            settings = context.preferences.addons[__package__].preferences
             Var_prefix_bool = bpy.context.scene.useprefixBool
             Var_suffix_bool = bpy.context.scene.usecounterBool
             Var_custom_prefix = bpy.context.scene.PrefixOption
             Var_allowFBX = bpy.context.scene.fbxBool
+            Var_prompt = bpy.context.scene.useDefinedPathBool
             obj = context.object
             objs = context.selected_objects
             folderBool = bpy.context.scene.advancedLibraryBool
+            col = layout.column()
+            col.scale_y = 1.2
+            col.prop(context.scene,'useDefinedPathBool')
+            col.prop(context.scene, 'exportPresets')
+            
+            
             if context.mode == 'OBJECT':
                 obj = context.scene
-                layout.prop(context.scene, 'exportPresets')
+
                 box = layout.box()
                 box.scale_y = 1.2
                 box.label(text="FBX Exporter")
-
                 if len(objs) != 0:
                     Var_allowFBX = True
-                box.operator('export_selected.darrow', icon="EXPORT")
+                if Var_prompt == False:
+                    box.operator('export_selected.darrow', icon="EXPORT")
+                else:
+                    col.prop(settings, 'userDefinedExportPath')
+                    box.operator('export_selected_promptless.darrow', icon="EXPORT")
+                
                 if Var_allowFBX == False:
                     box.enabled = False
 
@@ -482,6 +494,141 @@ def turn_collection_hierarchy_into_path(obj):
 #-----------------------------------------------------#
 #    Handles logic for exporting as FBX
 #-----------------------------------------------------#
+
+class DarrowExportFBXNoPrompt(bpy.types.Operator):
+    bl_idname = "export_selected_promptless.darrow"
+    bl_label = 'Export Selection'
+    bl_description = "Export selection as an FBX using smart naming"
+    bl_options = {'PRESET'}
+    filename_ext = ".fbx"
+
+    def execute(self, context):
+        print("promptless")
+        objs = context.selected_objects
+        if len(objs) != 0:
+            C = bpy.context
+            fbxname = bpy.context.view_layer.objects.active
+            name = bpy.path.clean_name(fbxname.name)
+            Var_collectionBool = bpy.context.scene.collectionBool
+            amt = len(C.selected_objects)
+            one = 1
+            obj = bpy.context.view_layer.objects.active
+            parent_coll = turn_collection_hierarchy_into_path(obj)
+            bpy.ops.object.make_single_user(
+                object=True, obdata=True, material=False, animation=True)
+
+            if (Var_collectionBool == True) and (amt > one):
+                fbxname = parent_coll
+                name = bpy.path.clean_name(fbxname)
+
+            customprefix = bpy.context.scene.custom_name_string
+            blendName = bpy.path.basename(
+                bpy.context.blend_data.filepath).replace(".blend", "")
+            settings = context.preferences.addons[__package__].preferences
+            path_no_prompt = settings.userDefinedExportPath
+            Var_actionsBool = bpy.context.scene.allactionsBool
+            Var_leafBool = bpy.context.scene.isleafBool
+            Var_PrefixBool = bpy.context.scene.useprefixBool
+            Var_custom_prefix = bpy.context.scene.PrefixOption
+            Var_presets = bpy.context.scene.exportPresets
+            Var_counterBool = bpy.context.scene.usecounterBool
+            Var_nlaBool = False
+            Var_forcestartkey = False
+
+            if Var_presets == 'OP1':  # Unity preset
+                Var_leafBool = False
+                Var_actionsBool = False
+                Var_nlaBool = False
+                Var_forcestartkey = False
+                if (amt > one):
+                    Var_axisUp = 'Y'
+                    Var_axisForward = 'X'
+                    Var_scale = 1
+                else:
+                    bpy.ops.object.transform_apply(
+                        location=False, rotation=True, scale=False)
+                    bpy.context.active_object.rotation_euler[0] = math.radians(
+                        -90)
+                    print("rotated -90")
+                    bpy.ops.object.transform_apply(
+                        location=False, rotation=True, scale=False)
+                    print("rotations applied")
+                    bpy.context.active_object.rotation_euler[0] = math.radians(
+                        90)
+                    print("rotated 90")
+                    Var_axisUp = 'Y'
+                    Var_axisForward = 'X'
+                    Var_scale = 1
+            elif Var_presets == 'OP2':  # Unreal preset
+                Var_axisUp = 'Z'
+                Var_axisForward = '-Y'
+                Var_scale = 1
+                Var_nlaBool = False
+                Var_leafBool = False
+                Var_actionsBool = False
+                Var_forcestartkey = True
+
+            if Var_counterBool == True:
+                context.scene.counter += 1
+                count = context.scene.counter
+                count = str(count)
+                Var_exportnumber = "_" + count
+
+            if Var_PrefixBool == True:
+                if Var_custom_prefix == 'OP1':  # Unity preset
+                    if not bpy.data.is_saved:
+                        raise Exception("Blend file is not saved")
+
+                    if Var_counterBool == True:
+                        saveLoc = path_no_prompt + "_" + name + Var_exportnumber
+                    else:
+                        saveLoc = path_no_prompt + "_" + name
+
+                if Var_custom_prefix == 'OP2':  # Unreal preset
+                    if Var_counterBool == True:
+                        customname = customprefix + "_" + name + Var_exportnumber
+                    else:
+                        customname = customprefix + "_" + name
+
+                    if not bpy.data.is_saved:
+                        saveLoc = self.filepath.replace(
+                            "untitled", "") + customname
+                    else:
+                        saveLoc = self.filepath.replace(
+                            blendName, '') + customname
+
+            elif Var_PrefixBool == False:
+                customname = name
+                if Var_counterBool == True:
+                    if not bpy.data.is_saved:
+                        saveLoc = path_no_prompt.replace(
+                            "untitled", "") + name + Var_exportnumber
+                    else:
+                        saveLoc = path_no_prompt.replace(
+                            blendName, "") + name + Var_exportnumber
+                else:
+                    saveLoc = path_no_prompt.replace(blendName, "") + name
+                    if not bpy.data.is_saved:
+                        saveLoc = path_no_prompt.replace("untitled", "") + name
+
+        bpy.ops.export_scene.fbx(
+            filepath=saveLoc.replace('.fbx', '') + ".fbx",
+            use_mesh_modifiers=True,
+            bake_anim_use_all_actions=Var_actionsBool,
+            add_leaf_bones=Var_leafBool,
+            bake_anim_use_nla_strips=Var_nlaBool,
+            bake_anim_force_startend_keying=Var_forcestartkey,
+            check_existing=True,
+            axis_forward=Var_axisForward,
+            axis_up=Var_axisUp,
+            use_selection=True,
+            global_scale=Var_scale,
+            path_mode='AUTO')
+
+        self.report({'INFO'}, "Exported object as '" + customname + "'")
+        return {'FINISHED'}
+
+
 class DarrowExportFBX(bpy.types.Operator, ExportHelper):
     bl_idname = "export_selected.darrow"
     bl_label = 'Export Selection'
@@ -630,10 +777,16 @@ class DarrowCounterReset(bpy.types.Operator):
 #   Registration classes
 #-----------------------------------------------------#  
 preview_collections = {}
-classes = ( DarrowThumbnail, DarrowAddMeshtoLibrary, OBJECT_OT_mesh_library,
+classes = ( DarrowExportFBXNoPrompt, DarrowThumbnail, DarrowAddMeshtoLibrary, OBJECT_OT_mesh_library,
             meshFolder, renderFolder, DarrowExportFBX, DarrowCounterReset, DARROW_PT_panel_1, DARROW_PT_panel_2)
 
 def register():
+
+    bpy.types.Scene.useDefinedPathBool = bpy.props.BoolProperty(
+        name="Promptless Export",
+        description="",
+        default=True
+    )
 
     bpy.types.Scene.advancedLibraryBool = bpy.props.BoolProperty(
         name="Advanced",
