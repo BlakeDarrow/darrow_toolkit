@@ -22,19 +22,26 @@ class DarrowOrganizePanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_idname = "DARROW_PT_organizePanel"
 
+    def draw_header(self, context):
+       self.layout.label(text="",icon="LONGDISPLAY")
+
     def draw(self, context):
         split=self.layout
         col = split.column(align=True)
         col.scale_y = 1.33
-        col.operator('collapse.scene', icon="SORT_ASC")
-        col.label(text="Display Options")
+
+        col.label(text="Display Options", icon="OPTIONS")
+        col.operator('set.wireframe', text="Wireframe", icon="FILE_3D")
         row = col.row(align=True)
-        row.operator('set.wireframe', text="Wireframe", icon="FILE_3D")
         row.operator('darrow.toggle_cutters',
-                        text="Booleans", icon="MOD_BOOLEAN")
+                        text="Booleans", icon="MOD_BOOLEAN",)
+        row.operator('darrow.toggle_empty', text="Empties", icon="EMPTY_AXIS")
         col.separator()
-        col.operator('set.empty_coll',text="Group All Empties", icon="COLLECTION_NEW")
-        col.operator('darrow.organize_menu',text="Organize Selected",icon="OUTLINER_OB_GROUP_INSTANCE")
+        col.label(text="Collection Sorting",icon="COLLECTION_NEW")
+        row = col.row(align=True)
+        row.operator('set.cutter_coll',text="Booleans", icon="MOD_BOOLEAN")
+        row.operator('set.empty_coll',text="Empties", icon="EMPTY_AXIS")
+        col.operator('collapse.scene', icon="SORT_ASC")
         col.separator()
 
 def toggle_expand(context, state):
@@ -44,157 +51,6 @@ def toggle_expand(context, state):
         bpy.ops.outliner.expanded_toggle({'area': area})
     area.tag_redraw()
 
-def traverse_tree(t):
-    yield t
-    for child in t.children:
-        yield from traverse_tree(child)
-
-def parent_lookup(coll):
-    parent_lookup = {}
-    for coll in traverse_tree(coll):
-        for c in coll.children.keys():
-            parent_lookup.setdefault(c, coll)
-    return parent_lookup
-
-#-----------------------------------------------------#
-#    Organize selected
-#-----------------------------------------------------#
-class DarrowOrganizeMenu(bpy.types.Operator):
-    bl_label = "Organize Selected"
-    bl_idname = "darrow.organize_menu"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object is not None and
-                context.object.type == 'MESH')
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self)
-
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column()
-        objs = bpy.context.selected_objects
-        if len(objs) != 0:
-            col.prop(context.scene, "parentcoll_string")
-        else:
-            col.label(text="Please select at least one object")
-
-    def execute(self, context):
-        objs = bpy.context.selected_objects
-        if len(objs) != 0:
-            cutters = []
-            cutters_parent = []
-            linked = []
-            selected = context.selected_objects[0]
-            old_objs = bpy.context.selected_objects
-            objs = bpy.context.selected_objects
-            master_name = context.scene.parentcoll_string
-            masterCollectionFound = False
-            for myCol in bpy.data.collections:
-                if myCol.name == master_name:
-                    masterCollectionFound = True
-                    break
-
-            if masterCollectionFound == False:
-                master_collection = bpy.data.collections.new(master_name)
-                bpy.context.scene.collection.children.link(master_collection)
-            else:
-                master_collection = bpy.data.collections[master_name]
-                
-            for obj in objs:
-                for mods in obj.modifiers:
-                    if mods.type == 'BOOLEAN':
-                        cutters.append(mods.object)
-                        cutters_parent.append(obj)
-                        linked.append(obj)
-
-                        for x in objs:
-                            if x == mods.object:
-                                objs.remove(mods.object)
-            
-            for obj in objs:
-                for coll in obj.users_collection:
-                    coll.objects.unlink(obj)
-                bpy.data.collections[master_name].objects.link(obj)
-            
-            for obj in cutters:
-                for coll in obj.users_collection:
-                    coll.objects.unlink(obj)
-                bpy.data.collections[master_name].objects.link(obj)
-            used_cutters = []
-            for obj in objs:
-                for x in linked:
-                    if x == obj:
-                        parent_name = obj.name + "_Parent"
-                    
-                        parentCollectionFound = False
-                        for myCol in bpy.data.collections:
-                            if myCol.name == parent_name:
-                                parentCollectionFound = True
-                                break
-                        if parentCollectionFound == False:
-                            parent_collection = bpy.data.collections.new(parent_name)
-                            bpy.context.scene.collection.children.link(parent_collection)
-                        else:
-                            parent_collection = bpy.data.collections[parent_name]
-                        
-                        for coll in obj.users_collection:
-                            coll.objects.unlink(obj)
-                        bpy.data.collections[parent_name].objects.link(obj)
-
-                        """https://blender.stackexchange.com/a/172579"""
-                        C = bpy.context
-                        coll_scene = C.scene.collection
-                        coll_parents = parent_lookup(coll_scene)
-                        coll_target = coll_scene.children.get(master_collection.name)
-                        active_coll = obj.users_collection[0]
-                        active_coll_parent = coll_parents.get(active_coll.name)
-
-                        if active_coll_parent:
-                            active_coll_parent.children.unlink(active_coll)
-                            coll_target.children.link(active_coll)
-
-            for obj in cutters:
-                C = bpy.context
-                obj_i = cutters.index(obj)
-                cutters_name = cutters_parent[obj_i].name + "_Cutters"
-            
-                cuttersCollectionFound = False
-                for myCol in bpy.data.collections:
-                    if myCol.name == cutters_name:
-                        cuttersCollectionFound = True
-                        break
-                if cuttersCollectionFound == False:
-                    cutters_collection = bpy.data.collections.new(cutters_name)
-                    bpy.context.scene.collection.children.link(cutters_collection)
-                else:
-                    cutters_collection = bpy.data.collections[cutters_name]
-                for coll in obj.users_collection:
-                    coll.objects.unlink(obj)
-                bpy.data.collections[cutters_name].objects.link(obj)
-
-                coll_scene = C.scene.collection
-                coll_parents = parent_lookup(coll_scene)
-                coll_target = cutters_parent[obj_i].users_collection[0]
-                active_coll = obj.users_collection[0]
-                active_coll_parent = coll_parents.get(active_coll.name)
-
-                if active_coll_parent:
-                    active_coll_parent.children.unlink(active_coll)
-                    coll_target.children.link(active_coll)
-
-            for x in old_objs:
-                x.select_set(state=True)
-
-            context.view_layer.objects.active = selected
-            used_cutters.clear()
-            cutters.clear()
-            cutters_parent.clear()
-            linked.clear()
-        return {'FINISHED'}
-
 #-----------------------------------------------------#
 #    Toggle cutter visibility
 #-----------------------------------------------------#
@@ -202,6 +58,7 @@ class DarrowToggleCutters(bpy.types.Operator):
     bl_label = "Toggle Cutters"
     bl_idname = "darrow.toggle_cutters"
     bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Toggle the visabilty of boolean cutters."
 
     def execute(self, context):
         bpy.context.scene.cutterVis_Bool = not bpy.context.scene.cutterVis_Bool
@@ -211,6 +68,24 @@ class DarrowToggleCutters(bpy.types.Operator):
                 ob.hide_viewport = bpy.context.scene.cutterVis_Bool
                 ob.hide_viewport = not ob.hide_viewport
         return {'FINISHED'}
+#
+# -----------------------------------------------------#
+#    Toggle empty visibility
+#-----------------------------------------------------#
+class DarrowToggleEmpty(bpy.types.Operator):
+    bl_label = "Toggle Empty"
+    bl_idname = "darrow.toggle_empty"
+    bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Toggle the visabilty of empties"
+
+    def execute(self, context):
+        bpy.context.scene.emptyVis_Bool = not bpy.context.scene.emptyVis_Bool
+        print(bpy.context.scene.emptyVis_Bool)
+        for ob in bpy.data.objects:
+            if ob.type == 'EMPTY':
+                ob.hide_viewport = bpy.context.scene.emptyVis_Bool
+                ob.hide_viewport = not ob.hide_viewport
+        return {'FINISHED'}
 
 #-----------------------------------------------------#
 #     Collapse outliner
@@ -218,6 +93,7 @@ class DarrowToggleCutters(bpy.types.Operator):
 class DarrowCollapseOutliner(bpy.types.Operator):
     bl_label = "Collapse Outliner"
     bl_idname = "collapse.scene"
+    bl_description = "Collapse all items in the outliner"
 
     def execute(self, context):
         toggle_expand(context, 2)
@@ -260,6 +136,55 @@ class DarrowWireframe(bpy.types.Operator):
         return {'FINISHED'} 
     
 #-----------------------------------------------------#
+#    handles moving all Booleans's
+#-----------------------------------------------------#
+class DarrowSetCollectionCutter(bpy.types.Operator):
+    bl_idname = "set.cutter_coll"
+    bl_description = "Move all booleans to 'Darrow_Booleans' collection"
+    bl_label = "Group All Booleans"
+
+    def execute(self, context):
+        collectionFound = False
+        empty_collection_name = "Darrow_Booleans"
+        old_obj = bpy.context.selected_objects
+        scene = bpy.context.scene.objects
+
+        bpy.ops.object.select_all(action='DESELECT')
+
+        for myCol in bpy.data.collections:
+            if myCol.name == empty_collection_name:
+                collectionFound = True
+                break
+
+        bools = []
+        for obj in scene:
+            for mods in obj.modifiers:
+                if mods.type == 'BOOLEAN':
+                    bools.append(mods.object)
+
+        if collectionFound == False and not len(bools) == 0:
+                empty_collection = bpy.data.collections.new(empty_collection_name)
+                bpy.context.scene.collection.children.link(empty_collection)
+                bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
+                self.report({'INFO'}, "Moved all booleans")
+        else:
+            self.report({'WARNING'}, "No boolean cutters in scene to sort")
+        
+        for obj in bools:
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
+            bpy.data.collections[empty_collection_name].objects.link(obj)
+ 
+       
+        bpy.ops.object.select_all(action='DESELECT')
+
+        for x in old_obj:     
+            x.select_set(state=True)
+
+
+        return {'FINISHED'}
+
+#-----------------------------------------------------#
 #    handles moving all empty's
 #-----------------------------------------------------#
 class DarrowSetCollection(bpy.types.Operator):
@@ -272,40 +197,42 @@ class DarrowSetCollection(bpy.types.Operator):
         empty_collection_name = "Darrow_Empties"
         old_obj = bpy.context.selected_objects
         scene = bpy.context.scene.objects
+        empties = []
 
         bpy.ops.object.select_all(action='DESELECT')
-
         for myCol in bpy.data.collections:
             if myCol.name == empty_collection_name:
                 collectionFound = True
                 break
-
-        if collectionFound == False:
-            empty_collection = bpy.data.collections.new(empty_collection_name)
-            bpy.context.scene.collection.children.link(empty_collection)
-        
         for obj in scene:
             if obj.type == "EMPTY":
-                for coll in obj.users_collection:
-                    coll.objects.unlink(obj)
-                bpy.data.collections[empty_collection_name].objects.link(obj)
-                obj.hide_set(True)
+                empties.append(obj)
 
-        vlayer = bpy.context.scene.view_layers["View Layer"]
-        vlayer.layer_collection.children[empty_collection_name].hide_viewport = True
-        bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
+        if collectionFound == False and not len(empties) == 0:
+            empty_collection = bpy.data.collections.new(empty_collection_name)
+            bpy.context.scene.collection.children.link(empty_collection)
+            bpy.data.collections[empty_collection_name].color_tag = 'COLOR_01'
+            self.report({'INFO'}, "Moved all empties")
+        else:
+            self.report({'WARNING'}, "No empties in scene to sort")
+        
+        for obj in empties:
+            for coll in obj.users_collection:
+                coll.objects.unlink(obj)
+            bpy.data.collections[empty_collection_name].objects.link(obj)
+      
         bpy.ops.object.select_all(action='DESELECT')
 
         for x in old_obj:     
             x.select_set(state=True)
 
-        self.report({'INFO'}, "Moved all empties")
+       
         return {'FINISHED'}
 
 #-----------------------------------------------------#  
 #   Registration classes
 #-----------------------------------------------------#
-classes = (DarrowToggleCutters, DarrowOrganizeMenu, DarrowCollapseOutliner, DarrowSetCollection, DarrowWireframe, DarrowOrganizePanel,)
+classes = (DarrowToggleEmpty,DarrowSetCollectionCutter,DarrowToggleCutters, DarrowCollapseOutliner, DarrowSetCollection, DarrowWireframe, DarrowOrganizePanel,)
 
 def register():
     for cls in classes:
@@ -314,7 +241,12 @@ def register():
     bpy.types.Scene.cutterVis_Bool = bpy.props.BoolProperty(
         name="Vis Bool",
         description="Toggle visabilty of cutters",
-        default=False
+        default=True
+    )
+    bpy.types.Scene.emptyVis_Bool = bpy.props.BoolProperty(
+        name="Vis Bool",
+        description="Toggle visabilty of empties",
+        default=True
     )
 
     bpy.types.Scene.parentcoll_string = bpy.props.StringProperty(
