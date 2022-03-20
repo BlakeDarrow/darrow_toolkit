@@ -18,10 +18,6 @@ bl_info = {
 #-----------------------------------------------------#  
 #     add all new scripts to this string    
 #-----------------------------------------------------#   
-
-if __package__ != "darrow_toolkit":
-    sys.modules["darrow_toolkit"] = sys.modules[__package__]
-
 modulesNames = ['DarrowOrganizer',]
 
 #-----------------------------------------------------#  
